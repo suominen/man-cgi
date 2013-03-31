@@ -47,9 +47,9 @@ PATH=/usr/local/bin:/bin:/usr/bin
 #MANPATH=/usr/local/man:/usr/local/X/man:/usr/share/man:/usr/local/gnu/man
 
 # OS details
-OSARCH=`uname -m`
-OSNAME=`uname -s`
-OSREL=`uname -r`
+OSARCH=$(uname -m)
+OSNAME=$(uname -s)
+OSREL=$(uname -r)
 
 # Man page collections
 MANROOT=/proj/www/man
@@ -62,7 +62,20 @@ DOT=/common/images/man-dot.gif
 PAGES=/common/images/pages.gif
 
 # Copyright year
-CYEAR=`date +%Y`
+CYEAR=$(date +%Y)
+
+# Last modified is NetBSD-current build retrieval date
+BUILDFILE="$MANROOT/NetBSD-current/build"
+if [ -f "$BUILDFILE" ]
+then
+    eval $(stat -s "$BUILDFILE")
+    LASTMOD=$(date -u -r "$st_mtime" '+%a, %d %b %Y %H:%M:%S GMT')
+fi
+
+# Expires date is 16 days in the future
+EXPSECS=1382400
+EXPDATE=$(($(date '+%s') + $EXPSECS))
+EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -78,7 +91,11 @@ SECTION=$1
 set -- $COLL
 COLL=$1
 
-echo "Content-type: text/html"
+echo "Content-Type: text/html"
+if [ -n "$LASTMOD" ]
+then
+    echo "Last-Modified: $LASTMOD"
+fi
 
 case "$REQUEST_METHOD" in
 POST)
@@ -90,16 +107,16 @@ POST)
     do
 	case "$i" in
 	arch=*)
-	    ARCH=`echo "$i" | sed -e 's/arch=//'`
+	    ARCH=$(echo "$i" | sed -e 's/arch=//')
 	    ;;
 	coll=*)
-	    COLL=`echo "$i" | sed -e 's/coll=//'`
+	    COLL=$(echo "$i" | sed -e 's/coll=//')
 	    ;;
 	command=*)
-	    COMMAND=`echo "$i" | sed -e 's/command=//'`
+	    COMMAND=$(echo "$i" | sed -e 's/command=//')
 	    ;;
 	section=*)
-	    SECTION=`echo "$i" | sed -e 's/section=//'`
+	    SECTION=$(echo "$i" | sed -e 's/section=//')
 	    ;;
 	esac
     done
@@ -150,17 +167,21 @@ case "$PATH_INFO" in
     ;;
 esac
 
+# Cache a lot
+echo "Expires: $EXPIRES"
+echo "Cache-Control: public, max-age=$EXPSECS"
+
 # End of headers
 echo ""
 
 case "$SECTION" in
 .*)
-    ARCH=`echo $SECTION | sed -e 's/^\.//'`
+    ARCH=$(echo $SECTION | sed -e 's/^\.//')
     SECTION=""
     ;;
 *.*)
-    ARCH=`echo $SECTION | awk -F. '{print $2}'`
-    SECTION=`echo $SECTION | awk -F. '{print $1}'`
+    ARCH=$(echo $SECTION | awk -F. '{print $2}')
+    SECTION=$(echo $SECTION | awk -F. '{print $1}')
     ;;
 esac
 case "$SECTION" in
@@ -173,13 +194,13 @@ case "$COLL" in
     COLL=""
     ;;
 *)
-    COLL=`echo "$COLL" | tr -c -d '[-.A-Za-z0-9]'`
+    COLL=$(echo "$COLL" | tr -c -d '[-.A-Za-z0-9]')
     export MANPATH
     MANPATH="${MANROOT}/${COLL}"
     export GROFF_TMAC_PATH
     GROFF_TMAC_PATH="${MANROOT}/tmac"
-    CNAME=`echo $COLL | awk -F- '{print $1}'`
-    CREL=`echo $COLL | sed -e 's/^[^-]*-//'`
+    CNAME=$(echo $COLL | awk -F- '{print $1}')
+    CREL=$(echo $COLL | sed -e 's/^[^-]*-//')
     COLL="+$COLL"
     ;;
 esac
@@ -365,7 +386,7 @@ END
   </SELECT></TD></TR>
   <TR><TD>Architecture:&nbsp;</TD><TD><SELECT NAME=arch>
 END
-  for i in DEFAULT `cat $MANROOT/archlist`
+  for i in DEFAULT $(cat $MANROOT/archlist)
   do
     case ".$i" in
     .DEFAULT)
@@ -383,7 +404,7 @@ END
   </SELECT></TD></TR>
   <TR><TD>Collection:&nbsp;</TD><TD><SELECT NAME=coll>
 END
-  for i in DEFAULT `cat $MANROOT/colllist`
+  for i in DEFAULT $(cat $MANROOT/colllist)
   do
     case "+$i" in
     +DEFAULT)
