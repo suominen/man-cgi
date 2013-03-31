@@ -1,0 +1,430 @@
+#!/bin/sh
+# Man-cgi : a Common Gateway Interface which converts the output of
+#           the "man" command to HTML
+#
+VERSION="1.15"
+#
+# Author  : Panagiotis J. Christias <christia@theseas.ntua.gr>
+#
+# Usage   : it goes in the /cgi-bin/ directory. When called without 
+#           arguments (http://www-server/cgi-bin/man-cgi) it outputs a
+#           "Front Page" with a section list and query form. When called
+#           with arguments, the first argument is the topic (e.g. ls)
+#           and the second argument (optional) is the section to look in.
+#
+#           Examples:
+#               http://www.ntua.gr/cgi-bin/man-cgi?ls
+#               http://www.ntua.gr/cgi-bin/man-cgi?sleep+3
+#
+# Notice  : Man-cgi uses the following two images, you may want to get them
+#           and put them in your w3 server:
+#               http://www.ntua.gr/images/doty.gif
+#               http://www.ntua.gr/images/pages.gif
+#
+# History :
+#   1.15    Multiple blank lines are supressed.
+#   1.14    Man-cgi now recognizes cross-references that
+#           contain periods (e.g. foo.foo(3)).
+#   1.13    Really fixed problems occuring in pages which used
+#           multi-overstrike for emboldening (hopefully).
+#   1.12    Fixed problems occuring in pages which used multi-overstrike
+#           for emboldening. Now Man-cgi works any number of overstrike.
+#   1.11    Fixed problem with hyphenated cross-references.
+#   1.10 and earlier, no history at that time...
+#
+# Last update: Fri May 5 1995
+#
+
+### CONFIGURATION SECTION : change the following variables to fit your needs ###
+
+# The HTTPD server may not pass the enviroment variables to the script.
+# You should add your system path here :
+export PATH
+PATH=/usr/local/bin:/bin:/usr/bin
+
+# The same for the man path here :
+#export MANPATH
+#MANPATH=/usr/local/man:/usr/local/X/man:/usr/share/man:/usr/local/gnu/man
+
+# OS details
+OSARCH=`uname -m`
+OSNAME=`uname -s`
+OSREL=`uname -r`
+
+# Man page collections
+MANROOT=/proj/www/man
+
+# The full URL of the Man-cgi :
+MANCGI='/cgi-bin/man-cgi'
+
+# The URL of the two images :
+DOT=/common/images/man-dot.gif
+PAGES=/common/images/pages.gif
+
+# Copyright year
+CYEAR=`date +%Y`
+
+### END OF CONFIGURATION SECTION ###############################################
+
+COMMAND=${1}
+SECTION=${2:-ANY}
+COLL=${3:-DEFAULT}
+ARCH=DEFAULT
+
+set -- $COMMAND
+COMMAND=$1
+set -- $SECTION
+SECTION=$1
+set -- $COLL
+COLL=$1
+
+echo "Content-type: text/html"
+
+case "$REQUEST_METHOD" in
+POST)
+    read a
+    OIFS="$IFS"
+    IFS="${OIFS}&+"
+    set -- $a
+    for i
+    do
+	case "$i" in
+	arch=*)
+	    ARCH=`echo "$i" | sed -e 's/arch=//'`
+	    ;;
+	coll=*)
+	    COLL=`echo "$i" | sed -e 's/coll=//'`
+	    ;;
+	command=*)
+	    COMMAND=`echo "$i" | sed -e 's/command=//'`
+	    ;;
+	section=*)
+	    SECTION=`echo "$i" | sed -e 's/section=//'`
+	    ;;
+	esac
+    done
+    IFS="${OIFS}"
+    case "$SERVER_PORT" in
+	80) ;;
+	*)  PORT=":${SERVER_PORT}";;
+    esac
+    case "$SECTION.$ARCH" in
+	ANY.DEFAULT)
+	    SECTION=""
+	    ;;
+	*.DEFAULT)
+	    SECTION="+${SECTION}"
+	    ;;
+	ANY.*)
+	    SECTION="+.${ARCH}"
+	    ;;
+	*)
+	    SECTION="+${SECTION}.${ARCH}"
+	    ;;
+    esac
+    case "$COLL" in
+	DEFAULT)
+	    COLL=""
+	    ;;
+	*)
+	    case "$SECTION" in
+		"")
+		    COLL="++${COLL}"
+		    ;;
+		*)
+		    COLL="+${COLL}"
+		    ;;
+	    esac
+    esac
+    ME="http://${SERVER_NAME}${PORT}${SCRIPT_NAME}?${COMMAND}${SECTION}${COLL}"
+    echo "Location: $ME"
+    echo ""
+    echo 'Goto: <A HREF="'"$ME"'">'"$ME"'</A>'
+    exit 0
+    ;;
+esac
+
+case "$PATH_INFO" in
+/apropos)
+    MANPARAM="-k"
+    ;;
+esac
+
+# End of headers
+echo ""
+
+case "$SECTION" in
+.*)
+    ARCH=`echo $SECTION | sed -e 's/^\.//'`
+    SECTION=""
+    ;;
+*.*)
+    ARCH=`echo $SECTION | awk -F. '{print $2}'`
+    SECTION=`echo $SECTION | awk -F. '{print $1}'`
+    ;;
+esac
+case "$SECTION" in
+ANY)
+    SECTION=""
+    ;;
+esac
+case "$COLL" in
+""|DEFAULT)
+    COLL=""
+    ;;
+*)
+    COLL=`echo "$COLL" | tr -c -d '[-.A-Za-z0-9]'`
+    export MANPATH
+    MANPATH="${MANROOT}/${COLL}"
+    export GROFF_TMAC_PATH
+    GROFF_TMAC_PATH="${MANROOT}/tmac"
+    CNAME=`echo $COLL | awk -F- '{print $1}'`
+    CREL=`echo $COLL | sed -e 's/^[^-]*-//'`
+    COLL="+$COLL"
+    ;;
+esac
+case "$ARCH" in
+""|DEFAULT)
+    ARCH=""
+    ;;
+*)
+    export MACHINE
+    MACHINE="$ARCH"
+    ARCH=".$ARCH"
+    ;;
+esac
+
+if [ "$COMMAND" != "" ] ; then
+  cat <<END
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD>
+<TITLE>$COMMAND${SECTION:+"($SECTION)"} - ${CNAME:-"$OSNAME"} Manual Pages</TITLE>
+<LINK REL="shortcut icon" HREF="/${CNAME:-"$OSNAME"}.ico" TYPE="image/x-icon">
+</HEAD>
+<BODY>
+<PRE>
+END
+  case "$SECTION" in
+  "") man $MANPARAM -- "$COMMAND";;
+  *)  man -- "$SECTION" "$COMMAND";;
+  esac 2>&1 | \
+  sed \
+          -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+          -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+          -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+          -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+	  -e 's/</«/g' \
+	  -e 's/>/»/g' \
+   \
+	  -e '/^[A-Z]/s/.//g' \
+	  -e 's/^[A-Z][-+() ,A-Z_]*$/<B><FONT SIZE="+2">&<\/FONT><\/B>/' \
+   \
+	  -e 's/_\(.\)/<i>\1<\/i>/g' \
+	  -e 's/.\(.\)/<b>\1<\/b>/g' \
+   \
+	  -e 's#<i>\(.\)</i<b>\1</b>#<b>\1</b>#g' \
+          -e 's#</b><b>.##g' \
+          -e 's#</b>.<b>##g' \
+          -e 's#.##g' \
+          -e 's#_</i<b><</b>i>##g'  \
+   \
+	  -e 's#</i>\( *\)<i>#\1#g' \
+	  -e 's#</b>\( *\)<b>#\1#g' \
+   \
+	  -e 's#</b><i>\(.\)</i><b>#\1#g' \
+   \
+	  -e 's/^  \([A-Z][ ,0-9A-z_]*\)$/  <b>\1<\/b>/' \
+	  -e 's/^   \([A-Z][ ,0-9A-z_]*\)$/   <b>\1<\/b>/' \
+   \
+	  -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9]\)[A-z]*)\)#<A HREF=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</A>#g" \
+   \
+	  -e 's/\&/\&amp;/g' \
+          -e 's/«/\&lt;/g' \
+          -e 's/»/\&gt;/g' \
+	  -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9]\)[A-z_]*)\)#<A HREF=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</A>#" \
+	  2>/dev/null | \
+  ( read a
+    notfound=0
+    set -- $a
+    case "$2 $3 $4" in
+    "Formatting manual page...")
+      ;;
+    "no entry for")
+      notfound=1
+      echo "$a"
+      ;;
+    *)
+      echo "$a"
+      ;;
+    esac
+    cat -s 2>/dev/null
+    echo "</PRE>"
+    if [ $notfound -eq 1 ]
+    then
+      case "$ARCH$COLL" in
+      "") SECTION="";;
+      *)  SECTION="+";;
+      esac
+      cat <<END
+<P>The manual page was not found.
+<A HREF="$MANCGI/apropos?$COMMAND$SECTION$ARCH$COLL">Try
+apropos</A> or select a different architecture.</P>
+END
+    fi
+  )
+else
+  cat <<END
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD>
+<TITLE>${CNAME:-"$OSNAME"} Manual Pages</TITLE>
+<LINK REL="shortcut icon" HREF="/${CNAME:-"$OSNAME"}.ico" TYPE="image/x-icon">
+</HEAD>
+<BODY>
+<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=500><TR><TD>
+<H1><IMG ALT="" SRC=$PAGES> ${CNAME:-"$OSNAME"} Manual Pages</H1>
+<STRONG>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</STRONG>
+<HR>
+<P>Here are the intro pages of each section:</P>
+<OL>
+<LI><A HREF="$MANCGI?intro+1$ARCH$COLL">GENERAL COMMANDS</A></LI>
+<LI><A HREF="$MANCGI?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</A></LI>
+<LI><A HREF="$MANCGI?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</A></LI>
+<LI><A HREF="$MANCGI?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</A></LI>
+<LI><A HREF="$MANCGI?intro+5$ARCH$COLL">FILE FORMATS</A></LI>
+<LI><A HREF="$MANCGI?intro+6$ARCH$COLL">GAMES AND DEMOS</A></LI>
+<LI><A HREF="$MANCGI?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</A></LI>
+<LI><A HREF="$MANCGI?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</A></LI>
+<LI><A HREF="$MANCGI?intro+9$ARCH$COLL">KERNEL INTERNALS</A></LI>
+</OL>
+END
+  case "$ARCH$COLL" in
+  "")
+    cat <<END
+<UL>
+<LI><A HREF="$MANCGI?X+X11">X WINDOW SYSTEM</A></LI>
+</UL>
+END
+    ;;
+  esac
+  cat <<END
+<P><FONT SIZE="-1">Sometimes man pages are not stored in the right
+section and you may get an empty page. Follow the link at the top of
+the empty page and you'll get your man page (hopefully).</FONT></P>
+</TD></TR></TABLE>
+END
+fi
+cat <<END
+<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=500><TR><TD>
+<HR>
+<P>You can also request any man page by name and (optionally) by section:</P>
+<FORM METHOD=POST ACTION="$MANCGI/man">
+  <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
+  <TR><TD>Command:&nbsp;</TD><TD><INPUT NAME=command SIZE=24
+  VALUE="$COMMAND"></TD></TR>
+  <TR><TD>Section:&nbsp;</TD><TD><SELECT NAME=section>
+END
+  for i in ANY:ANY \
+    1:1 2:2 3:3 3f:3f 4:4 5:5 6:6 7:7 8:8 9:9 n:n l:l \
+    X:X11R6 \
+    games:games \
+    local:local \
+    pkg:packages \
+    perl:perl \
+    std:system
+  do
+    OIFS="$IFS"
+    IFS=":$IFS"
+    eval set -- $i
+    IFS="$OIFS"
+    case "$1" in
+    "$SECTION")
+	echo "  <OPTION VALUE=\"$1\" SELECTED> $2"
+	;;
+    *)
+	echo "  <OPTION VALUE=\"$1\"> $2"
+	;;
+    esac
+  done
+  cat <<END
+  </SELECT></TD></TR>
+  <TR><TD>Architecture:&nbsp;</TD><TD><SELECT NAME=arch>
+END
+  for i in DEFAULT `cat $MANROOT/archlist`
+  do
+    case ".$i" in
+    .DEFAULT)
+      echo "  <OPTION VALUE=\"DEFAULT\"> DEFAULT ($OSARCH)"
+      ;;
+    "$ARCH")
+      echo "  <OPTION VALUE=\"$i\" SELECTED> $i"
+      ;;
+    *)
+      echo "  <OPTION VALUE=\"$i\"> $i"
+      ;;
+    esac
+  done
+  cat <<END
+  </SELECT></TD></TR>
+  <TR><TD>Collection:&nbsp;</TD><TD><SELECT NAME=coll>
+END
+  for i in DEFAULT `cat $MANROOT/colllist`
+  do
+    case "+$i" in
+    +DEFAULT)
+      echo "  <OPTION VALUE=\"$i\"> $i ($OSNAME-$OSREL)"
+      ;;
+    "$COLL")
+      echo "  <OPTION VALUE=\"$i\" SELECTED> $i"
+      ;;
+    *)
+      echo "  <OPTION VALUE=\"$i\"> $i"
+      ;;
+    esac
+  done
+  cat <<END
+  </SELECT></TD></TR>
+  <TR><TD>&nbsp;</TD>
+  <TD><INPUT TYPE=submit VALUE="Show manual page"></TD></TR>
+  </TABLE>
+  <P>Use the DEFAULT collection to view manual pages
+  for third-party software.</P>
+  <HR>
+</FORM>
+</TD></TR></TABLE>
+<ADDRESS><FONT SIZE="-1">
+&copy;1994 <A HREF="http://www.ntua.gr/~christia/man-cgi.html">Man-cgi
+$VERSION</A>, Panagiotis Christias &lt;christia@softlab.ntua.gr&gt;<BR>
+&copy;1996-$CYEAR Modified for <A HREF="http://www.netbsd.org/">NetBSD</A>
+by <A HREF="http://kimmo.suominen.com/">Kimmo Suominen</A>
+<SCRIPT LANGUAGE="JavaScript"><!--
+document.write ('&lt;<A HREF="mailto:')
+document.write ('kimmo')
+document.write ('@')
+document.write ('suominen.com')
+document.write ('">')
+document.write ('kimmo')
+document.write ('@')
+document.write ('suominen.com')
+document.write ('</A>&gt;\n')
+// --></SCRIPT>
+</FONT></ADDRESS>
+</BODY>
+</HTML>
+END
+exit 0
