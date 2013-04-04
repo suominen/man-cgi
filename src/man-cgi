@@ -46,6 +46,11 @@ PATH=/usr/local/bin:/bin:/usr/bin
 #export MANPATH
 #MANPATH=/usr/local/man:/usr/local/X/man:/usr/share/man:/usr/local/gnu/man
 
+# Character set ISO-8859-1
+export LC_CTYPE
+LC_CTYPE=en_US.ISO8859-1
+CHARSET=iso-8859-1
+
 # OS details
 OSARCH=$(uname -m)
 OSNAME=$(uname -s)
@@ -91,7 +96,7 @@ SECTION=$1
 set -- $COLL
 COLL=$1
 
-echo "Content-Type: text/html"
+echo "Content-Type: text/html; charset=$CHARSET"
 if [ -n "$LASTMOD" ]
 then
     echo "Last-Modified: $LASTMOD"
@@ -172,7 +177,22 @@ echo "Expires: $EXPIRES"
 echo "Cache-Control: public, max-age=$EXPSECS"
 
 # End of headers
-echo ""
+cat <<END
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=$CHARSET">
+<style type="text/css">
+<!--
+table { padding: 0; }
+table.outer { width: 500px; }
+th, td { border: 0; padding: 0; }
+b.section { font-size: 150%; }
+.small { font-size: 80%; }
+-->
+</style>
+END
 
 case "$SECTION" in
 .*)
@@ -217,13 +237,11 @@ esac
 
 if [ "$COMMAND" != "" ] ; then
   cat <<END
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HEAD>
-<TITLE>$COMMAND${SECTION:+"($SECTION)"} - ${CNAME:-"$OSNAME"} Manual Pages</TITLE>
-<LINK REL="shortcut icon" HREF="/${CNAME:-"$OSNAME"}.ico" TYPE="image/x-icon">
-</HEAD>
-<BODY>
-<PRE>
+<title>$COMMAND${SECTION:+"($SECTION)"} - ${CNAME:-"$OSNAME"} Manual Pages</title>
+<link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
+</head>
+<body>
+<pre>
 END
   case "$SECTION" in
   "") man $MANPARAM -- "$COMMAND";;
@@ -254,7 +272,7 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	  -e 's/>/»/g' \
    \
 	  -e '/^[A-Z]/s/.//g' \
-	  -e 's/^[A-Z][-+() ,A-Z_]*$/<B><FONT SIZE="+2">&<\/FONT><\/B>/' \
+	  -e 's/^[A-Z][-+() ,A-Z_]*$/<b class="section">&<\/b>/' \
    \
 	  -e 's/_\(.\)/<i>\1<\/i>/g' \
 	  -e 's/.\(.\)/<b>\1<\/b>/g' \
@@ -273,12 +291,12 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	  -e 's/^  \([A-Z][ ,0-9A-z_]*\)$/  <b>\1<\/b>/' \
 	  -e 's/^   \([A-Z][ ,0-9A-z_]*\)$/   <b>\1<\/b>/' \
    \
-	  -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9]\)[A-z]*)\)#<A HREF=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</A>#g" \
+	  -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9]\)[A-z]*)\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
    \
 	  -e 's/\&/\&amp;/g' \
           -e 's/«/\&lt;/g' \
           -e 's/»/\&gt;/g' \
-	  -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9]\)[A-z_]*)\)#<A HREF=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</A>#" \
+	  -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9]\)[A-z_]*)\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
 	  2>/dev/null | \
   ( read a
     notfound=0
@@ -303,62 +321,60 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
       *)  SECTION="+";;
       esac
       cat <<END
-<P>The manual page was not found.
-<A HREF="$MANCGI/apropos?$COMMAND$SECTION$ARCH$COLL">Try
-apropos</A> or select a different architecture.</P>
+<p>The manual page was not found.
+<a href="$MANCGI/apropos?$COMMAND$SECTION$ARCH$COLL">Try
+apropos</a> or select a different architecture.</p>
 END
     fi
   )
 else
   cat <<END
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<HEAD>
-<TITLE>${CNAME:-"$OSNAME"} Manual Pages</TITLE>
-<LINK REL="shortcut icon" HREF="/${CNAME:-"$OSNAME"}.ico" TYPE="image/x-icon">
-</HEAD>
-<BODY>
-<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=500><TR><TD>
-<H1><IMG ALT="" SRC=$PAGES> ${CNAME:-"$OSNAME"} Manual Pages</H1>
-<STRONG>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</STRONG>
-<HR>
-<P>Here are the intro pages of each section:</P>
-<OL>
-<LI><A HREF="$MANCGI?intro+1$ARCH$COLL">GENERAL COMMANDS</A></LI>
-<LI><A HREF="$MANCGI?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</A></LI>
-<LI><A HREF="$MANCGI?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</A></LI>
-<LI><A HREF="$MANCGI?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</A></LI>
-<LI><A HREF="$MANCGI?intro+5$ARCH$COLL">FILE FORMATS</A></LI>
-<LI><A HREF="$MANCGI?intro+6$ARCH$COLL">GAMES AND DEMOS</A></LI>
-<LI><A HREF="$MANCGI?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</A></LI>
-<LI><A HREF="$MANCGI?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</A></LI>
-<LI><A HREF="$MANCGI?intro+9$ARCH$COLL">KERNEL INTERNALS</A></LI>
-</OL>
+<title>${CNAME:-"$OSNAME"} Manual Pages</title>
+<link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
+</head>
+<body>
+<table class="outer"><tr><td>
+<h1><img alt="" src=$PAGES> ${CNAME:-"$OSNAME"} Manual Pages</h1>
+<b>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</b>
+<hr>
+<p>Here are the intro pages of each section:</p>
+<ol>
+<li><a href="$MANCGI?intro+1$ARCH$COLL">GENERAL COMMANDS</a></li>
+<li><a href="$MANCGI?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</a></li>
+<li><a href="$MANCGI?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</a></li>
+<li><a href="$MANCGI?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</a></li>
+<li><a href="$MANCGI?intro+5$ARCH$COLL">FILE FORMATS</a></li>
+<li><a href="$MANCGI?intro+6$ARCH$COLL">GAMES AND DEMOS</a></li>
+<li><a href="$MANCGI?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</a></li>
+<li><a href="$MANCGI?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</a></li>
+<li><a href="$MANCGI?intro+9$ARCH$COLL">KERNEL INTERNALS</a></li>
+</ol>
 END
   case "$ARCH$COLL" in
   "")
     cat <<END
-<UL>
-<LI><A HREF="$MANCGI?X+X11">X WINDOW SYSTEM</A></LI>
-</UL>
+<ul>
+<li><a href="$MANCGI?X+X11">X WINDOW SYSTEM</a></li>
+</ul>
 END
     ;;
   esac
   cat <<END
-<P><FONT SIZE="-1">Sometimes man pages are not stored in the right
-section and you may get an empty page. Follow the link at the top of
-the empty page and you'll get your man page (hopefully).</FONT></P>
-</TD></TR></TABLE>
+<p class="small">Sometimes man pages are not stored in the right section
+and you may get an empty page. Follow the link at the top of the empty page
+and you'll get your man page (hopefully).</p>
+</td></tr></table>
 END
 fi
 cat <<END
-<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=500><TR><TD>
-<HR>
-<P>You can also request any man page by name and (optionally) by section:</P>
-<FORM METHOD=POST ACTION="$MANCGI/man">
-  <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
-  <TR><TD>Command:&nbsp;</TD><TD><INPUT NAME=command SIZE=24
-  VALUE="$COMMAND"></TD></TR>
-  <TR><TD>Section:&nbsp;</TD><TD><SELECT NAME=section>
+<table class="outer"><tr><td>
+<hr>
+<p>You can also request any man page by name and (optionally) by section:</p>
+<form method=post action="$MANCGI/man">
+  <table>
+  <tr><td>Command:&nbsp;</td><td><input name="command" size="24"
+  value="$COMMAND"></td></tr>
+  <tr><td>Section:&nbsp;</td><td><select name="section">
 END
   for i in ANY:ANY \
     1:1 2:2 3:3 3f:3f 4:4 5:5 6:6 7:7 8:8 9:9 n:n l:l \
@@ -375,65 +391,65 @@ END
     IFS="$OIFS"
     case "$1" in
     "$SECTION")
-	echo "  <OPTION VALUE=\"$1\" SELECTED> $2"
+	echo "  <option value=\"$1\" selected>$2</option>"
 	;;
     *)
-	echo "  <OPTION VALUE=\"$1\"> $2"
+	echo "  <option value=\"$1\">$2</option>"
 	;;
     esac
   done
   cat <<END
-  </SELECT></TD></TR>
-  <TR><TD>Architecture:&nbsp;</TD><TD><SELECT NAME=arch>
+  </select></td></tr>
+  <tr><td>Architecture:&nbsp;</td><td><select name="arch">
 END
   for i in DEFAULT $(cat $MANROOT/archlist)
   do
     case ".$i" in
     .DEFAULT)
-      echo "  <OPTION VALUE=\"DEFAULT\"> DEFAULT ($OSARCH)"
+      echo "  <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
       ;;
     "$ARCH")
-      echo "  <OPTION VALUE=\"$i\" SELECTED> $i"
+      echo "  <option value=\"$i\" selected>$i</option>"
       ;;
     *)
-      echo "  <OPTION VALUE=\"$i\"> $i"
+      echo "  <option value=\"$i\">$i</option>"
       ;;
     esac
   done
   cat <<END
-  </SELECT></TD></TR>
-  <TR><TD>Collection:&nbsp;</TD><TD><SELECT NAME=coll>
+  </select></td></tr>
+  <tr><td>Collection:&nbsp;</td><td><select name="coll">
 END
   for i in DEFAULT $(cat $MANROOT/colllist)
   do
     case "+$i" in
     +DEFAULT)
-      echo "  <OPTION VALUE=\"$i\"> $i ($OSNAME-$OSREL)"
+      echo "  <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
       ;;
     "$COLL")
-      echo "  <OPTION VALUE=\"$i\" SELECTED> $i"
+      echo "  <option value=\"$i\" selected>$i</option>"
       ;;
     *)
-      echo "  <OPTION VALUE=\"$i\"> $i"
+      echo "  <option value=\"$i\">$i</option>"
       ;;
     esac
   done
   cat <<END
-  </SELECT></TD></TR>
-  <TR><TD>&nbsp;</TD>
-  <TD><INPUT TYPE=submit VALUE="Show manual page"></TD></TR>
-  </TABLE>
-  <P>Use the DEFAULT collection to view manual pages
-  for third-party software.</P>
-  <HR>
-</FORM>
-</TD></TR></TABLE>
-<ADDRESS><FONT SIZE="-1">
-&copy;1994 <A HREF="http://www.ntua.gr/~christia/man-cgi.html">Man-cgi
-$VERSION</A>, Panagiotis Christias &lt;christia@softlab.ntua.gr&gt;<BR>
-&copy;1996-$CYEAR Modified for <A HREF="http://www.netbsd.org/">NetBSD</A>
-by <A HREF="http://kimmo.suominen.com/">Kimmo Suominen</A>
-<SCRIPT LANGUAGE="JavaScript"><!--
+  </select></td></tr>
+  <tr><td>&nbsp;</td>
+  <td><input type="submit" value="Show manual page"></td></tr>
+  </table>
+  <p>Use the DEFAULT collection to view manual pages
+  for third-party software.</p>
+  <hr>
+</form>
+</td></tr></table>
+<address class="small">
+&copy;1994 <a href="http://www.ntua.gr/~christia/man-cgi.html">Man-cgi
+$VERSION</A>, Panagiotis Christias &lt;christia@softlab.ntua.gr&gt;<br>
+&copy;1996-$CYEAR Modified for <a href="http://www.netbsd.org/">NetBSD</a>
+by <a href="http://kimmo.suominen.com/">Kimmo Suominen</a>
+<script><!--
 document.write ('&lt;<A HREF="mailto:')
 document.write ('kimmo')
 document.write ('@')
@@ -443,9 +459,17 @@ document.write ('kimmo')
 document.write ('@')
 document.write ('suominen.com')
 document.write ('</A>&gt;\n')
-// --></SCRIPT>
-</FONT></ADDRESS>
-</BODY>
-</HTML>
+// --></script>
+</address>
+<script><!--
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-39862532-1', 'gw.com');
+  ga('send', 'pageview');
+// --></script>
+</body>
+</html>
 END
 exit 0
