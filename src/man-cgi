@@ -127,41 +127,41 @@ POST)
     done
     IFS="${OIFS}"
     case "$SERVER_PORT" in
-	80) ;;
-	*)  PORT=":${SERVER_PORT}";;
+    80) ;;
+    *)  PORT=":${SERVER_PORT}";;
     esac
     case "$SECTION.$ARCH" in
-	ANY.DEFAULT)
-	    SECTION=""
-	    ;;
-	*.DEFAULT)
-	    SECTION="+${SECTION}"
-	    ;;
-	ANY.*)
-	    SECTION="+.${ARCH}"
-	    ;;
-	*)
-	    SECTION="+${SECTION}.${ARCH}"
-	    ;;
+    ANY.DEFAULT)
+	SECTION=""
+	;;
+    *.DEFAULT)
+	SECTION="+${SECTION}"
+	;;
+    ANY.*)
+	SECTION="+.${ARCH}"
+	;;
+    *)
+	SECTION="+${SECTION}.${ARCH}"
+	;;
     esac
     case "$COLL" in
-	DEFAULT)
-	    COLL=""
+    DEFAULT)
+	COLL=""
+	;;
+    *)
+	case "$SECTION" in
+	"")
+	    COLL="++${COLL}"
 	    ;;
 	*)
-	    case "$SECTION" in
-		"")
-		    COLL="++${COLL}"
-		    ;;
-		*)
-		    COLL="+${COLL}"
-		    ;;
-	    esac
+	    COLL="+${COLL}"
+	    ;;
+	esac
     esac
     ME="http://${SERVER_NAME}${PORT}${SCRIPT_NAME}?${COMMAND}${SECTION}${COLL}"
     echo "Location: $ME"
     echo ""
-    echo 'Goto: <A HREF="'"$ME"'">'"$ME"'</A>'
+    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
     exit 0
     ;;
 esac
@@ -230,105 +230,120 @@ case "$ARCH" in
     ;;
 *)
     export MACHINE
-    MACHINE="$ARCH"
+    case "$ARCH" in
+    NONE)
+	MACHINE=.
+	;;
+    *)
+	MACHINE="$ARCH"
+	;;
+    esac
     ARCH=".$ARCH"
     ;;
 esac
 
-if [ "$COMMAND" != "" ] ; then
-  cat <<END
+if [ "$COMMAND" != "" ]
+then
+    case "$SECTION" in
+    "")
+	if [ "$MANPARAM" = "" ]
+	then
+	    man -w -- "$COMMAND" >/dev/null 2>&1
+	    notfound=$?
+	fi
+	;;
+    *)
+	man -w -- "$SECTION" "$COMMAND" >/dev/null 2>&1
+	notfound=$?
+	;;
+    esac
+    cat <<END
 <title>$COMMAND${SECTION:+"($SECTION)"} - ${CNAME:-"$OSNAME"} Manual Pages</title>
 <link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
 </head>
 <body>
-<pre>
 END
-  case "$SECTION" in
-  "") man $MANPARAM -- "$COMMAND";;
-  *)  man -- "$SECTION" "$COMMAND";;
-  esac 2>&1 | \
-  sed \
-          -e '/- *$/N
-{
-s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
-\2/
-}' \
-          -e '/- *$/N
-{
-s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
-\2/
-}' \
-          -e '/- *$/N
-{
-s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
-\2/
-}' \
-          -e '/- *$/N
-{
-s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
-\2/
-}' \
-	  -e 's/</«/g' \
-	  -e 's/>/»/g' \
-   \
-	  -e '/^[A-Z]/s/.//g' \
-	  -e 's/^[A-Z][-+() ,A-Z_]*$/<b class="section">&<\/b>/' \
-   \
-	  -e 's/_\(.\)/<i>\1<\/i>/g' \
-	  -e 's/.\(.\)/<b>\1<\/b>/g' \
-   \
-	  -e 's#<i>\(.\)</i<b>\1</b>#<b>\1</b>#g' \
-          -e 's#</b><b>.##g' \
-          -e 's#</b>.<b>##g' \
-          -e 's#.##g' \
-          -e 's#_</i<b><</b>i>##g'  \
-   \
-	  -e 's#</i>\( *\)<i>#\1#g' \
-	  -e 's#</b>\( *\)<b>#\1#g' \
-   \
-	  -e 's#</b><i>\(.\)</i><b>#\1#g' \
-   \
-	  -e 's/^  \([A-Z][ ,0-9A-z_]*\)$/  <b>\1<\/b>/' \
-	  -e 's/^   \([A-Z][ ,0-9A-z_]*\)$/   <b>\1<\/b>/' \
-   \
-	  -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9]\)[A-z]*)\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
-   \
-	  -e 's/\&/\&amp;/g' \
-          -e 's/«/\&lt;/g' \
-          -e 's/»/\&gt;/g' \
-	  -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9]\)[A-z_]*)\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
-	  2>/dev/null | \
-  ( read a
-    notfound=0
-    set -- $a
-    case "$2 $3 $4" in
-    "Formatting manual page...")
-      ;;
-    "no entry for")
-      notfound=1
-      echo "$a"
-      ;;
-    *)
-      echo "$a"
-      ;;
-    esac
-    cat -s 2>/dev/null
-    echo "</PRE>"
-    if [ $notfound -eq 1 ]
+    if [ ${notfound:-0} -eq 0 ]
     then
-      case "$ARCH$COLL" in
-      "") SECTION="";;
-      *)  SECTION="+";;
-      esac
-      cat <<END
+	echo "<pre>"
+	case "$SECTION" in
+	"")
+	    man $MANPARAM -- "$COMMAND" 2>/dev/null
+	    ;;
+	*)
+	    man -- "$SECTION" "$COMMAND" 2>/dev/null
+	    ;;
+	esac | \
+	sed \
+	    -e '1n' \
+	    -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+	    -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+	    -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+	    -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+	    -e 's/</«/g' \
+	    -e 's/>/»/g' \
+   \
+	    -e '/^[A-Z]/s/.//g' \
+	    -e 's/^[A-Z][-+() ,A-Z_]*$/<b class="section">&<\/b>/' \
+   \
+	    -e 's/_\(.\)/<i>\1<\/i>/g' \
+	    -e 's/.\(.\)/<b>\1<\/b>/g' \
+   \
+	    -e 's#<i>\(.\)</i<b>\1</b>#<b>\1</b>#g' \
+	    -e 's#</b><b>.##g' \
+	    -e 's#</b>.<b>##g' \
+	    -e 's#.##g' \
+	    -e 's#_</i<b><</b>i>##g'  \
+   \
+	    -e 's#</i>\( *\)<i>#\1#g' \
+	    -e 's#</b>\( *\)<b>#\1#g' \
+   \
+	    -e 's#</b><i>\(.\)</i><b>#\1#g' \
+   \
+	    -e 's/^  \([A-Z][ ,0-9A-z_]*\)$/  <b>\1<\/b>/' \
+	    -e 's/^   \([A-Z][ ,0-9A-z_]*\)$/   <b>\1<\/b>/' \
+   \
+	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9]\)[A-z]*)\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
+   \
+	    -e 's/\&/\&amp;/g' \
+	    -e 's/«/\&lt;/g' \
+	    -e 's/»/\&gt;/g' \
+	    -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9]\)[A-z_]*)\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
+	    2>/dev/null
+	echo "</pre>"
+    else
+	case "$ARCH$COLL" in
+	"")
+	    SECTION=""
+	    ;;
+	*)
+	    SECTION="+"
+	    ;;
+	esac
+	cat <<END
 <p>The manual page was not found.
 <a href="$MANCGI/apropos?$COMMAND$SECTION$ARCH$COLL">Try
 apropos</a> or select a different architecture.</p>
 END
     fi
-  )
 else
-  cat <<END
+    cat <<END
 <title>${CNAME:-"$OSNAME"} Manual Pages</title>
 <link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
 </head>
@@ -350,16 +365,16 @@ else
 <li><a href="$MANCGI?intro+9$ARCH$COLL">KERNEL INTERNALS</a></li>
 </ol>
 END
-  case "$ARCH$COLL" in
-  "")
-    cat <<END
+    case "$ARCH$COLL" in
+    "")
+	cat <<END
 <ul>
 <li><a href="$MANCGI?X+X11">X WINDOW SYSTEM</a></li>
 </ul>
 END
-    ;;
-  esac
-  cat <<END
+	;;
+    esac
+    cat <<END
 <p class="small">Sometimes man pages are not stored in the right section
 and you may get an empty page. Follow the link at the top of the empty page
 and you'll get your man page (hopefully).</p>
@@ -376,7 +391,7 @@ cat <<END
   value="$COMMAND"></td></tr>
   <tr><td>Section:&nbsp;</td><td><select name="section">
 END
-  for i in ANY:ANY \
+for i in ANY:ANY \
     1:1 2:2 3:3 3f:3f 4:4 5:5 6:6 7:7 8:8 9:9 n:n l:l \
     X:X11R6 \
     games:games \
@@ -384,7 +399,7 @@ END
     pkg:packages \
     perl:perl \
     std:system
-  do
+do
     OIFS="$IFS"
     IFS=":$IFS"
     eval set -- $i
@@ -397,44 +412,44 @@ END
 	echo "  <option value=\"$1\">$2</option>"
 	;;
     esac
-  done
-  cat <<END
+done
+cat <<END
   </select></td></tr>
   <tr><td>Architecture:&nbsp;</td><td><select name="arch">
 END
-  for i in DEFAULT $(cat $MANROOT/archlist)
-  do
+for i in DEFAULT NONE $(cat $MANROOT/archlist)
+do
     case ".$i" in
     .DEFAULT)
-      echo "  <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
-      ;;
+	echo "  <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+	;;
     "$ARCH")
-      echo "  <option value=\"$i\" selected>$i</option>"
-      ;;
+	echo "  <option value=\"$i\" selected>$i</option>"
+	;;
     *)
-      echo "  <option value=\"$i\">$i</option>"
-      ;;
+	echo "  <option value=\"$i\">$i</option>"
+	;;
     esac
-  done
-  cat <<END
+done
+cat <<END
   </select></td></tr>
   <tr><td>Collection:&nbsp;</td><td><select name="coll">
 END
-  for i in DEFAULT $(cat $MANROOT/colllist)
-  do
+for i in DEFAULT $(cat $MANROOT/colllist)
+do
     case "+$i" in
     +DEFAULT)
-      echo "  <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
-      ;;
+	echo "  <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
+	;;
     "$COLL")
-      echo "  <option value=\"$i\" selected>$i</option>"
-      ;;
+	echo "  <option value=\"$i\" selected>$i</option>"
+	;;
     *)
-      echo "  <option value=\"$i\">$i</option>"
-      ;;
+	echo "  <option value=\"$i\">$i</option>"
+	;;
     esac
-  done
-  cat <<END
+done
+cat <<END
   </select></td></tr>
   <tr><td>&nbsp;</td>
   <td><input type="submit" value="Show manual page"></td></tr>
