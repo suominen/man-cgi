@@ -218,7 +218,7 @@ case "$COLL" in
     export MANPATH
     MANPATH="${MANROOT}/${COLL}"
     export GROFF_TMAC_PATH
-    GROFF_TMAC_PATH="${MANROOT}/tmac"
+    GROFF_TMAC_PATH="${MANPATH}/tmac"
     CNAME=$(echo $COLL | awk -F- '{print $1}')
     CREL=$(echo $COLL | sed -e 's/^[^-]*-//')
     COLL="+$COLL"
