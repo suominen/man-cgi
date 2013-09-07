@@ -173,8 +173,11 @@ case "$PATH_INFO" in
 esac
 
 # Cache a lot
-echo "Expires: $EXPIRES"
-echo "Cache-Control: public, max-age=$EXPSECS"
+if [ "$COMMAND" != "" ]
+then
+    echo "Expires: $EXPIRES"
+    echo "Cache-Control: public, max-age=$EXPSECS"
+fi
 
 # End of headers
 cat <<END
