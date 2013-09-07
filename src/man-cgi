@@ -57,7 +57,7 @@ OSNAME=$(uname -s)
 OSREL=$(uname -r)
 
 # Man page collections
-MANROOT=/proj/www/man
+MANROOT=/p/netbsd/www/man
 
 # The full URL of the Man-cgi :
 MANCGI='/cgi-bin/man-cgi'
