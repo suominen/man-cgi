@@ -259,12 +259,12 @@ then
     "")
 	if [ "$MANPARAM" = "" ]
 	then
-	    man -w -- "$COMMAND" >/dev/null 2>&1
+	    man -C "$MANROOT/man.conf" -w -- "$COMMAND" >/dev/null 2>&1
 	    notfound=$?
 	fi
 	;;
     *)
-	man -w -- "$SECTION" "$COMMAND" >/dev/null 2>&1
+	man -C "$MANROOT/man.conf" -w -- "$SECTION" "$COMMAND" >/dev/null 2>&1
 	notfound=$?
 	;;
     esac
@@ -279,10 +279,10 @@ END
 	echo "<pre>"
 	case "$SECTION" in
 	"")
-	    man $MANPARAM -- "$COMMAND" 2>/dev/null
+	    man -C "$MANROOT/man.conf" $MANPARAM -- "$COMMAND" 2>/dev/null
 	    ;;
 	*)
-	    man -- "$SECTION" "$COMMAND" 2>/dev/null
+	    man -C "$MANROOT/man.conf" -- "$SECTION" "$COMMAND" 2>/dev/null
 	    ;;
 	esac | \
 	sed \
