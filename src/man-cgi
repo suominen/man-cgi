@@ -48,10 +48,10 @@ PATH=/usr/local/bin:/bin:/usr/bin
 #export MANPATH
 #MANPATH=/usr/local/man:/usr/local/X/man:/usr/share/man:/usr/local/gnu/man
 
-# Character set ISO-8859-1
+# Character set UTF-8
 export LC_CTYPE
-LC_CTYPE=en_US.ISO8859-1
-CHARSET=iso-8859-1
+LC_CTYPE=en_US.UTF-8
+CHARSET=utf-8
 
 # OS details
 OSARCH=$(uname -m)
@@ -201,6 +201,7 @@ cat <<END
 table { padding: 0; }
 table.outer { width: 500px; }
 th, td { border: 0; padding: 0; }
+.intro th, .intro td { padding-left: 10px; }
 b.section { font-size: 150%; }
 .small { font-size: 80%; }
 -->
@@ -365,29 +366,61 @@ else
 <h1><img alt="" src=$PAGES> ${CNAME:-"$OSNAME"} Manual Pages</h1>
 <b>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</b>
 <hr>
-<p>Here are the intro pages of each section:</p>
-<ol>
-<li><a href="$MANCGI?intro+1$ARCH$COLL">GENERAL COMMANDS</a></li>
-<li><a href="$MANCGI?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</a></li>
-<li><a href="$MANCGI?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</a></li>
-<li><a href="$MANCGI?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</a></li>
-<li><a href="$MANCGI?intro+5$ARCH$COLL">FILE FORMATS</a></li>
-<li><a href="$MANCGI?intro+6$ARCH$COLL">GAMES AND DEMOS</a></li>
-<li><a href="$MANCGI?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</a></li>
-<li><a href="$MANCGI?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</a></li>
-<li><a href="$MANCGI?intro+9$ARCH$COLL">KERNEL INTERNALS</a></li>
-</ol>
-END
-    case "$ARCH$COLL" in
-    "")
-	cat <<END
-<ul>
-<li><a href="$MANCGI?X">X WINDOW SYSTEM</a></li>
-</ul>
-END
-	;;
-    esac
-    cat <<END
+<p>Here are the intro pages of each possible section:</p>
+<table class="intro">
+<tr>
+<td class="section">1</td>
+<td><a href="$MANCGI?intro+1$ARCH$COLL">GENERAL COMMANDS</a></td>
+</tr>
+<tr>
+<td class="section">2</td>
+<td><a href="$MANCGI?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</a></td>
+</tr>
+<tr>
+<td class="section">3</td>
+<td><a href="$MANCGI?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</a></td>
+</tr>
+<tr>
+<td class="section">3f</td>
+<td><a href="$MANCGI?intro+3f$ARCH$COLL">FORTRAN LIBRARY FUNCTIONS</a></td>
+</tr>
+<tr>
+<td class="section">3lua</td>
+<td><a href="$MANCGI?intro+3lua$ARCH$COLL">LUA MODULES</a></td>
+</tr>
+<tr>
+<td class="section">4</td>
+<td><a href="$MANCGI?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
+</tr>
+<tr>
+<td class="section">5</td>
+<td><a href="$MANCGI?intro+5$ARCH$COLL">FILE FORMATS</a></td>
+</tr>
+<tr>
+<td class="section">6</td>
+<td><a href="$MANCGI?intro+6$ARCH$COLL">GAMES AND DEMOS</a></td>
+</tr>
+<tr>
+<td class="section">7</td>
+<td><a href="$MANCGI?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</a></td>
+</tr>
+<tr>
+<td class="section">8</td>
+<td><a href="$MANCGI?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</a></td>
+</tr>
+<tr>
+<td class="section">9</td>
+<td><a href="$MANCGI?intro+9$ARCH$COLL">KERNEL INTERNALS</a></td>
+</tr>
+<tr>
+<td class="section">9lua</td>
+<td><a href="$MANCGI?intro+9lua$ARCH$COLL">LUA KERNEL BINDINGS</a></td>
+</tr>
+<tr>
+<td class="section">X</td>
+<td><a href="$MANCGI?X">X WINDOW SYSTEM</a></td>
+</tr>
+</table>
 <p class="small">Sometimes man pages are not stored in the right section
 and you may get an empty page. Follow the link at the top of the empty page
 and you'll get your man page (hopefully).</p>
