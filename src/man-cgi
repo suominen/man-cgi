@@ -48,10 +48,10 @@ PATH=/usr/local/bin:/bin:/usr/bin
 #export MANPATH
 #MANPATH=/usr/local/man:/usr/local/X/man:/usr/share/man:/usr/local/gnu/man
 
-# Character set UTF-8
+# Character set ISO-8859-1
 export LC_CTYPE
-LC_CTYPE=en_US.UTF-8
-CHARSET=utf-8
+LC_CTYPE=en_US.ISO8859-1
+CHARSET=windows-1252
 
 # OS details
 OSARCH=$(uname -m)
