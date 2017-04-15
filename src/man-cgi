@@ -416,10 +416,18 @@ else
 <td class="section">9lua</td>
 <td><a href="$MANCGI?intro+9lua$ARCH$COLL">LUA KERNEL BINDINGS</a></td>
 </tr>
+END
+    case "$ARCH$COLL" in
+    "")
+	cat <<END
 <tr>
 <td class="section">X</td>
 <td><a href="$MANCGI?X">X WINDOW SYSTEM</a></td>
 </tr>
+END
+	;;
+    esac
+    cat <<END
 </table>
 <p class="small">Sometimes man pages are not stored in the right section
 and you may get an empty page. Follow the link at the top of the empty page
