@@ -129,7 +129,7 @@ POST)
 	    COLL=$(echo "$i" | sed -e 's/coll=//')
 	    ;;
 	command=*)
-	    COMMAND=$(echo "$i" | sed -e 's/command=//')
+	    COMMAND=$(echo "$i" | sed -e 's/command=//' -e 's,%2F,/,gi')
 	    ;;
 	section=*)
 	    SECTION=$(echo "$i" | sed -e 's/section=//')
@@ -333,12 +333,12 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	    -e 's/^  \([A-Z][ ,0-9A-z_]*\)$/  <b>\1<\/b>/' \
 	    -e 's/^   \([A-Z][ ,0-9A-z_]*\)$/   <b>\1<\/b>/' \
    \
-	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
+	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_/]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
    \
 	    -e 's/\&/\&amp;/g' \
 	    -e 's/«/\&lt;/g' \
 	    -e 's/»/\&gt;/g' \
-	    -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9][A-z_]*\))\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
+	    -e "s#^\(\([0-9A-z_][-0-9A-z_/]*\) *(\([1-9][A-z_]*\))\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
 	    2>/dev/null
 	echo "</pre>"
     else
