@@ -2,7 +2,7 @@
 # Man-cgi : a Common Gateway Interface which converts the output of
 #           the "man" command to HTML
 #
-VERSION="1.15"
+VERSION="7.0"
 #
 # Author  : Panagiotis J. Christias <christia@theseas.ntua.gr>
 #
@@ -22,6 +22,7 @@ VERSION="1.15"
 #               http://www.ntua.gr/images/pages.gif
 #
 # History :
+#   7.0     Handle multicharacter sections (e.g. intro(9lua)).
 #   1.15    Multiple blank lines are supressed.
 #   1.14    Man-cgi now recognizes cross-references that
 #           contain periods (e.g. foo.foo(3)).
@@ -32,7 +33,7 @@ VERSION="1.15"
 #   1.11    Fixed problem with hyphenated cross-references.
 #   1.10 and earlier, no history at that time...
 #
-# Last update: Fri May 5 1995
+# Last update: Sat Apr 15 2017
 #
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
@@ -330,12 +331,12 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	    -e 's/^  \([A-Z][ ,0-9A-z_]*\)$/  <b>\1<\/b>/' \
 	    -e 's/^   \([A-Z][ ,0-9A-z_]*\)$/   <b>\1<\/b>/' \
    \
-	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9]\)[A-z]*)\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
+	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
    \
 	    -e 's/\&/\&amp;/g' \
 	    -e 's/«/\&lt;/g' \
 	    -e 's/»/\&gt;/g' \
-	    -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9]\)[A-z_]*)\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
+	    -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9][A-z_]*\))\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
 	    2>/dev/null
 	echo "</pre>"
     else
@@ -403,8 +404,9 @@ cat <<END
   <tr><td>Section:&nbsp;</td><td><select name="section">
 END
 for i in ANY:ANY \
-    1:1 2:2 3:3 3f:3f 4:4 5:5 6:6 7:7 8:8 9:9 l:l n:n \
+    1:1 2:2 3:3 3f:3f 3lua:3lua 4:4 5:5 6:6 7:7 8:8 9:9 9lua:9lua l:l n:n \
     X:X11R7 \
+    X11R6:X11R6 \
     games:games \
     local:local \
     perl:perl \
