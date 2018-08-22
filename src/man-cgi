@@ -94,17 +94,17 @@ then
     IFS="${OIFS}"
 fi
 
-COMMAND=${1}
-SECTION=${2:-ANY}
-COLL=${3:-DEFAULT}
+COMMAND="${1##*/}"
+SECTION="${2:-ANY}"
+COLL="${3:-DEFAULT}"
 ARCH=DEFAULT
 
 set -- $COMMAND
-COMMAND=$1
+COMMAND="$1"
 set -- $SECTION
-SECTION=$1
+SECTION="$1"
 set -- $COLL
-COLL=$1
+COLL="$1"
 
 echo "Content-Type: text/html; charset=$CHARSET"
 if [ -n "$LASTMOD" ]
@@ -457,7 +457,7 @@ for i in ANY:ANY \
 do
     OIFS="$IFS"
     IFS=":$IFS"
-    eval set -- $i
+    set -- $i
     IFS="$OIFS"
     case "$1" in
     "$SECTION")
