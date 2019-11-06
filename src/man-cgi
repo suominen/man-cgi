@@ -86,11 +86,18 @@ EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
 
 ### END OF CONFIGURATION SECTION ###############################################
 
-if [ $# -lt 1 ]
+if [ $# -lt 2 ]
 then
+    QS="$(
+	echo "${1:-${QUERY_STRING:-}}" \
+	| sed \
+	    -e 's/%20/+/g' \
+	    -e 's/%2B/+/g' \
+	    -e 's/%2b/+/g'
+    )"
     OIFS="$IFS"
     IFS="${OIFS}+"
-    set -- ${QUERY_STRING}
+    set -- ${QS}
     IFS="${OIFS}"
 fi
 
