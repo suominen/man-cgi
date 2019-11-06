@@ -323,7 +323,17 @@ then
     cat <<END
 <title>$COMMAND${SECTION:+"($SECTION)"} - ${CNAME:-"$OSNAME"} Manual Pages</title>
 <link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
+END
+    if [ ${notfound:-0} -eq 0 ]
+    then
+	if [ "$MANPARAM" = "" ]
+	then
+	    cat <<END
 <link rel="canonical" href="$(canonical_url)">
+END
+	fi
+    fi
+    cat <<END
 </head>
 <body>
 END
