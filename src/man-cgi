@@ -179,6 +179,7 @@ esac
 case "$PATH_INFO" in
 /apropos)
     MANPARAM="-k"
+    echo 'X-Robots-Tag: noindex'
     ;;
 esac
 
