@@ -126,6 +126,8 @@ canonical_url()
     esac
 
     case "$coll" in
+    "")
+	;;
     DEFAULT)
 	coll=""
 	;;
