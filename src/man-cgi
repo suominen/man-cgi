@@ -418,10 +418,31 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	    ;;
 	esac
 	cat <<END
-<p>The manual page was not found.
-<a href="$SCRIPT_NAME/apropos?$COMMAND$SECTION$ARCH$COLL">Try
-apropos</a> or select a different architecture.</p>
+<table class="outer"><tr><td>
+<p>The manual page was not found. Try searching instead:</p>
+  <table>
+  <tr><td>Bing:&nbsp;</td><td><a
+    href="https://bing.com/search?q=site%3A$SERVER_NAME+$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+  <tr><td>DuckDuckGo:&nbsp;</td><td><a
+    href="https://duckduckgo.com/?q=site%3A$SERVER_NAME+$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+  <tr><td>Google:&nbsp;</td><td><a
+    href="https://google.com/search?q=site%3A$SERVER_NAME+$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+  <tr><td>Yahoo:&nbsp;</td><td><a
+    href="https://search.yahoo.com/search?p=site%3A$SERVER_NAME+$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+  </table>
+</td></tr></table>
 END
+# <a href="$SCRIPT_NAME/apropos?$COMMAND$SECTION$ARCH$COLL">Try
+# apropos</a> or select a different architecture.</p>
+# END
     fi
 else
     cat <<END
