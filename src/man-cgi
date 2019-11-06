@@ -189,25 +189,6 @@ then
     echo "Cache-Control: public, max-age=$EXPSECS"
 fi
 
-# End of headers
-cat <<END
-
-<!DOCTYPE HTML>
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=$CHARSET">
-<style type="text/css">
-<!--
-table { padding: 0; }
-table.outer { width: 500px; }
-th, td { border: 0; padding: 0; }
-.intro th, .intro td { padding-left: 10px; }
-b.section { font-size: 150%; }
-.small { font-size: 80%; }
--->
-</style>
-END
-
 case "$SECTION" in
 .*)
     ARCH=$(echo $SECTION | sed -e 's/^\.//')
@@ -271,6 +252,34 @@ then
 	notfound=$?
 	;;
     esac
+
+    if [ ${notfound:-0} -ne 0 ]
+    then
+	echo 'Status: 404 Not Found'
+    fi
+fi
+
+# End of headers
+cat <<END
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=$CHARSET">
+<style type="text/css">
+<!--
+table { padding: 0; }
+table.outer { width: 500px; }
+th, td { border: 0; padding: 0; }
+.intro th, .intro td { padding-left: 10px; }
+b.section { font-size: 150%; }
+.small { font-size: 80%; }
+-->
+</style>
+END
+
+if [ "$COMMAND" != "" ]
+then
     cat <<END
 <title>$COMMAND${SECTION:+"($SECTION)"} - ${CNAME:-"$OSNAME"} Manual Pages</title>
 <link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
@@ -282,7 +291,12 @@ END
 	echo "<pre>"
 	case "$SECTION" in
 	"")
-	    man -C "$MANROOT/man.conf" $MANPARAM -- "$COMMAND" 2>/dev/null
+	    if [ "$MANPARAM" = "" ]
+	    then
+		man -C "$MANROOT/man.conf" -- "$COMMAND" 2>/dev/null
+	    else
+		man -C "$MANROOT/man.conf" $MANPARAM -- "$COMMAND" 2>&1
+	    fi
 	    ;;
 	*)
 	    man -C "$MANROOT/man.conf" -- "$SECTION" "$COMMAND" 2>/dev/null
