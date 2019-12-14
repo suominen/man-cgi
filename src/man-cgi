@@ -437,6 +437,10 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
     href="https://search.yahoo.com/search?p=site%3A$SERVER_NAME+$COMMAND"
     ><tt>site:$SERVER_NAME $COMMAND</tt></a>
   </td></tr>
+  <tr><td>Yandex:&nbsp;</td><td><a
+    href="https://yandex.com/search/?text=site%3A$SERVER_NAME+$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
   </table>
 </td></tr></table>
 END
