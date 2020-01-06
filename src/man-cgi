@@ -310,20 +310,19 @@ cat <<END
 <meta http-equiv="Content-Type" content="text/html; charset=$CHARSET">
 <style type="text/css">
 <!--
-body { background-color: #f0f0f0; color: #000000; }
+body { background-color: #f0f0f0; color: #000000; font-size: 12pt; margin: 2em; }
 a:link { color: #0000f0; }
 a:visited { color: #6000c0; }
 @media screen and (prefers-color-scheme: dark) {
-    body { background-color: #303030; color: #c0c0c0; }
+    body { background-color: #000000; color: #c0c0c0; }
     a:link { color: #90c0f0; }
     a:visited { color: #c060c0; }
 }
 table { padding: 0; }
-table.outer { width: 500px; }
 th, td { border: 0; padding: 0; }
-.intro th, .intro td { padding-left: 10px; }
-b.section { font-size: 150%; }
-.small { font-size: 80%; }
+.intro th, .intro td { padding-left: 1em; }
+b.section { font-size: 14pt; }
+.small { font-size: 10pt; }
 -->
 </style>
 END
@@ -389,7 +388,7 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	    -e 's/>/»/g' \
    \
 	    -e '/^[A-Z]/s/.//g' \
-	    -e 's/^[A-Z][-+() ,A-Z_]*$/<b class="section">&<\/b>/' \
+	    -e 's/^[A-Z][-+() ,A-Z_\/]*$/<br \/><b class="section">&<\/b><br \/>/' \
    \
 	    -e 's/_\(.\)/<i>\1<\/i>/g' \
 	    -e 's/.\(.\)/<b>\1<\/b>/g' \
@@ -466,10 +465,10 @@ else
 <link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
 </head>
 <body>
-<table class="outer"><tr><td>
 <h1><img alt="" src=$PAGES> ${CNAME:-"$OSNAME"} Manual Pages</h1>
-<b>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</b>
-<hr>
+<p><b>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</b></p>
+<hr />
+<table class="outer"><tr><td>
 <p>Here are the intro pages of each possible section:</p>
 <table class="intro">
 <tr>
@@ -540,8 +539,8 @@ and you'll get your man page (hopefully).</p>
 END
 fi
 cat <<END
+<hr />
 <table class="outer"><tr><td>
-<hr>
 <p>You can also request any man page by name and (optionally) by section:</p>
 <form method=post action="$SCRIPT_NAME/man">
   <table>
@@ -615,9 +614,9 @@ cat <<END
   </table>
   <p>Use the DEFAULT collection to view manual pages
   for third-party software.</p>
-  <hr>
 </form>
 </td></tr></table>
+<hr />
 <address class="small">
 &copy;1994 Man-cgi 1.15, Panagiotis Christias<br>
 &copy;1996-$CYEAR Modified for <a href="https://www.netbsd.org/">NetBSD</a>
