@@ -310,11 +310,13 @@ cat <<END
 <meta http-equiv="Content-Type" content="text/html; charset=$CHARSET">
 <style type="text/css">
 <!--
-body { background-color: white; color: black; }
+body { background-color: #f0f0f0; color: #000000; }
+a:link { color: #0000f0; }
+a:visited { color: #6000c0; }
 @media screen and (prefers-color-scheme: dark) {
-    body { background-color: #303030; color: white; }
-    a:link { color: #809fff; }
-    a:visited { color: #c09fff; }
+    body { background-color: #303030; color: #c0c0c0; }
+    a:link { color: #90c0f0; }
+    a:visited { color: #c060c0; }
 }
 table { padding: 0; }
 table.outer { width: 500px; }
