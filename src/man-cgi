@@ -206,8 +206,9 @@ POST)
 
     ME="$(canonical_url)"
 
+    echo 'Status: 303 See Other'
     echo "Location: $ME"
-    echo ""
+    echo
     echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
 
     exit 0
