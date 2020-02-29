@@ -73,11 +73,6 @@ then
     LASTMOD=$(date -u -r "$st_mtime" '+%a, %d %b %Y %H:%M:%S GMT')
 fi
 
-# Expires date is 16 days in the future
-EXPSECS=1382400
-EXPDATE=$(($(date '+%s') + $EXPSECS))
-EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
-
 ### END OF CONFIGURATION SECTION ###############################################
 
 canonical_url()
@@ -222,13 +217,6 @@ case "$PATH_INFO" in
     ;;
 esac
 
-# Cache a lot
-if [ "$COMMAND" != "" ]
-then
-    echo "Expires: $EXPIRES"
-    echo "Cache-Control: public, max-age=$EXPSECS"
-fi
-
 case "$SECTION" in
 .*)
     ARCH=$(echo $SECTION | sed -e 's/^\.//')
@@ -277,6 +265,9 @@ case "$ARCH" in
     ;;
 esac
 
+# 1 hour
+EXPSECS=3600
+
 if [ "$COMMAND" != "" ]
 then
     case "$SECTION" in
@@ -296,8 +287,27 @@ then
     if [ ${notfound:-0} -ne 0 ]
     then
 	echo 'Status: 404 Not Found'
+	# 10 minutes
+	EXPSECS=600
+    else
+	case "${COLL}" in
+	*current*)
+	    # 8 hours
+	    EXPSECS=28800
+	    ;;
+	*)
+	    # 16 days
+	    EXPSECS=1382400
+	    ;;
+	esac
     fi
 fi
+
+EXPDATE=$(($(date '+%s') + $EXPSECS))
+EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
+
+echo "Expires: $EXPIRES"
+echo "Cache-Control: public, max-age=$EXPSECS"
 
 # End of headers
 cat <<END
