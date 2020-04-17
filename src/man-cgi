@@ -344,8 +344,8 @@ END
 if [ "$COMMAND" != "" ]
 then
     cat <<END
-<title>$COMMAND${SECTION:+"($SECTION)"} - ${CNAME:-"$OSNAME"} Manual Pages</title>
-<link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
+<title>$COMMAND${SECTION:+($SECTION)} - ${CNAME:-$OSNAME} Manual Pages</title>
+<link rel="shortcut icon" href="/${CNAME:-$OSNAME}.ico" type="image/x-icon">
 END
     if [ ${notfound:-0} -eq 0 ]
     then
@@ -475,12 +475,12 @@ END
     fi
 else
     cat <<END
-<title>${CNAME:-"$OSNAME"} Manual Pages</title>
-<link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
+<title>${CNAME:-$OSNAME} Manual Pages</title>
+<link rel="shortcut icon" href="/${CNAME:-$OSNAME}.ico" type="image/x-icon">
 </head>
 <body>
-<h1><img alt="" src=$PAGES> ${CNAME:-"$OSNAME"} Manual Pages</h1>
-<p><b>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</b></p>
+<h1><img alt="" src=$PAGES> ${CNAME:-$OSNAME} Manual Pages</h1>
+<p><b>${CNAME:-$OSNAME} ${CREL:-$OSREL} (${MACHINE:-$OSARCH})</b></p>
 <hr />
 <table class="outer"><tr><td>
 <p>Here are the intro pages of each possible section:</p>
