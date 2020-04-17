@@ -66,12 +66,7 @@ DOT=/common/images/man-dot.gif
 PAGES=/common/images/pages.gif
 
 # Last modified is NetBSD-current build retrieval date
-BUILDFILE="$MANROOT/NetBSD-current/build"
-if [ -f "$BUILDFILE" ]
-then
-    eval $(stat -s "$BUILDFILE")
-    LASTMOD=$(date -u -r "$st_mtime" '+%a, %d %b %Y %H:%M:%S GMT')
-fi
+LASTMODFILE="$MANROOT/NetBSD-current/build"
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -168,10 +163,6 @@ set -- $COLL
 COLL="$1"
 
 echo "Content-Type: text/html; charset=$CHARSET"
-if [ -n "$LASTMOD" ]
-then
-    echo "Last-Modified: $LASTMOD"
-fi
 
 case "$REQUEST_METHOD" in
 POST)
@@ -274,12 +265,18 @@ then
     "")
 	if [ "$MANPARAM" = "" ]
 	then
-	    man -C "$MANROOT/man.conf" -w -- "$COMMAND" >/dev/null 2>&1
+	    LASTMODFILE=$(
+		man -C "$MANROOT/man.conf" -w -- "$COMMAND" 2>/dev/null \
+		| sed -e 1q
+	    )
 	    notfound=$?
 	fi
 	;;
     *)
-	man -C "$MANROOT/man.conf" -w -- "$SECTION" "$COMMAND" >/dev/null 2>&1
+	LASTMODFILE=$(
+	    man -C "$MANROOT/man.conf" -w -- "$SECTION" "$COMMAND" 2>/dev/null \
+	    | sed -e 1q
+	)
 	notfound=$?
 	;;
     esac
@@ -300,6 +297,16 @@ then
 	    EXPSECS=1382400
 	    ;;
 	esac
+    fi
+fi
+
+if [ -f "$LASTMODFILE" ]
+then
+    eval $(stat -s "$LASTMODFILE")
+    LASTMOD=$(date -u -r "$st_mtime" '+%a, %d %b %Y %H:%M:%S GMT')
+    if [ -n "$LASTMOD" ]
+    then
+	echo "Last-Modified: $LASTMOD"
     fi
 fi
 
