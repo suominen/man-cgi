@@ -266,16 +266,14 @@ then
 	if [ "$MANPARAM" = "" ]
 	then
 	    LASTMODFILE=$(
-		man -C "$MANROOT/man.conf" -w -- "$COMMAND" 2>/dev/null \
-		| sed -e 1q
+		man -C "$MANROOT/man.conf" -w -- "$COMMAND" 2>/dev/null
 	    )
 	    notfound=$?
 	fi
 	;;
     *)
 	LASTMODFILE=$(
-	    man -C "$MANROOT/man.conf" -w -- "$SECTION" "$COMMAND" 2>/dev/null \
-	    | sed -e 1q
+	    man -C "$MANROOT/man.conf" -w -- "$SECTION" "$COMMAND" 2>/dev/null
 	)
 	notfound=$?
 	;;
@@ -299,6 +297,8 @@ then
 	esac
     fi
 fi
+
+LASTMODFILE="$(echo "$LASTMODFILE" | sed -e 1q)"
 
 if [ -f "$LASTMODFILE" ]
 then
