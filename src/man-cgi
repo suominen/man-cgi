@@ -329,20 +329,22 @@ body { background-color: #ffffff; color: #000000; font-size: 12pt; margin: 2em; 
 @media screen {
     body { background-color: #f0f0f0; }
 }
-a:link { color: #0000f0; }
+a:link, b.section a:visited { color: #0000f0; }
 a:visited { color: #6000c0; }
 @media screen and (prefers-color-scheme: dark) {
     body { background-color: #000000; color: #c0c0c0; }
-    a:link { color: #90c0f0; }
+    a:link, b.section a:visited { color: #90c0f0; }
     a:visited { color: #c060c0; }
 }
 table { padding: 0; }
 th, td { border: 0; padding: 0; }
 .intro th, .intro td { padding-left: 1em; }
 b.section { font-size: 14pt; }
+b.section a { text-decoration: none; }
 .small { font-size: 10pt; }
 @media print {
     div.queryform { display: none; }
+    a:link, a:visited, b.section a:visited { color: #000000; }
 }
 -->
 </style>
