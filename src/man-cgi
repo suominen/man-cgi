@@ -229,6 +229,33 @@ case "$COLL" in
     ;;
 *)
     COLL=$(echo "$COLL" | tr -c -d '[-.A-Za-z0-9]')
+    if [ ! -d "${MANROOT}/${COLL}" ]
+    then
+	case "${COLL}" in
+	*-[1-9].*|*-[1-9][0-9].*)
+	    MINOR="$((${COLL##*.} + 0))"
+	    case "${MINOR}" in
+	    0)
+		;;
+	    *)
+		NCOLL="${COLL%.*}.$((${MINOR} - 1))-STABLE"
+		if [ -d "${MANROOT}/${NCOLL}" ]
+		then
+		    COLL="${NCOLL}"
+		    ME="$(canonical_url)"
+
+		    echo 'Status: 303 See Other'
+		    echo "Location: $ME"
+		    echo
+		    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+
+		    exit 0
+		fi
+		;;
+	    esac
+	    ;;
+	esac
+    fi
     export MANPATH
     MANPATH="${MANROOT}/${COLL}"
     export GROFF_TMAC_PATH
