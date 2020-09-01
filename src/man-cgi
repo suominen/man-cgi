@@ -74,63 +74,78 @@ canonical_url()
 {
     local arch coll port section
 
-    case "${SERVER_PORT:-443}" in
-    443) port=;;
-    *)  port=":${SERVER_PORT}";;
-    esac
-
-    case "$ARCH" in
-    .*)
-	arch="$(echo "$ARCH" | sed -e 's/^\.//')"
+    case "${REQUEST_SCHEME:-http}" in
+    https)
+	case "${SERVER_PORT:-443}" in
+	443)	port=;;
+	*)	port=":${SERVER_PORT}";;
+	esac
 	;;
     *)
-	arch="$ARCH"
-	;;
-    esac
-
-    case "$SECTION.$arch" in
-    ANY.DEFAULT)
-	section=""
-	;;
-    *.DEFAULT|*.)
-	section="+${SECTION}"
-	;;
-    ANY.*)
-	section="+.${arch}"
-	;;
-    *)
-	section="+${SECTION}.${arch}"
-	;;
-    esac
-
-    case "$COLL" in
-    +*)
-	coll="$(echo "$COLL" | sed -e 's/^\+//')"
-	;;
-    *)
-	coll="$COLL"
-	;;
-    esac
-
-    case "$coll" in
-    "")
-	;;
-    DEFAULT)
-	coll=""
-	;;
-    *)
-	case "$section" in
-	"")
-	    coll="++${coll}"
-	    ;;
-	*)
-	    coll="+${coll}"
-	    ;;
+	case "${SERVER_PORT:-80}" in
+	80)	port=;;
+	*)	port=":${SERVER_PORT}";;
 	esac
 	;;
     esac
 
-    echo "${REQUEST_SCHEME-:http}://${SERVER_NAME}${port}${SCRIPT_NAME}?${COMMAND}${section}${coll}"
+    case "${COLL}" in
+    DEFAULT|"${DEFAULT_COLLECTION}"|"")
+	coll=
+	;;
+    *)
+	coll="${COLL}"
+	;;
+    esac
+
+    case "${ARCH}" in
+    DEFAULT|"${DEFAULT_ARCH}"|"")
+	arch=
+	;;
+    *)
+	arch="${ARCH}"
+	;;
+    esac
+
+    case "$SECTION" in
+    ANY|"")
+	section=
+	;;
+    *)
+	section="${SECTION}"
+	;;
+    esac
+
+    case "${COMMAND}" in
+    "")
+	echo "${REQUEST_SCHEME-:http}://${SERVER_NAME}${port}${SCRIPT_NAME}?+${section}${arch:+.$arch}+${coll}"
+	;;
+    *)
+	# XXX: We should probably have some configurable prefix, too.
+	echo "${REQUEST_SCHEME-:http}://${SERVER_NAME}${port}${coll:+/$coll}${arch:+/$arch}/${COMMAND}${section:+.$section}"
+	;;
+    esac
+}
+
+list_archs()
+{
+    case "${DEFAULT_ARCH}" in
+    "")
+	echo DEFAULT
+	;;
+    esac
+    echo NONE
+    cat "${MANROOT}/archlist"
+}
+
+list_collections()
+{
+    case "${DEFAULT_COLLECTION}" in
+    "")
+	echo DEFAULT
+	;;
+    esac
+    cat "${MANROOT}/colllist"
 }
 
 case "$PATH_INFO" in
@@ -156,6 +171,14 @@ case "$PATH_INFO" in
     SECTION="${2:-ANY}"
     COLL="${3:-DEFAULT}"
     ARCH=DEFAULT
+
+    case "${COMMAND}" in
+    "")
+	;;
+    *)
+	need_redirect=true
+	;;
+    esac
     ;;
 *)
     OIFS="$IFS"
@@ -184,9 +207,14 @@ case "$PATH_INFO" in
 	esac
 	;;
     *)
-	COMMAND="${3}"
-	ARCH="${2}"
 	COLL="${1}"
+	while [ ${#} -gt 3 ]
+	do
+	    need_redirect=true
+	    shift
+	done
+	ARCH="${2}"
+	COMMAND="${3}"
 	;;
     esac
     ;;
@@ -220,16 +248,16 @@ POST)
     do
 	case "$i" in
 	arch=*)
-	    ARCH=$(echo "$i" | sed -e 's/arch=//')
+	    ARCH="${i#arch=}"
 	    ;;
 	coll=*)
-	    COLL=$(echo "$i" | sed -e 's/coll=//')
+	    COLL="${i#coll=}"
 	    ;;
 	command=*)
-	    COMMAND=$(echo "$i" | sed -e 's/command=//' -e 's,%2F,/,gi')
+	    COMMAND="$(echo "$i" | sed -e 's/command=//' -e 's,%2F,/,gi')"
 	    ;;
 	section=*)
-	    SECTION=$(echo "$i" | sed -e 's/section=//')
+	    SECTION="${i#section=}"
 	    ;;
 	esac
     done
@@ -247,34 +275,50 @@ esac
 
 case "$SECTION" in
 .*)
-    ARCH=$(echo $SECTION | sed -e 's/^\.//')
-    SECTION=""
+    ARCH="${SECTION#.}"
+    SECTION=
     ;;
 *.*)
-    ARCH=$(echo $SECTION | awk -F. '{print $2}')
-    SECTION=$(echo $SECTION | awk -F. '{print $1}')
+    ARCH="${SECTION##*.}"
+    SECTION="${SECTION%%.*}"
     ;;
 esac
+
 case "$SECTION" in
 ANY)
-    SECTION=""
+    SECTION=
     ;;
 esac
+
 case "$COMMAND" in
 *.[1-9]|*.3f|*.[39]lua)
     SECTION="${COMMAND##*.}"
     COMMAND="${COMMAND%.*}"
     ;;
 esac
+
 case "$COMMAND" in
 */*)
     ARCH="${COMMAND%/*}"
     COMMAND="${COMMAND##*/}"
     ;;
 esac
-case "$COLL" in
-""|DEFAULT)
-    COLL=""
+
+case "${DEFAULT_COLLECTION}" in
+"")
+    ;;
+*)
+    case "${COLL}" in
+    DEFAULT|"")
+	COLL="${DEFAULT_COLLECTION}"
+	;;
+    esac
+    ;;
+esac
+
+case "${COLL}" in
+DEFAULT|"")
+    COLL=
     ;;
 *)
     COLL=$(echo "$COLL" | tr -c -d '[-.A-Za-z0-9]')
@@ -324,26 +368,48 @@ case "$COLL" in
     MANPATH="${MANROOT}/${COLL}"
     export GROFF_TMAC_PATH
     GROFF_TMAC_PATH="${MANPATH}/tmac"
-    CNAME=$(echo $COLL | awk -F- '{print $1}')
-    CREL=$(echo $COLL | sed -e 's/^[^-]*-//')
-    COLL="+$COLL"
+    CNAME="${COLL%%-*}"
+    CREL="${COLL#*-}"
     ;;
 esac
+
+if ${need_redirect:-false}
+then
+    ME="$(canonical_url)"
+
+    echo 'Status: 303 See Other'
+    echo "Location: $ME"
+    echo
+    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+
+    exit 0
+fi
+
+case "${DEFAULT_ARCH}" in
+"")
+    ;;
+*)
+    case "${ARCH}" in
+    DEFAULT|"")
+	ARCH="${DEFAULT_ARCH}"
+	;;
+    esac
+    ;;
+esac
+
 case "$ARCH" in
-""|DEFAULT)
-    ARCH=""
+DEFAULT|"")
+    ARCH=
     ;;
 *)
     export MACHINE
-    case "$ARCH" in
-    NONE)
-	MACHINE=.
-	;;
-    *)
-	MACHINE="$ARCH"
-	;;
-    esac
-    ARCH=".$ARCH"
+    MACHINE="$ARCH"
+    ;;
+esac
+
+case "${ARCH}" in
+"${DEFAULT_ARCH}")
+    ARCH=
     ;;
 esac
 
@@ -377,7 +443,7 @@ then
 	EXPSECS=600
     else
 	case "${COLL}" in
-	*current*)
+	*-current|*-STABLE)
 	    # 8 hours
 	    EXPSECS=28800
 	    ;;
@@ -447,6 +513,7 @@ then
 <title>$COMMAND${SECTION:+($SECTION)} - ${CNAME:-$OSNAME} Manual Pages</title>
 <link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
 END
+
     if [ ${notfound:-0} -eq 0 ]
     then
 	if [ "$MANPARAM" = "" ]
@@ -456,10 +523,12 @@ END
 END
 	fi
     fi
+
     cat <<END
 </head>
 <body>
 END
+
     if [ ${notfound:-0} -eq 0 ]
     then
 	echo "<pre>"
@@ -521,23 +590,15 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	    -e 's/^  \([A-Z][ ,0-9A-z_]*\)$/  <b>\1<\/b>/' \
 	    -e 's/^   \([A-Z][ ,0-9A-z_]*\)$/   <b>\1<\/b>/' \
    \
-	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_/]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"$SCRIPT_NAME\?\3+\5$ARCH$COLL\">\1</a>#g" \
+	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_/]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"/${COLL:+$COLL/}${ARCH:+$ARCH/}\3.\5\">\1</a>#g" \
    \
 	    -e 's/\&/\&amp;/g' \
 	    -e 's/«/\&lt;/g' \
 	    -e 's/»/\&gt;/g' \
-	    -e "s#^\(\([0-9A-z_][-0-9A-z_/]*\) *(\([1-9][A-z_]*\))\)#<a href=\"$SCRIPT_NAME\?\2+\3$ARCH$COLL\">\1</a>#" \
+	    -e "s#^\(\([0-9A-z_][-0-9A-z_/]*\) *(\([1-9][A-z_]*\))\)#<a href=\"/${COLL:+$COLL/}${ARCH:+$ARCH/}\2.\3\">\1</a>#" \
 	    2>/dev/null
 	echo "</pre>"
     else
-	case "$ARCH$COLL" in
-	"")
-	    SECTION=""
-	    ;;
-	*)
-	    SECTION="+"
-	    ;;
-	esac
 	cat <<END
 <table class="outer"><tr><td>
 <p>The manual page was not found. Try searching instead:</p>
@@ -569,9 +630,11 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
   </table>
 </td></tr></table>
 END
+
 # <a href="$SCRIPT_NAME/apropos?$COMMAND$SECTION$ARCH$COLL">Try
 # apropos</a> or select a different architecture.</p>
 # END
+
     fi
 else
     cat <<END
@@ -633,18 +696,10 @@ else
 <td class="section">9lua</td>
 <td><a href="$SCRIPT_NAME?intro+9lua$ARCH$COLL">LUA KERNEL BINDINGS</a></td>
 </tr>
-END
-    case "$ARCH$COLL" in
-    "")
-	cat <<END
 <tr>
 <td class="section">X</td>
-<td><a href="$SCRIPT_NAME?X">X WINDOW SYSTEM</a></td>
+<td><a href="$SCRIPT_NAME?X+7$ARCH$COLL">X WINDOW SYSTEM</a></td>
 </tr>
-END
-	;;
-    esac
-    cat <<END
 </table>
 <p class="small">Sometimes man pages are not stored in the right section
 and you may get an empty page. Follow the link at the top of the empty page
@@ -652,6 +707,7 @@ and you'll get your man page (hopefully).</p>
 </td></tr></table>
 END
 fi
+
 cat <<END
 <div class="queryform">
 <hr />
@@ -663,40 +719,12 @@ cat <<END
   value="$COMMAND"></td></tr>
   <tr><td>Section:&nbsp;</td><td><select name="section">
 END
-for i in ANY:ANY \
-    1:1 2:2 3:3 3f:3f 3lua:3lua 4:4 5:5 6:6 7:7 8:8 9:9 9lua:9lua l:l n:n \
-    X:X11R7 \
-    X11R6:X11R6 \
-    games:games \
-    local:local \
-    perl:perl \
-    pkg:packages \
-    std:system
+
+# XXX: Create a seclist and use that?
+for i in ANY 1 2 3 3f 3lua 4 5 6 7 8 9 9lua
 do
-    OIFS="$IFS"
-    IFS=":$IFS"
-    set -- $i
-    IFS="$OIFS"
-    case "$1" in
+    case "$i" in
     "$SECTION")
-	echo "  <option value=\"$1\" selected>$2</option>"
-	;;
-    *)
-	echo "  <option value=\"$1\">$2</option>"
-	;;
-    esac
-done
-cat <<END
-  </select></td></tr>
-  <tr><td>Architecture:&nbsp;</td><td><select name="arch">
-END
-for i in DEFAULT NONE $(cat $MANROOT/archlist)
-do
-    case ".$i" in
-    .DEFAULT)
-	echo "  <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
-	;;
-    "$ARCH")
 	echo "  <option value=\"$i\" selected>$i</option>"
 	;;
     *)
@@ -704,14 +732,36 @@ do
 	;;
     esac
 done
+
+cat <<END
+  </select></td></tr>
+  <tr><td>Architecture:&nbsp;</td><td><select name="arch">
+END
+
+for i in $(list_archs)
+do
+    case "$i" in
+    DEFAULT)
+	echo "  <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+	;;
+    "${ARCH}")
+	echo "  <option value=\"$i\" selected>$i</option>"
+	;;
+    *)
+	echo "  <option value=\"$i\">$i</option>"
+	;;
+    esac
+done
+
 cat <<END
   </select></td></tr>
   <tr><td>Collection:&nbsp;</td><td><select name="coll">
 END
-for i in DEFAULT $(cat $MANROOT/colllist)
+
+for i in $(list_collections)
 do
-    case "+$i" in
-    +DEFAULT)
+    case "$i" in
+    DEFAULT)
 	echo "  <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
 	;;
     "$COLL")
@@ -722,13 +772,24 @@ do
 	;;
     esac
 done
+
 cat <<END
   </select></td></tr>
   <tr><td>&nbsp;</td>
   <td><input type="submit" value="Show manual page"></td></tr>
   </table>
+END
+
+case "${DEFAULT_COLLECTION}" in
+"")
+    cat <<END
   <p>Use the DEFAULT collection to view manual pages
   for third-party software.</p>
+END
+    ;;
+esac
+
+cat <<END
 </form>
 </td></tr></table>
 <hr />
