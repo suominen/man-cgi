@@ -413,6 +413,12 @@ case "${ARCH}" in
     ;;
 esac
 
+case "${COLL}" in
+"${DEFAULT_COLLECTION}")
+    COLL=
+    ;;
+esac
+
 # 1 hour
 EXPSECS=3600
 
