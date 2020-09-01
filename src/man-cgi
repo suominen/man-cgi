@@ -62,8 +62,8 @@ OSREL=$(uname -r)
 MANROOT=/p/netbsd/www/man
 
 # The URL of the two images :
-DOT=/common/images/man-dot.gif
-PAGES=/common/images/pages.gif
+DOT=/s/man-dot.gif
+PAGES=/s/pages.gif
 
 # Last modified is NetBSD-current build retrieval date
 LASTMODFILE="$MANROOT/NetBSD-current/build"
@@ -130,30 +130,74 @@ canonical_url()
 	;;
     esac
 
-    echo "https://${SERVER_NAME}${port}${SCRIPT_NAME}?${COMMAND}${section}${coll}"
+    echo "${REQUEST_SCHEME-:http}://${SERVER_NAME}${port}${SCRIPT_NAME}?${COMMAND}${section}${coll}"
 }
 
-if [ $# -lt 2 ]
-then
-    QS="$(
-	echo "${1:-${QUERY_STRING:-}}" \
-	| sed \
-	    -e 's/%20/+/g' \
-	    -e 's/%2B/+/g' \
-	    -e 's/%2b/+/g' \
-	    -e 's/=$//' \
-	    ;
-    )"
-    OIFS="$IFS"
-    IFS="${OIFS}+"
-    set -- ${QS}
-    IFS="${OIFS}"
-fi
+case "$PATH_INFO" in
+''|/)
+    if [ $# -lt 2 ]
+    then
+	QS="$(
+	    echo "${1:-${QUERY_STRING:-}}" \
+	    | sed \
+		-e 's/%20/+/g' \
+		-e 's/%2B/+/g' \
+		-e 's/%2b/+/g' \
+		-e 's/=$//' \
+		;
+	)"
+	OIFS="$IFS"
+	IFS="${OIFS}+"
+	set -- ${QS}
+	IFS="${OIFS}"
+    fi
 
-COMMAND="${1##*/}"
-SECTION="${2:-ANY}"
-COLL="${3:-DEFAULT}"
-ARCH=DEFAULT
+    COMMAND="${1##*/}"
+    SECTION="${2:-ANY}"
+    COLL="${3:-DEFAULT}"
+    ARCH=DEFAULT
+    ;;
+*)
+    OIFS="$IFS"
+    IFS="${OIFS}/"
+    set -- ${PATH_INFO}
+    IFS="${OIFS}"
+    shift
+
+    SECTION=ANY
+    COLL=DEFAULT
+    ARCH=DEFAULT
+
+    case ${#} in
+    1)
+	COMMAND="${1}"
+	;;
+    2)
+	COMMAND="${2}"
+	case "${1}" in
+	[A-Z]*)
+	    COLL="${1}"
+	    ;;
+	*)
+	    ARCH="${1}"
+	    ;;
+	esac
+	;;
+    *)
+	COMMAND="${3}"
+	ARCH="${2}"
+	COLL="${1}"
+	;;
+    esac
+    ;;
+esac
+
+#case "$PATH_INFO" in
+#/apropos)
+#    MANPARAM="-k"
+#    echo 'X-Robots-Tag: noindex'
+#    ;;
+#esac
 
 set -- $COMMAND
 COMMAND="$1"
@@ -201,10 +245,10 @@ POST)
     ;;
 esac
 
-case "$PATH_INFO" in
-/apropos)
-    MANPARAM="-k"
-    echo 'X-Robots-Tag: noindex'
+case "$COMMAND" in
+*.[1-9]|*.3f|*.[39]lua)
+    SECTION="${COMMAND##*.}"
+    COMMAND="${COMMAND%.*}"
     ;;
 esac
 
@@ -396,7 +440,7 @@ if [ "$COMMAND" != "" ]
 then
     cat <<END
 <title>$COMMAND${SECTION:+($SECTION)} - ${CNAME:-$OSNAME} Manual Pages</title>
-<link rel="shortcut icon" href="/${CNAME:-$OSNAME}.ico" type="image/x-icon">
+<link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
 END
     if [ ${notfound:-0} -eq 0 ]
     then
@@ -527,7 +571,7 @@ END
 else
     cat <<END
 <title>${CNAME:-$OSNAME} Manual Pages</title>
-<link rel="shortcut icon" href="/${CNAME:-$OSNAME}.ico" type="image/x-icon">
+<link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
 </head>
 <body>
 <h1><img alt="" src=$PAGES> ${CNAME:-$OSNAME} Manual Pages</h1>
@@ -608,7 +652,7 @@ cat <<END
 <hr />
 <table class="outer"><tr><td>
 <p>You can also request any man page by name and (optionally) by section:</p>
-<form method=post action="$SCRIPT_NAME/man">
+<form method=post action="$SCRIPT_NAME">
   <table>
   <tr><td>Command:&nbsp;</td><td><input name="command" size="24"
   value="$COMMAND"></td></tr>
@@ -686,7 +730,7 @@ cat <<END
 </div>
 <address class="small">
 Powered by man-cgi 1.15, Panagiotis Christias<br />
-Modified for <a href="https://www.netbsd.org/">NetBSD</a>
+Modified for <a href="${REQUEST_SCHEME-:http}://www.netbsd.org/">NetBSD</a>
     by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>
 </address>
 <script><!--
