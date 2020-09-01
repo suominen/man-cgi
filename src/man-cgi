@@ -152,7 +152,7 @@ case "$PATH_INFO" in
 	IFS="${OIFS}"
     fi
 
-    COMMAND="${1##*/}"
+    COMMAND="${1}"
     SECTION="${2:-ANY}"
     COLL="${3:-DEFAULT}"
     ARCH=DEFAULT
@@ -245,13 +245,6 @@ POST)
     ;;
 esac
 
-case "$COMMAND" in
-*.[1-9]|*.3f|*.[39]lua)
-    SECTION="${COMMAND##*.}"
-    COMMAND="${COMMAND%.*}"
-    ;;
-esac
-
 case "$SECTION" in
 .*)
     ARCH=$(echo $SECTION | sed -e 's/^\.//')
@@ -265,6 +258,18 @@ esac
 case "$SECTION" in
 ANY)
     SECTION=""
+    ;;
+esac
+case "$COMMAND" in
+*.[1-9]|*.3f|*.[39]lua)
+    SECTION="${COMMAND##*.}"
+    COMMAND="${COMMAND%.*}"
+    ;;
+esac
+case "$COMMAND" in
+*/*)
+    ARCH="${COMMAND%/*}"
+    COMMAND="${COMMAND##*/}"
     ;;
 esac
 case "$COLL" in
