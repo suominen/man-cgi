@@ -650,55 +650,55 @@ else
 <table class="intro">
 <tr>
 <td class="section">1</td>
-<td><a href="$SCRIPT_NAME?intro+1$ARCH$COLL">GENERAL COMMANDS</a></td>
+<td><a href="$SCRIPT_NAME?intro+1${ARCH:+.$ARCH}${COLL:++$COLL}">GENERAL COMMANDS</a></td>
 </tr>
 <tr>
 <td class="section">2</td>
-<td><a href="$SCRIPT_NAME?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</a></td>
+<td><a href="$SCRIPT_NAME?intro+2${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM CALLS AND ERROR NUMBERS</a></td>
 </tr>
 <tr>
 <td class="section">3</td>
-<td><a href="$SCRIPT_NAME?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</a></td>
+<td><a href="$SCRIPT_NAME?intro+3${ARCH:+.$ARCH}${COLL:++$COLL}">C LIBRARY FUNCTIONS</a></td>
 </tr>
 <tr>
 <td class="section">3f</td>
-<td><a href="$SCRIPT_NAME?intro+3f$ARCH$COLL">FORTRAN LIBRARY FUNCTIONS</a></td>
+<td><a href="$SCRIPT_NAME?intro+3f${ARCH:+.$ARCH}${COLL:++$COLL}">FORTRAN LIBRARY FUNCTIONS</a></td>
 </tr>
 <tr>
 <td class="section">3lua</td>
-<td><a href="$SCRIPT_NAME?intro+3lua$ARCH$COLL">LUA MODULES</a></td>
+<td><a href="$SCRIPT_NAME?intro+3lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA MODULES</a></td>
 </tr>
 <tr>
 <td class="section">4</td>
-<td><a href="$SCRIPT_NAME?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
+<td><a href="$SCRIPT_NAME?intro+4${ARCH:+.$ARCH}${COLL:++$COLL}">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
 </tr>
 <tr>
 <td class="section">5</td>
-<td><a href="$SCRIPT_NAME?intro+5$ARCH$COLL">FILE FORMATS</a></td>
+<td><a href="$SCRIPT_NAME?intro+5${ARCH:+.$ARCH}${COLL:++$COLL}">FILE FORMATS</a></td>
 </tr>
 <tr>
 <td class="section">6</td>
-<td><a href="$SCRIPT_NAME?intro+6$ARCH$COLL">GAMES AND DEMOS</a></td>
+<td><a href="$SCRIPT_NAME?intro+6${ARCH:+.$ARCH}${COLL:++$COLL}">GAMES AND DEMOS</a></td>
 </tr>
 <tr>
 <td class="section">7</td>
-<td><a href="$SCRIPT_NAME?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</a></td>
+<td><a href="$SCRIPT_NAME?intro+7${ARCH:+.$ARCH}${COLL:++$COLL}">MISCELLANEOUS INFORMATION PAGES</a></td>
 </tr>
 <tr>
 <td class="section">8</td>
-<td><a href="$SCRIPT_NAME?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</a></td>
+<td><a href="$SCRIPT_NAME?intro+8${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM MAINTENANCE COMMANDS</a></td>
 </tr>
 <tr>
 <td class="section">9</td>
-<td><a href="$SCRIPT_NAME?intro+9$ARCH$COLL">KERNEL INTERNALS</a></td>
+<td><a href="$SCRIPT_NAME?intro+9${ARCH:+.$ARCH}${COLL:++$COLL}">KERNEL INTERNALS</a></td>
 </tr>
 <tr>
 <td class="section">9lua</td>
-<td><a href="$SCRIPT_NAME?intro+9lua$ARCH$COLL">LUA KERNEL BINDINGS</a></td>
+<td><a href="$SCRIPT_NAME?intro+9lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA KERNEL BINDINGS</a></td>
 </tr>
 <tr>
 <td class="section">X</td>
-<td><a href="$SCRIPT_NAME?X+7$ARCH$COLL">X WINDOW SYSTEM</a></td>
+<td><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}">X WINDOW SYSTEM</a></td>
 </tr>
 </table>
 <p class="small">Sometimes man pages are not stored in the right section
