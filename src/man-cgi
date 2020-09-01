@@ -127,6 +127,11 @@ canonical_url()
     esac
 }
 
+rel_canonical_url()
+{
+    canonical_url | sed -e 's/^http:/https:/'
+}
+
 list_archs()
 {
     case "${DEFAULT_ARCH}" in
@@ -525,7 +530,7 @@ END
 	if [ "$MANPARAM" = "" ]
 	then
 	    cat <<END
-<link rel="canonical" href="$(canonical_url)">
+<link rel="canonical" href="$(rel_canonical_url)">
 END
 	fi
     fi
