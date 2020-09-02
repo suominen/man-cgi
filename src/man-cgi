@@ -504,6 +504,26 @@ case "${LASTMODFILE}" in
     ;;
 esac
 
+case "${SECTION}" in
+"")
+    SECTION="${LASTMODFILE##*.}"
+    case "${SECTION}" in
+    "")
+	;;
+    *)
+	ME="$(canonical_url)"
+
+	echo 'Status: 303 See Other'
+	echo "Location: $ME"
+	echo
+	echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+
+	exit 0
+	;;
+    esac
+    ;;
+esac
+
 if [ -f "$LASTMODFILE" ]
 then
     eval $(stat -s "$LASTMODFILE")
