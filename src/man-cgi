@@ -483,9 +483,17 @@ case "${LASTMODFILE}" in
 */build)
     ;;
 *)
-    CANONICAL_ARCH="${LASTMODFILE##${MANROOT}/${COLL}/}"
+    # XXX: This breaks when # DEFAULT_COLLECTION is not set
+    # and the DEFAULT collection is used for system pages.
+
+    CANONICAL_ARCH="${LASTMODFILE##${MANROOT}/}"
+    CANONICAL_ARCH="${CANONICAL_ARCH#*/}"
     CANONICAL_ARCH="${CANONICAL_ARCH#*/}"
     case "${CANONICAL_ARCH}" in
+    */*/*)
+	# Too many!
+	CANONICAL_ARCH=
+	;;
     */*)
 	CANONICAL_ARCH="${CANONICAL_ARCH%/*}"
 	;;
