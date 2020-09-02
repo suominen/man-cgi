@@ -320,6 +320,34 @@ case "$COMMAND" in
     ;;
 esac
 
+case "${DEFAULT_ARCH}" in
+"")
+    ;;
+*)
+    case "${ARCH}" in
+    DEFAULT|"")
+	ARCH="${DEFAULT_ARCH}"
+	;;
+    esac
+    ;;
+esac
+
+case "$ARCH" in
+DEFAULT|"")
+    ARCH=
+    ;;
+*)
+    export MACHINE
+    MACHINE="$ARCH"
+    ;;
+esac
+
+case "${ARCH}" in
+"${DEFAULT_ARCH}")
+    ARCH=
+    ;;
+esac
+
 case "${DEFAULT_COLLECTION}" in
 "")
     ;;
@@ -389,6 +417,12 @@ DEFAULT|"")
     ;;
 esac
 
+case "${COLL}" in
+"${DEFAULT_COLLECTION}")
+    COLL=
+    ;;
+esac
+
 if ${need_redirect:-false}
 then
     ME="$(canonical_url)"
@@ -400,40 +434,6 @@ then
 
     exit 0
 fi
-
-case "${DEFAULT_ARCH}" in
-"")
-    ;;
-*)
-    case "${ARCH}" in
-    DEFAULT|"")
-	ARCH="${DEFAULT_ARCH}"
-	;;
-    esac
-    ;;
-esac
-
-case "$ARCH" in
-DEFAULT|"")
-    ARCH=
-    ;;
-*)
-    export MACHINE
-    MACHINE="$ARCH"
-    ;;
-esac
-
-case "${ARCH}" in
-"${DEFAULT_ARCH}")
-    ARCH=
-    ;;
-esac
-
-case "${COLL}" in
-"${DEFAULT_COLLECTION}")
-    COLL=
-    ;;
-esac
 
 # 1 hour
 EXPSECS=3600
