@@ -501,24 +501,27 @@ case "${LASTMODFILE}" in
 	CANONICAL_ARCH=NONE
 	;;
     esac
-    ;;
-esac
 
-case "${SECTION}" in
-"")
-    SECTION="${LASTMODFILE##*.}"
     case "${SECTION}" in
     "")
-	;;
-    *)
-	ME="$(canonical_url)"
+	SECTION="${LASTMODFILE##*.}"
+	case "${SECTION}" in
+	"")
+	    ;;
+	[1-9]|3f|[39]lua)
+	    ME="$(canonical_url)"
 
-	echo 'Status: 303 See Other'
-	echo "Location: $ME"
-	echo
-	echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+	    echo 'Status: 303 See Other'
+	    echo "Location: $ME"
+	    echo
+	    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
 
-	exit 0
+	    exit 0
+	    ;;
+	*)
+	    SECTION=
+	    ;;
+	esac
 	;;
     esac
     ;;
