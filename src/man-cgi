@@ -129,7 +129,18 @@ canonical_url()
 
 rel_canonical_url()
 {
-    canonical_url | sed -e 's/^http:/https:/'
+    # Assumptions:
+    # - Also serving over https, so advertise it as canonical
+    # - Only using non-standard ports for development, so
+    #   they are not seen by search engines
+
+    canonical_url \
+    | sed -e "
+	s/^http:/https:/
+	s,:[1-9][0-9]*/,/,
+	s,/${ARCH}/,/${CANONICAL_ARCH:-$ARCH}/,
+	s,/NONE/,/,
+    "
 }
 
 list_archs()
@@ -467,6 +478,23 @@ then
 fi
 
 LASTMODFILE="$(echo "$LASTMODFILE" | sed -e 1q)"
+
+case "${LASTMODFILE}" in
+*/build)
+    ;;
+*)
+    CANONICAL_ARCH="${LASTMODFILE##${MANROOT}/${COLL}/}"
+    CANONICAL_ARCH="${CANONICAL_ARCH#*/}"
+    case "${CANONICAL_ARCH}" in
+    */*)
+	CANONICAL_ARCH="${CANONICAL_ARCH%/*}"
+	;;
+    *)
+	CANONICAL_ARCH=NONE
+	;;
+    esac
+    ;;
+esac
 
 if [ -f "$LASTMODFILE" ]
 then
