@@ -569,6 +569,9 @@ th, td { border: 0; padding: 0; }
 b.section { font-size: 14pt; }
 b.section a { text-decoration: none; }
 .small { font-size: 10pt; }
+div.queryform input, div.queryform select { width: 100%; }
+body, input, select { font-family: Roboto, sans-serif; }
+code, pre, tt { font-family: 'Roboto Mono', monospace; }
 @media print {
     div.queryform { display: none; }
     a:link, a:visited, b.section a:visited { color: #000000; }
@@ -583,6 +586,13 @@ then
 <title>$COMMAND${SECTION:+($SECTION)} - ${CNAME:-$OSNAME} Manual Pages</title>
 <link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
 END
+    tr -d \\n <<END
+<link href="https://fonts.googleapis.com/css2
+?family=Roboto:ital,wght@0,400;0,700;1,400;1,700
+&family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700
+&display=swap" rel="stylesheet">
+END
+    echo
 
     if [ ${notfound:-0} -eq 0 ]
     then
@@ -791,14 +801,31 @@ cat <<END
 END
 
 # XXX: Create a seclist and use that?
-for i in ANY 1 2 3 3f 3lua 4 5 6 7 8 9 9lua
+for i in \
+    'ANY Search in All Sections' \
+    '1 General Commands' \
+    '2 System Calls' \
+    '3 C Library Functions' \
+    '3f Fortran Library Functions' \
+    '3lua Lua Modules' \
+    '4 Special Files and Hardware Support' \
+    '5 File Formats' \
+    '6 Games and Demos' \
+    '7 Miscellaneous Information Pages' \
+    '8 System Maintenance Commands' \
+    '9 Kernel Internals' \
+    '9lua Lua Kernel Bindings' \
+    ;
 do
-    case "$i" in
+    set -- ${i}
+    s="${1}"
+    shift
+    case "$s" in
     "$SECTION")
-	echo "  <option value=\"$i\" selected>$i</option>"
+	echo "  <option value=\"$s\" selected>$s - $@</option>"
 	;;
     *)
-	echo "  <option value=\"$i\">$i</option>"
+	echo "  <option value=\"$s\">$s - $@</option>"
 	;;
     esac
 done
