@@ -565,7 +565,7 @@ a:visited { color: #6000c0; }
 }
 table { padding: 0; }
 th, td { border: 0; padding: 0; }
-.intro th, .intro td { padding-left: 1em; }
+.intro th, .intro td { padding-left: 1em; padding-top: 3px; }
 b.section { font-size: 14pt; }
 b.section a { text-decoration: none; }
 .small { font-size: 10pt; }
