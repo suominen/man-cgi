@@ -376,7 +376,7 @@ DEFAULT|"")
 		COLL="${NCOLL}"
 		ME="$(canonical_url)"
 
-		echo 'Status: 303 See Other'
+		echo 'Status: 302 Found'
 		echo "Location: $ME"
 		echo
 		echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
@@ -396,7 +396,7 @@ DEFAULT|"")
 		    COLL="${NCOLL}"
 		    ME="$(canonical_url)"
 
-		    echo 'Status: 303 See Other'
+		    echo 'Status: 302 Found'
 		    echo "Location: $ME"
 		    echo
 		    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
@@ -427,7 +427,7 @@ if ${need_redirect:-false}
 then
     ME="$(canonical_url)"
 
-    echo 'Status: 303 See Other'
+    echo 'Status: 308 Permanent Redirect'
     echo "Location: $ME"
     echo
     echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
