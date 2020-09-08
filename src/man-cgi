@@ -511,7 +511,7 @@ case "${LASTMODFILE}" in
 	[1-9]|3f|[39]lua)
 	    ME="$(canonical_url)"
 
-	    echo 'Status: 303 See Other'
+	    echo 'Status: 308 Permanent Redirect'
 	    echo "Location: $ME"
 	    echo
 	    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
