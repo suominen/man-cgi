@@ -219,7 +219,11 @@ case "$PATH_INFO" in
 	esac
 	;;
     *)
-	COLL="${1}"
+	case "${1}" in
+	[A-Z]*)
+	    COLL="${1}"
+	    ;;
+	esac
 	while [ ${#} -gt 3 ]
 	do
 	    need_redirect=true
