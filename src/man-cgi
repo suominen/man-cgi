@@ -570,7 +570,7 @@ b.section { font-size: 14pt; }
 b.section a { text-decoration: none; }
 .small { font-size: 10pt; }
 div.queryform input, div.queryform select { width: 100%; }
-body, input, select { font-family: Roboto, sans-serif; }
+body, input, select { font-family: 'Source Sans Pro', sans-serif; }
 code, pre, tt { font-family: 'Roboto Mono', monospace; }
 @media print {
     div.queryform { display: none; }
@@ -580,17 +580,18 @@ code, pre, tt { font-family: 'Roboto Mono', monospace; }
 </style>
 END
 
+tr -d \\n <<END
+<link href="https://fonts.googleapis.com/css2
+?family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700
+&family=Source+Sans+Pro:ital,wght@0,400;0,700;0,900;1,400
+&display=swap" rel="stylesheet">
+END
+
 if [ "$COMMAND" != "" ]
 then
     cat <<END
 <title>$COMMAND${SECTION:+($SECTION)} - ${CNAME:-$OSNAME} Manual Pages</title>
 <link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
-END
-    tr -d \\n <<END
-<link href="https://fonts.googleapis.com/css2
-?family=Roboto:ital,wght@0,400;0,700;1,400;1,700
-&family=Roboto+Mono:ital,wght@0,400;0,700;1,400;1,700
-&display=swap" rel="stylesheet">
 END
     echo
 
