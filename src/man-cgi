@@ -566,7 +566,14 @@ b.section { font-size: 14pt; }
 b.section a { text-decoration: none; }
 .small { font-size: 10pt; }
 div.queryform, address { padding-top: 4ex; }
-div.queryform input, div.queryform select { width: 100%; }
+div.queryform input { padding-right: 5px; }
+div.queryform th {
+    text-align: left;
+    text-transform: uppercase;
+    font-weight: normal;
+    font-size: smaller;
+    padding-left: 3px;
+}
 body, input, select { font-family: 'Source Sans Pro', sans-serif; }
 code, pre, tt { font-family: 'Roboto Mono', monospace; }
 @media print {
@@ -792,9 +799,15 @@ cat <<END
 <div class="queryform">
 <form method=post action="$SCRIPT_NAME">
   <table>
-  <tr><td>Command:&nbsp;</td><td><input name="command" size="24"
-  value="$COMMAND"></td></tr>
-  <tr><td>Section:&nbsp;</td><td><select name="section">
+  <tr>
+    <th>Command:</th>
+    <th>Section:</th>
+    <th>Arch:</th>
+    <th>Collection:</th>
+    <th>&nbsp;<!-- submit --></th>
+  </tr>
+    <td><input name="command" size="24" value="$COMMAND"></td>
+    <td><select name="section">
 END
 
 # XXX: Create a seclist and use that?
@@ -819,58 +832,58 @@ do
     shift
     case "$s" in
     "$SECTION")
-	echo "  <option value=\"$s\" selected>$s - $@</option>"
+	echo "      <option value=\"$s\" selected>$s - $@</option>"
 	;;
     *)
-	echo "  <option value=\"$s\">$s - $@</option>"
+	echo "      <option value=\"$s\">$s - $@</option>"
 	;;
     esac
 done
 
 cat <<END
-  </select></td></tr>
-  <tr><td>Architecture:&nbsp;</td><td><select name="arch">
+    </select></td>
+    <td><select name="arch">
 END
 
 for i in $(list_archs)
 do
     case "$i" in
     DEFAULT)
-	echo "  <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+	echo "      <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
 	;;
     "${ARCH}")
-	echo "  <option value=\"$i\" selected>$i</option>"
+	echo "      <option value=\"$i\" selected>$i</option>"
 	;;
     *)
-	echo "  <option value=\"$i\">$i</option>"
+	echo "      <option value=\"$i\">$i</option>"
 	;;
     esac
 done
 
 cat <<END
-  </select></td></tr>
-  <tr><td>Collection:&nbsp;</td><td><select name="coll">
+    </select></td>
+    <td><select name="coll">
 END
 
 for i in $(list_collections)
 do
     case "$i" in
     DEFAULT)
-	echo "  <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
+	echo "      <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
 	;;
     "$COLL")
-	echo "  <option value=\"$i\" selected>$i</option>"
+	echo "      <option value=\"$i\" selected>$i</option>"
 	;;
     *)
-	echo "  <option value=\"$i\">$i</option>"
+	echo "      <option value=\"$i\">$i</option>"
 	;;
     esac
 done
 
 cat <<END
-  </select></td></tr>
-  <tr><td>&nbsp;</td>
-  <td><input type="submit" value="Show manual page"></td></tr>
+    </select></td>
+    <td><input type="submit" value="Show"></td>
+  </tr>
   </table>
 END
 
