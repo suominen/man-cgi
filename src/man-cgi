@@ -222,15 +222,16 @@ case "$PATH_INFO" in
 	case "${1}" in
 	[A-Z]*)
 	    COLL="${1}"
+	    shift
 	    ;;
 	esac
-	while [ ${#} -gt 3 ]
+	while [ ${#} -gt 2 ]
 	do
 	    need_redirect=true
 	    shift
 	done
-	ARCH="${2}"
-	COMMAND="${3}"
+	ARCH="${1}"
+	COMMAND="${2}"
 	;;
     esac
     ;;
