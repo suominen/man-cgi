@@ -160,6 +160,200 @@ list_collections()
     cat "${MANROOT}/colllist"
 }
 
+introtable()
+{
+    cat <<END
+<table class="intro">
+<tr>
+<td class="section">1</td>
+<td><a href="$SCRIPT_NAME?intro+1${ARCH:+.$ARCH}${COLL:++$COLL}">GENERAL COMMANDS</a></td>
+</tr>
+<tr>
+<td class="section">2</td>
+<td><a href="$SCRIPT_NAME?intro+2${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM CALLS AND ERROR NUMBERS</a></td>
+</tr>
+<tr>
+<td class="section">3</td>
+<td><a href="$SCRIPT_NAME?intro+3${ARCH:+.$ARCH}${COLL:++$COLL}">C LIBRARY FUNCTIONS</a></td>
+</tr>
+<tr>
+<td class="section">3f</td>
+<td><a href="$SCRIPT_NAME?intro+3f${ARCH:+.$ARCH}${COLL:++$COLL}">FORTRAN LIBRARY FUNCTIONS</a></td>
+</tr>
+<tr>
+<td class="section">3lua</td>
+<td><a href="$SCRIPT_NAME?intro+3lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA MODULES</a></td>
+</tr>
+<tr>
+<td class="section">4</td>
+<td><a href="$SCRIPT_NAME?intro+4${ARCH:+.$ARCH}${COLL:++$COLL}">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
+</tr>
+<tr>
+<td class="section">5</td>
+<td><a href="$SCRIPT_NAME?intro+5${ARCH:+.$ARCH}${COLL:++$COLL}">FILE FORMATS</a></td>
+</tr>
+<tr>
+<td class="section">6</td>
+<td><a href="$SCRIPT_NAME?intro+6${ARCH:+.$ARCH}${COLL:++$COLL}">GAMES AND DEMOS</a></td>
+</tr>
+<tr>
+<td class="section">7</td>
+<td><a href="$SCRIPT_NAME?intro+7${ARCH:+.$ARCH}${COLL:++$COLL}">MISCELLANEOUS INFORMATION PAGES</a></td>
+</tr>
+<tr>
+<td class="section">8</td>
+<td><a href="$SCRIPT_NAME?intro+8${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM MAINTENANCE COMMANDS</a></td>
+</tr>
+<tr>
+<td class="section">9</td>
+<td><a href="$SCRIPT_NAME?intro+9${ARCH:+.$ARCH}${COLL:++$COLL}">KERNEL INTERNALS</a></td>
+</tr>
+<tr>
+<td class="section">9lua</td>
+<td><a href="$SCRIPT_NAME?intro+9lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA KERNEL BINDINGS</a></td>
+</tr>
+<tr>
+<td class="section">X</td>
+<td><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}">X WINDOW SYSTEM</a></td>
+</tr>
+</table>
+END
+}
+
+queryform()
+{
+    cat <<END
+<div class="queryform">
+<form method=post action="$SCRIPT_NAME">
+  <table>
+  <tr>
+    <th>Command:</th>
+    <th>Section:</th>
+    <th>Arch:</th>
+    <th>Collection:</th>
+    <th>&nbsp;<!-- submit --></th>
+  </tr>
+    <td><input name="command" size="24" value="$COMMAND"></td>
+    <td><select name="section">
+END
+
+    # XXX: Create a seclist and use that?
+    for i in \
+	'ANY Search in All Sections' \
+	'1 General Commands' \
+	'2 System Calls' \
+	'3 C Library Functions' \
+	'3f Fortran Library Functions' \
+	'3lua Lua Modules' \
+	'4 Special Files and Hardware Support' \
+	'5 File Formats' \
+	'6 Games and Demos' \
+	'7 Miscellaneous Information Pages' \
+	'8 System Maintenance Commands' \
+	'9 Kernel Internals' \
+	'9lua Lua Kernel Bindings' \
+	;
+    do
+	set -- ${i}
+	s="${1}"
+	shift
+	case "$s" in
+	"$SECTION")
+	    echo "      <option value=\"$s\" selected>$s - $@</option>"
+	    ;;
+	*)
+	    echo "      <option value=\"$s\">$s - $@</option>"
+	    ;;
+	esac
+    done
+
+    cat <<END
+    </select></td>
+    <td><select name="arch">
+END
+
+    for i in $(list_archs)
+    do
+	case "$i" in
+	DEFAULT)
+	    echo "      <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+	    ;;
+	"${ARCH}")
+	    echo "      <option value=\"$i\" selected>$i</option>"
+	    ;;
+	*)
+	    echo "      <option value=\"$i\">$i</option>"
+	    ;;
+	esac
+    done
+
+    cat <<END
+    </select></td>
+    <td><select name="coll">
+END
+
+    for i in $(list_collections)
+    do
+	case "$i" in
+	DEFAULT)
+	    echo "      <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
+	    ;;
+	"$COLL")
+	    echo "      <option value=\"$i\" selected>$i</option>"
+	    ;;
+	*)
+	    echo "      <option value=\"$i\">$i</option>"
+	    ;;
+	esac
+    done
+
+    cat <<END
+    </select></td>
+    <td><input type="submit" value="Show"></td>
+  </tr>
+  </table>
+END
+
+    case "${DEFAULT_COLLECTION}" in
+    "")
+	cat <<END
+  <p>Use the DEFAULT collection to view manual pages
+  for third-party software.</p>
+END
+	;;
+    esac
+
+    cat <<END
+</form>
+</div>
+END
+}
+
+signature()
+{
+    cat <<END
+<address class="small">
+Powered by man-cgi 1.15, Panagiotis Christias<br />
+Modified for <a href="${REQUEST_SCHEME-:http}://www.netbsd.org/">NetBSD</a>
+    by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>
+</address>
+END
+}
+
+tracker()
+{
+    cat <<END
+<script><!--
+ (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ ga('create', 'UA-39862532-1', 'gw.com');
+ ga('send', 'pageview');
+// --></script>
+END
+}
+
 case "$PATH_INFO" in
 ''|/)
     if [ $# -lt 2 ]
@@ -551,38 +745,42 @@ cat <<END
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=$CHARSET">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0" />
 <style type="text/css">
 <!--
-body { background-color: #ffffff; color: #000000; font-size: 12pt; margin: 2em; }
+body { color: #000000; font-size: 12pt; margin: 2em; }
+body, div.queryform { background-color: #ffffff; }
 @media screen {
-    body { background-color: #f0f0f0; }
+    body, div.queryform { background-color: #f0f0f0; }
 }
 a:link, b.section a:visited { color: #0000f0; }
 a:visited { color: #6000c0; }
 @media screen and (prefers-color-scheme: dark) {
-    body { background-color: #000000; color: #c0c0c0; }
+    body { color: #c0c0c0; }
+    body, div.queryform { background-color: #000000; }
     a:link, b.section a:visited { color: #90c0f0; }
     a:visited { color: #c060c0; }
 }
-table { padding: 0; }
-th, td { border: 0; padding: 0; }
-.intro th, .intro td { padding-left: 1em; padding-top: 3px; }
+table, th, td { padding: 0; }
+.intro th, .intro td { padding-left: 1em; padding-top: 0.5ex; }
 b.section { font-size: 14pt; }
 b.section a { text-decoration: none; }
 .small { font-size: 10pt; }
-div.queryform, address { padding-top: 4ex; }
+div.queryform { position: sticky; top: 0px; padding-bottom: 1ex; }
+div.queryform, address { margin-top: 3ex; margin-bottom: 3ex; }
+address { padding-top: 1ex; }
 div.queryform input { padding-right: 5px; }
 div.queryform th {
     text-align: left;
     text-transform: uppercase;
     font-weight: normal;
-    font-size: smaller;
+    font-size: 10pt;
     padding-left: 3px;
 }
 body, input, select { font-family: 'Source Sans Pro', sans-serif; }
 code, pre, tt { font-family: 'Roboto Mono', monospace; }
 @media print {
-    div.queryform { display: none; }
+    h1.manpage, div.queryform { display: none; }
     a:link, a:visited, b.section a:visited { color: #000000; }
 }
 -->
@@ -596,29 +794,38 @@ tr -d \\n <<END
 &display=swap" rel="stylesheet">
 END
 
-if [ "$COMMAND" != "" ]
+cat <<END
+<link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
+<title>${COMMAND:+$COMMAND${SECTION:+($SECTION)} - }${CNAME:-$OSNAME} Manual Pages</title>
+END
+
+if [ ${notfound:-0} -eq 0 ] && [ -z "${MANPARAM}" ] && [ ! -z "${COMMAND}" ]
 then
     cat <<END
-<title>$COMMAND${SECTION:+($SECTION)} - ${CNAME:-$OSNAME} Manual Pages</title>
-<link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
-END
-    echo
-
-    if [ ${notfound:-0} -eq 0 ]
-    then
-	if [ "$MANPARAM" = "" ]
-	then
-	    cat <<END
 <link rel="canonical" href="$(rel_canonical_url)">
 END
-	fi
-    fi
+fi
 
-    cat <<END
+cat <<END
 </head>
 <body>
+<h1${COMMAND:+ class="manpage"}>${COMMAND:+$COMMAND${SECTION:+($SECTION)}
+  - }${CNAME:-$OSNAME} Manual Pages</h1>
 END
 
+queryform
+
+if [ -z "$COMMAND" ]
+then
+    case "${DEFAULT_COLLECTION}" in
+    "")
+	cat <<END
+<p><b>${CNAME:-$OSNAME} ${CREL:-$OSREL} (${MACHINE:-$OSARCH})</b></p>
+END
+	;;
+    esac
+    introtable
+else
     if [ ${notfound:-0} -eq 0 ]
     then
 	echo "<pre>"
@@ -724,201 +931,14 @@ END
 # END
 
     fi
-else
-    cat <<END
-<title>${CNAME:-$OSNAME} Manual Pages</title>
-<link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
-</head>
-<body>
-<h1>${CNAME:-$OSNAME} Manual Pages</h1>
-END
-
-    case "${DEFAULT_COLLECTION}" in
-    "")
-	cat <<END
-<p><b>${CNAME:-$OSNAME} ${CREL:-$OSREL} (${MACHINE:-$OSARCH})</b></p>
-END
-	;;
-    esac
-
-    cat <<END
-<table class="intro">
-<tr>
-<td class="section">1</td>
-<td><a href="$SCRIPT_NAME?intro+1${ARCH:+.$ARCH}${COLL:++$COLL}">GENERAL COMMANDS</a></td>
-</tr>
-<tr>
-<td class="section">2</td>
-<td><a href="$SCRIPT_NAME?intro+2${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM CALLS AND ERROR NUMBERS</a></td>
-</tr>
-<tr>
-<td class="section">3</td>
-<td><a href="$SCRIPT_NAME?intro+3${ARCH:+.$ARCH}${COLL:++$COLL}">C LIBRARY FUNCTIONS</a></td>
-</tr>
-<tr>
-<td class="section">3f</td>
-<td><a href="$SCRIPT_NAME?intro+3f${ARCH:+.$ARCH}${COLL:++$COLL}">FORTRAN LIBRARY FUNCTIONS</a></td>
-</tr>
-<tr>
-<td class="section">3lua</td>
-<td><a href="$SCRIPT_NAME?intro+3lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA MODULES</a></td>
-</tr>
-<tr>
-<td class="section">4</td>
-<td><a href="$SCRIPT_NAME?intro+4${ARCH:+.$ARCH}${COLL:++$COLL}">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
-</tr>
-<tr>
-<td class="section">5</td>
-<td><a href="$SCRIPT_NAME?intro+5${ARCH:+.$ARCH}${COLL:++$COLL}">FILE FORMATS</a></td>
-</tr>
-<tr>
-<td class="section">6</td>
-<td><a href="$SCRIPT_NAME?intro+6${ARCH:+.$ARCH}${COLL:++$COLL}">GAMES AND DEMOS</a></td>
-</tr>
-<tr>
-<td class="section">7</td>
-<td><a href="$SCRIPT_NAME?intro+7${ARCH:+.$ARCH}${COLL:++$COLL}">MISCELLANEOUS INFORMATION PAGES</a></td>
-</tr>
-<tr>
-<td class="section">8</td>
-<td><a href="$SCRIPT_NAME?intro+8${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM MAINTENANCE COMMANDS</a></td>
-</tr>
-<tr>
-<td class="section">9</td>
-<td><a href="$SCRIPT_NAME?intro+9${ARCH:+.$ARCH}${COLL:++$COLL}">KERNEL INTERNALS</a></td>
-</tr>
-<tr>
-<td class="section">9lua</td>
-<td><a href="$SCRIPT_NAME?intro+9lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA KERNEL BINDINGS</a></td>
-</tr>
-<tr>
-<td class="section">X</td>
-<td><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}">X WINDOW SYSTEM</a></td>
-</tr>
-</table>
-END
 fi
 
-cat <<END
-
-<div class="queryform">
-<form method=post action="$SCRIPT_NAME">
-  <table>
-  <tr>
-    <th>Command:</th>
-    <th>Section:</th>
-    <th>Arch:</th>
-    <th>Collection:</th>
-    <th>&nbsp;<!-- submit --></th>
-  </tr>
-    <td><input name="command" size="24" value="$COMMAND"></td>
-    <td><select name="section">
-END
-
-# XXX: Create a seclist and use that?
-for i in \
-    'ANY Search in All Sections' \
-    '1 General Commands' \
-    '2 System Calls' \
-    '3 C Library Functions' \
-    '3f Fortran Library Functions' \
-    '3lua Lua Modules' \
-    '4 Special Files and Hardware Support' \
-    '5 File Formats' \
-    '6 Games and Demos' \
-    '7 Miscellaneous Information Pages' \
-    '8 System Maintenance Commands' \
-    '9 Kernel Internals' \
-    '9lua Lua Kernel Bindings' \
-    ;
-do
-    set -- ${i}
-    s="${1}"
-    shift
-    case "$s" in
-    "$SECTION")
-	echo "      <option value=\"$s\" selected>$s - $@</option>"
-	;;
-    *)
-	echo "      <option value=\"$s\">$s - $@</option>"
-	;;
-    esac
-done
+signature
+tracker
 
 cat <<END
-    </select></td>
-    <td><select name="arch">
-END
-
-for i in $(list_archs)
-do
-    case "$i" in
-    DEFAULT)
-	echo "      <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
-	;;
-    "${ARCH}")
-	echo "      <option value=\"$i\" selected>$i</option>"
-	;;
-    *)
-	echo "      <option value=\"$i\">$i</option>"
-	;;
-    esac
-done
-
-cat <<END
-    </select></td>
-    <td><select name="coll">
-END
-
-for i in $(list_collections)
-do
-    case "$i" in
-    DEFAULT)
-	echo "      <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
-	;;
-    "$COLL")
-	echo "      <option value=\"$i\" selected>$i</option>"
-	;;
-    *)
-	echo "      <option value=\"$i\">$i</option>"
-	;;
-    esac
-done
-
-cat <<END
-    </select></td>
-    <td><input type="submit" value="Show"></td>
-  </tr>
-  </table>
-END
-
-case "${DEFAULT_COLLECTION}" in
-"")
-    cat <<END
-  <p>Use the DEFAULT collection to view manual pages
-  for third-party software.</p>
-END
-    ;;
-esac
-
-cat <<END
-</form>
-</div>
-
-<address class="small">
-Powered by man-cgi 1.15, Panagiotis Christias<br />
-Modified for <a href="${REQUEST_SCHEME-:http}://www.netbsd.org/">NetBSD</a>
-    by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>
-</address>
-<script><!--
- (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
- (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
- m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
- })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
- ga('create', 'UA-39862532-1', 'gw.com');
- ga('send', 'pageview');
-// --></script>
 </body>
 </html>
 END
+
 exit 0
