@@ -114,11 +114,11 @@ canonical_url()
 
     case "${COMMAND}" in
     "")
-	echo "${REQUEST_SCHEME-:http}://${SERVER_NAME}${port}${SCRIPT_NAME}?+${section}${arch:+.$arch}+${coll}"
+	echo "${REQUEST_SCHEME:-http}://${SERVER_NAME}${port}${SCRIPT_NAME}?+${section}${arch:+.$arch}+${coll}"
 	;;
     *)
 	# XXX: We should probably have some configurable prefix, too.
-	echo "${REQUEST_SCHEME-:http}://${SERVER_NAME}${port}${coll:+/$coll}${arch:+/$arch}/${COMMAND}${section:+.$section}"
+	echo "${REQUEST_SCHEME:-http}://${SERVER_NAME}${port}${coll:+/$coll}${arch:+/$arch}/${COMMAND}${section:+.$section}"
 	;;
     esac
 }
@@ -334,7 +334,7 @@ signature()
     cat <<END
 <address class="small">
 Powered by man-cgi 1.15, Panagiotis Christias<br />
-Modified for <a href="${REQUEST_SCHEME-:http}://www.netbsd.org/">NetBSD</a>
+Modified for <a href="${REQUEST_SCHEME:-http}://www.netbsd.org/">NetBSD</a>
     by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>
 </address>
 END
