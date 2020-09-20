@@ -134,8 +134,8 @@ rel_canonical_url()
     | sed -e "
 	s/^http:/https:/
 	s,:[1-9][0-9]*/,/,
-	s,/NONE/,/,
 	${ARCH:+s,/${ARCH}/,/${CANONICAL_ARCH:-$ARCH}/,}
+	s,/NONE/,/,
     "
 }
 
