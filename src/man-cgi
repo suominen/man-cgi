@@ -687,7 +687,7 @@ case "${LASTMODFILE}" in
     case "${CANONICAL_ARCH}" in
     */*/*)
 	# Too many!
-	CANONICAL_ARCH=
+	CANONICAL_ARCH=NONE
 	;;
     */*)
 	CANONICAL_ARCH="${CANONICAL_ARCH%/*}"
