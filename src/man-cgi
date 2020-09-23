@@ -1,41 +1,40 @@
 #!/bin/sh
-# Man-cgi : a Common Gateway Interface which converts the output of
-#           the "man" command to HTML
 #
-# Author  : Panagiotis J. Christias <christia@theseas.ntua.gr>
+# Convert output of man to HTML
 #
-# Usage   : it goes in the /cgi-bin/ directory. When called without 
-#           arguments (https://www-server/cgi-bin/man-cgi) it outputs a
-#           "Front Page" with a section list and query form. When called
-#           with arguments, the first argument is the topic (e.g. ls)
-#           and the second argument (optional) is the section to look in.
+# (c) 1994 Panagiotis J. Christias <christia@theseas.ntua.gr>
+#	http://users.softlab.ntua.gr/~christia/man-cgi.html
 #
-#           http://www.ntua.gr/~christia/man-cgi.html
-#           XXX: Dead link detected 2017-04-15
+# Modifications for NetBSD:
+# (c) 1997-2020 Kimmo Suominen <kimmo@suominen.com>
+#	https://kimmo.suominen.com/
 #
-#           Examples:
-#               http://www.ntua.gr/cgi-bin/man-cgi?ls
-#               http://www.ntua.gr/cgi-bin/man-cgi?sleep+3
+# Usage:
 #
-# Notice  : Man-cgi uses the following two images, you may want to get them
-#           and put them in your w3 server:
-#               http://www.ntua.gr/images/doty.gif
-#               http://www.ntua.gr/images/pages.gif
+#   PATH_INFO=/[COLLECTION/][ARCH/]COMMAND[.SECTION]
 #
-# History :
-#   7.0     Handle multicharacter sections (e.g. intro(9lua)).
-#   1.15    Multiple blank lines are supressed.
-#   1.14    Man-cgi now recognizes cross-references that
-#           contain periods (e.g. foo.foo(3)).
-#   1.13    Really fixed problems occuring in pages which used
-#           multi-overstrike for emboldening (hopefully).
-#   1.12    Fixed problems occuring in pages which used multi-overstrike
-#           for emboldening. Now Man-cgi works any number of overstrike.
-#   1.11    Fixed problem with hyphenated cross-references.
-#   1.10 and earlier, no history at that time...
+# Examples:
 #
-# Last update: Sat Apr 15 2017
+#   /ls.1
+#   /ls
+#   /i386/boot.8
+#   /NetBSD-9.0/boot.8
+#   /NetBSD-9.0/i386/boot.8
 #
+# Legacy usage:
+#
+#   QUERY_STRING=COMMAND[+[SECTION.ARCH][+[COLLECTION]]]
+#
+# Examples:
+#
+#   ls+1
+#   ls
+#   boot+8.i386
+#   boot+8+NetBSD-9.0
+#   boot+8.i386+NetBSD-9.0
+#
+
+MANCGI_DATE=2020-09-23
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
@@ -333,9 +332,12 @@ signature()
 {
     cat <<END
 <address class="small">
-Powered by man-cgi 1.15, Panagiotis Christias<br />
-Modified for <a href="${REQUEST_SCHEME:-http}://www.netbsd.org/">NetBSD</a>
-    by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>
+Powered by man-cgi (${MANCGI_DATE}).
+Maintained for <a href="${REQUEST_SCHEME:-http}://www.netbsd.org/">NetBSD</a>
+    by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>.
+Based on <a href="http://users.softlab.ntua.gr/~christia/man-cgi.html"
+>man-cgi</a> by <a href="http://users.softlab.ntua.gr/~christia/"
+>Panagiotis Christias</a>.
 </address>
 END
 }
