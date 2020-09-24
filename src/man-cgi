@@ -34,7 +34,7 @@
 #   boot+8.i386+NetBSD-9.0
 #
 
-MANCGI_DATE=2020-09-23
+MANCGI_DATE=2020-09-24
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
@@ -176,9 +176,11 @@ introtable()
 <td><a href="$SCRIPT_NAME?intro+3${ARCH:+.$ARCH}${COLL:++$COLL}">C LIBRARY FUNCTIONS</a></td>
 </tr>
 <tr>
+<!-- nothing there
 <td class="section">3f</td>
 <td><a href="$SCRIPT_NAME?intro+3f${ARCH:+.$ARCH}${COLL:++$COLL}">FORTRAN LIBRARY FUNCTIONS</a></td>
 </tr>
+-->
 <tr>
 <td class="section">3lua</td>
 <td><a href="$SCRIPT_NAME?intro+3lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA MODULES</a></td>
@@ -212,8 +214,15 @@ introtable()
 <td><a href="$SCRIPT_NAME?intro+9lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA KERNEL BINDINGS</a></td>
 </tr>
 <tr>
-<td class="section">X</td>
-<td><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}">X WINDOW SYSTEM</a></td>
+<td class="section" colspan="2">&nbsp;</td>
+</tr>
+<tr>
+<td class="section" colspan="2"><a href="$SCRIPT_NAME?afterboot+8${ARCH:+.$ARCH}${COLL:++$COLL}"
+    >afterboot(8) &mdash; Things to Check After the First Complete Boot</a></td>
+</tr>
+<tr>
+<td class="section" colspan="2"><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}"
+    >X(7) &mdash; A Portable, Network-Transparent Window System</a></td>
 </tr>
 </table>
 END
