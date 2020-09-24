@@ -184,12 +184,12 @@ introtable()
 </tr>
 <tr>
 <td class="section">3</td>
-<td><a href="$SCRIPT_NAME?intro+3${ARCH:+.$ARCH}${COLL:++$COLL}">C LIBRARY FUNCTIONS</a></td>
+<td><a href="$SCRIPT_NAME?intro+3${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM LIBRARIES</a></td>
 </tr>
 <tr>
 <!-- nothing there
 <td class="section">3f</td>
-<td><a href="$SCRIPT_NAME?intro+3f${ARCH:+.$ARCH}${COLL:++$COLL}">FORTRAN LIBRARY FUNCTIONS</a></td>
+<td><a href="$SCRIPT_NAME?intro+3f${ARCH:+.$ARCH}${COLL:++$COLL}">FORTRAN LIBRARIES</a></td>
 </tr>
 -->
 <tr>
@@ -198,7 +198,7 @@ introtable()
 </tr>
 <tr>
 <td class="section">4</td>
-<td><a href="$SCRIPT_NAME?intro+4${ARCH:+.$ARCH}${COLL:++$COLL}">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
+<td><a href="$SCRIPT_NAME?intro+4${ARCH:+.$ARCH}${COLL:++$COLL}">DEVICES AND DEVICE DRIVERS</a></td>
 </tr>
 <tr>
 <td class="section">5</td>
@@ -206,7 +206,7 @@ introtable()
 </tr>
 <tr>
 <td class="section">6</td>
-<td><a href="$SCRIPT_NAME?intro+6${ARCH:+.$ARCH}${COLL:++$COLL}">GAMES AND DEMOS</a></td>
+<td><a href="$SCRIPT_NAME?intro+6${ARCH:+.$ARCH}${COLL:++$COLL}">GAMES</a></td>
 </tr>
 <tr>
 <td class="section">7</td>
@@ -214,7 +214,7 @@ introtable()
 </tr>
 <tr>
 <td class="section">8</td>
-<td><a href="$SCRIPT_NAME?intro+8${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM MAINTENANCE COMMANDS</a></td>
+<td><a href="$SCRIPT_NAME?intro+8${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM MAINTENANCE PROCEDURES AND COMMANDS</a></td>
 </tr>
 <tr>
 <td class="section">9</td>
