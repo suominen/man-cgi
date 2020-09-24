@@ -783,7 +783,7 @@ b.section { font-size: 14pt; }
 b.section a { text-decoration: none; }
 .small { font-size: 10pt; }
 div.queryform { position: sticky; top: 0px; padding-bottom: 1ex; }
-div.queryform, address { margin-top: 3ex; margin-bottom: 3ex; }
+div.queryform { margin-top: 3ex; margin-bottom: 3ex; }
 address { padding-top: 1ex; }
 div.queryform input { padding-right: 5px; }
 div.queryform th {
