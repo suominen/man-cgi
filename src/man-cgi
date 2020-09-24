@@ -164,6 +164,17 @@ introtable()
     cat <<END
 <table class="intro">
 <tr>
+<td class="page"><a href="$SCRIPT_NAME?afterboot+8${ARCH:+.$ARCH}${COLL:++$COLL}"
+    >afterboot(8)</a></td>
+<td>things to check after the first complete boot</a></td>
+</tr>
+<tr>
+<td class="page"><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}"
+    >X(7)</a></td>
+<td>a portable, network-transparent window system</a></td>
+</tr>
+<tr><td colspan="2">&nbsp;</td></tr>
+<tr>
 <td class="section">1</td>
 <td><a href="$SCRIPT_NAME?intro+1${ARCH:+.$ARCH}${COLL:++$COLL}">GENERAL COMMANDS</a></td>
 </tr>
@@ -215,14 +226,6 @@ introtable()
 </tr>
 <tr>
 <td class="section" colspan="2">&nbsp;</td>
-</tr>
-<tr>
-<td class="section" colspan="2"><a href="$SCRIPT_NAME?afterboot+8${ARCH:+.$ARCH}${COLL:++$COLL}"
-    >afterboot(8) &mdash; Things to Check After the First Complete Boot</a></td>
-</tr>
-<tr>
-<td class="section" colspan="2"><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}"
-    >X(7) &mdash; A Portable, Network-Transparent Window System</a></td>
 </tr>
 </table>
 END
@@ -773,7 +776,9 @@ a:visited { color: #6000c0; }
     a:visited { color: #c060c0; }
 }
 table, th, td { padding: 0; }
-.intro th, .intro td { padding-left: 1em; padding-top: 0.5ex; }
+.intro th, .intro td { padding-right: 1em; padding-top: 0.5ex; }
+.intro td.page { text-align: right; }
+.intro td.section { padding-left: 3.3em; }
 b.section { font-size: 14pt; }
 b.section a { text-decoration: none; }
 .small { font-size: 10pt; }
