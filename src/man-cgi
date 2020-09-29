@@ -15,23 +15,29 @@
 #
 # Examples:
 #
-#   /ls.1
-#   /ls
+#   /boot.8
+#   /boot
 #   /i386/boot.8
+#   /i386/boot
 #   /NetBSD-9.0/boot.8
+#   /NetBSD-9.0/boot
 #   /NetBSD-9.0/i386/boot.8
+#   /NetBSD-9.0/i386/boot
 #
 # Legacy usage:
 #
-#   QUERY_STRING=COMMAND[+[SECTION.ARCH][+[COLLECTION]]]
+#   QUERY_STRING=COMMAND[+[SECTION][.ARCH][+COLLECTION]]
 #
 # Examples:
 #
-#   ls+1
-#   ls
+#   boot+8
+#   boot
 #   boot+8.i386
+#   boot+.i386
 #   boot+8+NetBSD-9.0
+#   boot++NetBSD-9.0
 #   boot+8.i386+NetBSD-9.0
+#   boot+.i386+NetBSD-9.0
 #
 
 MANCGI_DATE=2020-09-24
