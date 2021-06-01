@@ -40,7 +40,7 @@
 #   boot+.i386+NetBSD-9.0
 #
 
-MANCGI_DATE=2021-03-02
+MANCGI_DATE=2021-06-01
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
@@ -368,8 +368,7 @@ case "$PATH_INFO" in
 	    echo "${1:-${QUERY_STRING:-}}" \
 	    | sed \
 		-e 's/%20/+/g' \
-		-e 's/%2B/+/g' \
-		-e 's/%2b/+/g' \
+		-e 's/%2B/+/gi' \
 		-e 's/=$//' \
 		;
 	)"
@@ -471,7 +470,16 @@ POST)
 	    COLL="${i#coll=}"
 	    ;;
 	command=*)
-	    COMMAND="$(echo "$i" | sed -e 's/command=//' -e 's,%2F,/,gi')"
+	    COMMAND="$(
+		echo "$i" \
+		| sed \
+		    -e 's/command=//' \
+		    -e 's,%2F,/,gi' \
+		    -e 's,%2B,+,gi' \
+		    -e 's,%5B,[,gi' \
+		    -e 's,%5D,],gi' \
+		    ;
+	    )"
 	    ;;
 	section=*)
 	    SECTION="${i#section=}"
