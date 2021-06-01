@@ -250,7 +250,7 @@ queryform()
     <th>Collection:</th>
     <th>&nbsp;<!-- submit --></th>
   </tr>
-    <td><input name="command" size="24" value="$COMMAND"></td>
+    <td><input name="command" size="24" value="$COMMAND" autofocus></td>
     <td><select name="section">
 END
 
