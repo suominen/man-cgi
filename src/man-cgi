@@ -64,7 +64,7 @@ OSNAME=$(uname -s)
 OSREL=$(uname -r)
 
 # Man page collections
-MANROOT=/p/netbsd/www/man
+MANROOT=/p/netbsd/man/man
 
 # Last modified is NetBSD-current build retrieval date
 LASTMODFILE="$MANROOT/NetBSD-current/build"
