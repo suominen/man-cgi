@@ -363,18 +363,11 @@ expires()
 	;;
     esac
 
-    EXPTYPE="${EXPTYPE:-public}"
-    case "${EXPTYPE}" in
-    private)
-	EXPSECS=0
-	;;
-    esac
-
     EXPDATE=$(($(date '+%s') + $EXPSECS))
     EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
 
     echo "Expires: $EXPIRES"
-    echo "Cache-Control: $EXPTYPE, max-age=$EXPSECS"
+    echo "Cache-Control: public, max-age=$EXPSECS"
 }
 
 redirect()
@@ -554,7 +547,6 @@ POST)
 	esac
     done
 
-    EXPTYPE=private
     redirect 303
     ;;
 esac
