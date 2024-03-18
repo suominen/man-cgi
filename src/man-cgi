@@ -6,7 +6,7 @@
 #	http://users.softlab.ntua.gr/~christia/man-cgi.html
 #
 # Modifications for NetBSD:
-# (c) 1997-2020 Kimmo Suominen <kimmo@suominen.com>
+# (c) 1997-2024 Kimmo Suominen <kimmo@suominen.com>
 #	https://kimmo.suominen.com/
 #
 # Usage:
@@ -40,7 +40,7 @@
 #   boot+.i386+NetBSD-9.0
 #
 
-MANCGI_DATE=2021-06-01
+MANCGI_DATE=2024-03-18
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
@@ -577,22 +577,23 @@ DEFAULT|"")
     COLL=$(echo "$COLL" | tr -c -d '[-.A-Za-z0-9]')
     if [ ! -d "${MANROOT}/${COLL}" ]
     then
-	case "${COLL}" in
-	*-[1-9][0-9].0)
-	    NCOLL="${COLL}-STABLE"
-	    if [ -d "${MANROOT}/${NCOLL}" ]
-	    then
-		COLL="${NCOLL}"
-		ME="$(canonical_url)"
+	NCOLL="${COLL%.*}.x-BRANCH"
+	if [ -d "${MANROOT}/${NCOLL}" ]
+	then
+	    COLL="${NCOLL}"
+	    ME="$(canonical_url)"
 
-		echo 'Status: 302 Found'
-		echo "Location: $ME"
-		echo
-		echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+	    echo 'Status: 302 Found'
+	    echo "Location: $ME"
+	    echo
+	    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
 
-		exit 0
-	    fi
+	    exit 0
+	fi
 
+	MINOR="$((${COLL##*.} + 0))"
+	case "${MINOR}" in
+	0)
 	    NCOLL="${COLL%%-*}-current"
 	    if [ -d "${MANROOT}/${NCOLL}" ]
 	    then
@@ -606,28 +607,6 @@ DEFAULT|"")
 
 		exit 0
 	    fi
-	    ;;
-	*-[1-9].*|*-[1-9][0-9].*)
-	    MINOR="$((${COLL##*.} + 0))"
-	    case "${MINOR}" in
-	    0)
-		;;
-	    *)
-		NCOLL="${COLL%.*}.$((${MINOR} - 1))-STABLE"
-		if [ -d "${MANROOT}/${NCOLL}" ]
-		then
-		    COLL="${NCOLL}"
-		    ME="$(canonical_url)"
-
-		    echo 'Status: 302 Found'
-		    echo "Location: $ME"
-		    echo
-		    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
-
-		    exit 0
-		fi
-		;;
-	    esac
 	    ;;
 	esac
     fi
@@ -688,7 +667,7 @@ then
 	EXPSECS=600
     else
 	case "${COLL}" in
-	*-current|*-STABLE)
+	*-current|*-BRANCH)
 	    # 8 hours
 	    EXPSECS=28800
 	    ;;
