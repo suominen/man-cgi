@@ -346,6 +346,73 @@ END
 END
 }
 
+expires()
+{
+    case "${EXPSECS:-}" in
+    '')
+	case "${COLL}" in
+	*-current|*-BRANCH)
+	    # 8 hours
+	    EXPSECS=28800
+	    ;;
+	*)
+	    # 16 days
+	    EXPSECS=1382400
+	    ;;
+	esac
+	;;
+    esac
+
+    EXPTYPE="${EXPTYPE:-public}"
+    case "${EXPTYPE}" in
+    private)
+	EXPSECS=0
+	;;
+    esac
+
+    EXPDATE=$(($(date '+%s') + $EXPSECS))
+    EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
+
+    echo "Expires: $EXPIRES"
+    echo "Cache-Control: $EXPTYPE, max-age=$EXPSECS"
+}
+
+redirect()
+{
+    ME="$(canonical_url)"
+    case "${1}" in
+    303)
+	echo 'Status: 303 See Other'
+	;;
+    308)
+	echo 'Status: 308 Permanent Redirect'
+	;;
+    *)
+	echo 'Status: 302 Found'
+	;;
+    esac
+    echo "Location: $ME"
+    expires
+
+    # End of headers
+    cat <<END
+
+<html><body>
+
+<!-- -------------------------------------------------------------------- -->
+
+<p>Goto: <a
+href="$ME"
+>$ME</a></p>
+
+<!-- -------------------------------------------------------------------- -->
+
+END
+    signature
+    echo '</body></html>'
+    exit 0
+}
+
 signature()
 {
     cat <<END
@@ -487,14 +554,8 @@ POST)
 	esac
     done
 
-    ME="$(canonical_url)"
-
-    echo 'Status: 303 See Other'
-    echo "Location: $ME"
-    echo
-    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
-
-    exit 0
+    EXPTYPE=private
+    redirect 303
     ;;
 esac
 
@@ -581,14 +642,7 @@ DEFAULT|"")
 	if [ -d "${MANROOT}/${NCOLL}" ]
 	then
 	    COLL="${NCOLL}"
-	    ME="$(canonical_url)"
-
-	    echo 'Status: 302 Found'
-	    echo "Location: $ME"
-	    echo
-	    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
-
-	    exit 0
+	    redirect 302
 	fi
 
 	MINOR="$((${COLL##*.} + 0))"
@@ -598,14 +652,7 @@ DEFAULT|"")
 	    if [ -d "${MANROOT}/${NCOLL}" ]
 	    then
 		COLL="${NCOLL}"
-		ME="$(canonical_url)"
-
-		echo 'Status: 302 Found'
-		echo "Location: $ME"
-		echo
-		echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
-
-		exit 0
+		redirect 302
 	    fi
 	    ;;
 	esac
@@ -627,30 +674,25 @@ esac
 
 if ${need_redirect:-false}
 then
-    ME="$(canonical_url)"
-
-    echo 'Status: 308 Permanent Redirect'
-    echo "Location: $ME"
-    echo
-    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
-
-    exit 0
+    redirect 308
 fi
 
-# 1 hour
-EXPSECS=3600
-
-if [ "$COMMAND" != "" ]
-then
-    case "$SECTION" in
-    "")
-	if [ "$MANPARAM" = "" ]
-	then
+case "${COMMAND}" in
+'')
+    # 1 hour
+    EXPSECS=3600
+    ;;
+*)
+    case "${SECTION}" in
+    '')
+	case "${MANPARAM}" in
+	'')
 	    LASTMODFILE=$(
 		man -C "$MANROOT/man.conf" -w -- "$COMMAND" 2>/dev/null
 	    )
 	    notfound=$?
-	fi
+	    ;;
+	esac
 	;;
     *)
 	LASTMODFILE=$(
@@ -665,19 +707,9 @@ then
 	echo 'Status: 404 Not Found'
 	# 10 minutes
 	EXPSECS=600
-    else
-	case "${COLL}" in
-	*-current|*-BRANCH)
-	    # 8 hours
-	    EXPSECS=28800
-	    ;;
-	*)
-	    # 16 days
-	    EXPSECS=1382400
-	    ;;
-	esac
     fi
-fi
+    ;;
+esac
 
 LASTMODFILE="$(echo "$LASTMODFILE" | sed -e 1q)"
 
@@ -711,14 +743,7 @@ case "${LASTMODFILE}" in
 	"")
 	    ;;
 	[1-9]|3f|[39]lua)
-	    ME="$(canonical_url)"
-
-	    echo 'Status: 308 Permanent Redirect'
-	    echo "Location: $ME"
-	    echo
-	    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
-
-	    exit 0
+	    redirect 308
 	    ;;
 	*)
 	    SECTION=
@@ -739,11 +764,7 @@ then
     fi
 fi
 
-EXPDATE=$(($(date '+%s') + $EXPSECS))
-EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
-
-echo "Expires: $EXPIRES"
-echo "Cache-Control: public, max-age=$EXPSECS"
+expires
 
 # End of headers
 cat <<END
