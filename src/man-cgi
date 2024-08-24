@@ -40,7 +40,7 @@
 #   boot+.i386+NetBSD-9.0
 #
 
-MANCGI_DATE=2024-03-20
+MANCGI_DATE=2024-08-24
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
