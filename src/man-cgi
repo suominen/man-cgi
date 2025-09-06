@@ -6,7 +6,7 @@
 #	http://users.softlab.ntua.gr/~christia/man-cgi.html
 #
 # Modifications for NetBSD:
-# (c) 1997-2024 Kimmo Suominen <kimmo@suominen.com>
+# (c) 1997-2025 Kimmo Suominen <kimmo@suominen.com>
 #	https://kimmo.suominen.com/
 #
 # Usage:
@@ -40,7 +40,7 @@
 #   boot+.i386+NetBSD-9.0
 #
 
-MANCGI_DATE=2024-08-26
+MANCGI_DATE=2025-09-06
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
@@ -135,11 +135,13 @@ rel_canonical_url()
     # - Only using non-standard ports for development, so
     #   they are not seen by search engines
 
+    local arch
+    arch="$(echo "${ARCH}" | sed -e 's/,/\\,/g')"
     canonical_url \
     | sed -e "
 	s/^http:/https:/
 	s,:[1-9][0-9]*/,/,
-	${ARCH:+s,/${ARCH}/,/${CANONICAL_ARCH:-$ARCH}/,}
+	${ARCH:+s,/${arch}/,/${CANONICAL_ARCH:-${arch}}/,}
 	s,/NONE/,/,
     "
 }
