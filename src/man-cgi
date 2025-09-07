@@ -39,8 +39,13 @@
 #   boot+8.i386+NetBSD-9.0
 #   boot+.i386+NetBSD-9.0
 #
+# Health check:
+#
+#   PATH_INFO=/.well-known/health
+#   QUERY_STRING=/.well-known/health
+#
 
-MANCGI_DATE=2025-09-07
+MANCGI_DATE=2025-09-08
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
@@ -70,6 +75,24 @@ MANROOT=/p/netbsd/man/man
 LASTMODFILE="$MANROOT/NetBSD-current/build"
 
 ### END OF CONFIGURATION SECTION ###############################################
+
+healthcheck()
+{
+    local code text
+
+    test -d "${MANROOT}" &&
+    test -f "${LASTMODFILE}" &&
+    { code=200; text=OK; } ||
+    { code=503; text='Service Unavailable'; }
+
+    echo "Status: ${code} ${text}"
+    echo "X-Powered-By: man-cgi (${MANCGI_DATE})"
+    echo 'Content-Type: text/plain'
+    echo ''
+    echo "${text}"
+
+    exit 0
+}
 
 canonical_url()
 {
@@ -436,6 +459,9 @@ END
 }
 
 case "$PATH_INFO" in
+/.well-known/health)
+    healthcheck
+    ;;
 ''|/)
     if [ $# -lt 2 ]
     then
@@ -459,7 +485,10 @@ case "$PATH_INFO" in
     ARCH=DEFAULT
 
     case "${COMMAND}" in
-    "")
+    /.well-known/health)
+	healthcheck
+	;;
+    '')
 	;;
     *)
 	need_redirect=true
