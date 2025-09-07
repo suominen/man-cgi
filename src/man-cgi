@@ -40,7 +40,7 @@
 #   boot+.i386+NetBSD-9.0
 #
 
-MANCGI_DATE=2025-09-06
+MANCGI_DATE=2025-09-07
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
@@ -652,7 +652,7 @@ DEFAULT|"")
 	    redirect 302
 	fi
 
-	MINOR="$((${COLL##*.} + 0))"
+	MINOR="${COLL##*.}"
 	case "${MINOR}" in
 	0)
 	    NCOLL="${COLL%%-*}-current"
