@@ -87,6 +87,9 @@ healthcheck()
 
     echo "Status: ${code} ${text}"
     echo "X-Powered-By: man-cgi (${MANCGI_DATE})"
+    echo 'Cache-Control: no-cache, no-store, must-revalidate'
+    echo 'Pragma: no-cache'
+    echo 'Expires: 0'
     echo 'Content-Type: text/plain'
     echo ''
     echo "${text}"
