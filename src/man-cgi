@@ -87,10 +87,12 @@ healthcheck()
 
     echo "Status: ${code} ${text}"
     echo "X-Powered-By: man-cgi (${MANCGI_DATE})"
-    echo 'Cache-Control: no-cache, no-store, must-revalidate'
-    echo 'Pragma: no-cache'
-    echo 'Expires: 0'
     echo 'Content-Type: text/plain'
+
+    EXPSECS=30
+    expires
+
+    # End of headers
     echo ''
     echo "${text}"
 
@@ -395,12 +397,12 @@ expires()
     '')
 	case "${COLL}" in
 	*-current|*-BRANCH)
-	    # 8 hours
-	    EXPSECS=28800
+	    # 24 hours
+	    EXPSECS=86400
 	    ;;
 	*)
-	    # 16 days
-	    EXPSECS=1382400
+	    # 90 days
+	    EXPSECS=7776000
 	    ;;
 	esac
 	;;
@@ -418,17 +420,27 @@ redirect()
     ME="$(canonical_url)"
     case "${1}" in
     303)
+	# POST (form query)
 	echo 'Status: 303 See Other'
 	;;
     308)
 	echo 'Status: 308 Permanent Redirect'
 	;;
     *)
+	# Collection not found
+	# 24 hours
+	EXPSECS=86400
 	echo 'Status: 302 Found'
 	;;
     esac
     echo "Location: $ME"
-    expires
+    case "$REQUEST_METHOD" in
+    POST)
+	;;
+    *)
+	expires
+	;;
+    esac
 
     # End of headers
     cat <<END
