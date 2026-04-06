@@ -730,8 +730,8 @@ fi
 
 case "${COMMAND}" in
 '')
-    # 1 hour
-    EXPSECS=3600
+    # 2 hours
+    EXPSECS=7200
     ;;
 *)
     case "${SECTION}" in
@@ -756,8 +756,6 @@ case "${COMMAND}" in
     if [ ${notfound:-0} -ne 0 ]
     then
 	echo 'Status: 404 Not Found'
-	# 10 minutes
-	EXPSECS=600
     fi
     ;;
 esac
