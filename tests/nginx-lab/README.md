@@ -12,7 +12,7 @@ before touching production configuration.
   `fastcgi_cache` and `fastcgi_cache_revalidate on`; the
   `#CLEAR_IMS#` marker is where the `drive` script injects
   conditional-clearing params for the second variant.
-- `drive` — runs both variants through five scenarios and prints
+- `drive` — runs both variants through six scenarios and prints
   client-visible status/cache-state plus what the backend saw.
 
 Run it on the NetBSD test host:

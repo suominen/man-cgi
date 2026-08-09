@@ -14,9 +14,11 @@ snapshot, not a source of truth.
   output and link markup).
 - Section list endpoint (`seclist`) instead of the hardcoded section
   options in the query form (XXX comment in `man-cgi`).
-- Revisit ETag emission (skipped for now; see ADR-0008 once written).
+- Revisit ETag emission (skipped for now; see ADR-0006).
+- Automate `manno-purge coll:NetBSD-current` in the daily build-pull
+  cron job (runbook suggests it; not yet wired).
 - Unify cache keys for legacy query-string URLs vs path URLs (nginx
-  cache key is `$request_method$request_uri`; the 308 canonicalization
+  cache key is `$request_method$request_uri`; the 301 canonicalization
   already migrates traffic).
 - Apply the Fastly `real_ip` list so `limit_req` keys on end-client
   addresses instead of Fastly POP addresses (current per-POP limiting
