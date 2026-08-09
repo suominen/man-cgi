@@ -64,8 +64,8 @@ This file records what the configuration does for caching and why.
 `limit_req` keys on `$binary_remote_addr`, which is a Fastly
 address (the `real_ip` include is deliberately not applied); with
 shielding, most traffic arrives from one POP and shares that
-budget. This is intentional — revisit via the BACKLOG item if
-429s become a problem. Note that `limit_req` rejects in nginx's
+budget. This is intentional — revisit if 429s
+become a problem. Note that `limit_req` rejects in nginx's
 preaccess phase, before the cache is consulted, so nothing masks
 those 429s (the `use_stale http_429` directive only covers a 429
 from the FastCGI upstream, which man-cgi never emits).

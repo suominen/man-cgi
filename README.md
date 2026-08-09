@@ -45,5 +45,4 @@ which only the origin and the QA vhost expose (Fastly strips them).
     docs/adr/       architecture decision records (MADR)
     docs/           caching design, runbook, nginx notes, deployment
     tests/          harness, fixtures, per-feature test scripts
-    TODO.md         execution roadmap and status
-    BACKLOG.md      one-line roll-up of open ideas
+    TODO.md         execution roadmap, status, and unscheduled ideas

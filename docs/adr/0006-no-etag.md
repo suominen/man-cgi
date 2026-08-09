@@ -36,5 +36,5 @@ sends both validators on revalidation; the CGI would need
 
 ## More Information
 
-Revisit if the renderer is ever rewritten (BACKLOG); a persistent
-server could hash content cheaply.
+Revisit if the renderer is ever rewritten; a persistent server
+could hash content cheaply.
