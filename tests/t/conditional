@@ -33,7 +33,7 @@ assert_header "^Last-Modified: ${LM_LS1}\$"
 assert_header '^Cache-Control: public, max-age=3600$'
 assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800$'
-assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1$'
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1$'
 assert_header '^Expires: '
 assert_no_header '^Content-Type:'
 assert_no_body
@@ -57,7 +57,7 @@ CGI_IMS=
 assert_exit 0
 assert_header '^Status: 304 Not Modified$'
 assert_no_header '^Status: 404'
-assert_header '^Surrogate-Key: all notfound form coll:NetBSD-current$'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
 assert_no_body
 
 # The home page revalidates the same way.
@@ -67,7 +67,7 @@ CGI_IMS=
 
 assert_exit 0
 assert_header '^Status: 304 Not Modified$'
-assert_header '^Surrogate-Key: all home form coll:NetBSD-current$'
+assert_header '^Surrogate-Key: all home coll:NetBSD-current$'
 assert_no_body
 
 # HEAD returns the full 200 header block without a body.

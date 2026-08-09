@@ -12,8 +12,6 @@ snapshot, not a source of truth.
   representations would make those expressions much harder.
 - Replace the sed HTMLizer with `mandoc -T html` (spike; changes
   output and link markup).
-- Section list endpoint (`seclist`) instead of the hardcoded section
-  options in the query form (XXX comment in `man-cgi`).
 - Revisit ETag emission (skipped for now; see ADR-0006).
 - Automate `manno-purge coll:NetBSD-current` in the daily build-pull
   cron job (runbook suggests it; not yet wired).

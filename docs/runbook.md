@@ -28,8 +28,8 @@ page at manage.fastly.com (also in its URL).
 |-----|------------|
 | `coll:<collection>` | That collection's man tree was rebuilt. The common case: `manno-purge coll:NetBSD-current` after the daily build pull. Covers the collection's pages, 404s (a rebuild can add a page that 404'd), and redirects. |
 | `page:<coll>:<cmd>.<sect>` | One page needs refreshing; hits all its arch aliases at once (the key is arch-free). |
-| `form` | `archlist` or `colllist` changed (until the JS query form lands, every HTML page embeds the lists; the `/api/v1` list objects carry it too). |
-| `api` | The three `/api/v1` list objects (archlist, colllist, sectlist), also individually keyed by name. |
+| `form` | `archlist` or `colllist` changed. Since the JS query form (ADR-0008) only the three `/api/v1` list objects carry it; pages no longer embed the lists. |
+| `api` | The three `/api/v1` list objects (archlist, colllist, sectlist), also individually keyed by name; their 404s carry `api notfound`. |
 | `home` | The home page needs refreshing. |
 | `notfound` | Mass-refresh of 404s. |
 | `redirect` | Redirect logic changed, or a collection appeared/disappeared. |
@@ -90,8 +90,8 @@ the other host while nginx is down, so wipe one host at a time.
 - **Script deploys with observable output changes.** Frozen-release
   objects revalidate indefinitely (their validators never change),
   so markup or header changes never reach them through expiry alone.
-- **`archlist`/`colllist` changes** — same reason, until the JS form
-  removes the embedded lists from page bodies (TODO step 12).
+  (List changes stopped being a wipe trigger when the JS query form
+  removed the embedded lists from page bodies.)
 - **A bad permanent redirect**: 301s are purgeable at Fastly (the
   `redirect` key) but live 30 days in nginx's cache with no purge
   mechanism — a wrong 301 needs `manno-purge redirect` *and* an
@@ -114,11 +114,10 @@ the other host while nginx is down, so wipe one host at a time.
 ## archlist / colllist changes
 
 1. Edit the lists (the Makefile in `$MANROOT` regenerates them).
-2. `manno-purge form home` — refreshes every list-embedding page at
-   Fastly.
-3. nginx keeps serving old embedded lists on frozen pages until
-   wiped (see above) — acceptable for cosmetic list drift, wipe when
-   it matters.
+2. `manno-purge form` — refreshes the `/api/v1` list objects, which
+   is all that embeds the lists since the JS query form (ADR-0008).
+   Browsers pick the change up within the objects' 1-hour
+   Cache-Control.
 
 ## Health checks and failover
 

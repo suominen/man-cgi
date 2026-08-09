@@ -119,7 +119,7 @@ As emitted by the CGI (QA, uncached vhost, 2026-08-09):
     Expires: Sun, 09 Aug 2026 09:31:44 GMT
     Cache-Control: public, max-age=3600
     Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800
-    Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1
+    Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1
 
 (`X-Accel-Expires` is absent from every observed response because
 nginx consumes it even on the uncached QA vhost.)
@@ -131,7 +131,7 @@ The 304, same request with `If-Modified-Since` echoed:
     Expires: Sun, 09 Aug 2026 09:32:12 GMT
     Cache-Control: public, max-age=3600
     Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800
-    Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1
+    Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1
 
 Through Fastly, clients additionally see `X-Man-Cache` (nginx's
 cache status for the stored object), `X-Cache`/`X-Served-By`

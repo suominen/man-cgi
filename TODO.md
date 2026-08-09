@@ -54,8 +54,10 @@ constraints are load-bearing; see the notes at the bottom.
   now feeds the endpoint, the query form, and the intro table —
   whose hardcoded uppercase copy is gone (wording now matches the
   form's mixed-case descriptions).
-- [ ] 12. Script: JS query form + localStorage; drop embedded
-  lists; write its ADR.
+- [x] 12. Script: JS query form + localStorage (ADR-0008). The
+  arch/collection selects server-render fallback options only; an
+  inline script loads the lists from /api/v1 and remembers choices
+  in localStorage; pages, home, and 404s dropped the `form` key.
 - [ ] 13. Script (after step 12 bakes one browser-TTL cycle + soft
   purge): canonical-arch 301 redirects; write its ADR.
 - [ ] 14. Rewrite ADR: keep improved shell CGI vs rewrite

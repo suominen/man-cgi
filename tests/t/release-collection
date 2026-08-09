@@ -26,8 +26,12 @@ assert_header "^Last-Modified: ${LM_REL_LS1}\$"
 assert_header '^Cache-Control: public, max-age=86400$'
 assert_header '^X-Accel-Expires: 86400$'
 assert_header '^Surrogate-Control: max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800$'
-assert_header '^Surrogate-Key: all form coll:NetBSD-10.1 page:NetBSD-10.1:ls.1$'
+assert_header '^Surrogate-Key: all coll:NetBSD-10.1 page:NetBSD-10.1:ls.1$'
 assert_body 'rel="canonical" href="https://man.netbsd.org/NetBSD-10.1/ls.1"'
+# The collection reaches the JS via data-url and the no-JS fallback
+# via a selected option.
+assert_body '<select name="coll" id="coll" data-url="NetBSD-10.1">'
+assert_body '<option value="NetBSD-10.1" selected>NetBSD-10.1</option>'
 
 run_cgi /NetBSD-10.1/nosuchcommand.1
 
@@ -36,7 +40,7 @@ assert_header '^Status: 404 Not Found$'
 assert_header '^Cache-Control: public, max-age=3600$'
 assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=86400, stale-if-error=86400$'
-assert_header '^Surrogate-Key: all notfound form coll:NetBSD-10.1$'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-10.1$'
 assert_header '^Expires: '
 assert_header "^Last-Modified: ${LM_REL_BUILD}$"
 

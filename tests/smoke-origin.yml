@@ -10,28 +10,34 @@ checklist:
 - path: /
   headers:
     surrogate-control: "max-age=86400, stale-while-revalidate=3600"
-    surrogate-key: "all home form coll:NetBSD-current"
+    surrogate-key: "all home coll:NetBSD-current"
 
 - path: /ls.1
   headers:
     surrogate-control: "max-age=86400, stale-while-revalidate=3600, stale-if-error=604800"
-    surrogate-key: "all form coll:NetBSD-current page:NetBSD-current:ls.1"
+    surrogate-key: "all coll:NetBSD-current page:NetBSD-current:ls.1"
 
 - path: /i386/ls.1
   headers:
-    surrogate-key: "all form coll:NetBSD-current page:NetBSD-current:ls.1 arch:i386"
+    surrogate-key: "all coll:NetBSD-current page:NetBSD-current:ls.1 arch:i386"
 
 # A machine-class page (man4/x86): both arch keys. (Depends on
 # est(4) staying in man4/x86 - pick another x86-class page if it
 # moves.)
 - path: /i386/est.4
   headers:
-    surrogate-key: "all form coll:NetBSD-current page:NetBSD-current:est.4 arch:i386 arch:x86"
+    surrogate-key: "all coll:NetBSD-current page:NetBSD-current:est.4 arch:i386 arch:x86"
 
 - path: /NetBSD-10.1/ls.1
   headers:
     surrogate-control: "max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800"
-    surrogate-key: "all form coll:NetBSD-10.1 page:NetBSD-10.1:ls.1"
+    surrogate-key: "all coll:NetBSD-10.1 page:NetBSD-10.1:ls.1"
+
+# API list objects keep the form key (the lists live here now).
+- path: /api/v1/archlist
+  type: text/plain
+  headers:
+    surrogate-key: "all api form archlist"
 
 # 404s revalidate at the origin (nginx's benefit; Fastly does not
 # 304 cached 404s toward clients).
@@ -39,7 +45,7 @@ checklist:
   code: 404
   headers:
     surrogate-control: "max-age=86400, stale-if-error=86400"
-    surrogate-key: "all notfound form coll:NetBSD-current"
+    surrogate-key: "all notfound coll:NetBSD-current"
   revalidate: true
 
 - path: /ls

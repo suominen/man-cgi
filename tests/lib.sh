@@ -163,10 +163,10 @@ assert_no_body()
 {
     if [ -s "${TESTTMP}/body" ]
     then
-	tap_fail "body is empty"
+	tap_fail 'body is empty'
 	diag "${TESTTMP}/body"
     else
-	tap_pass "body is empty"
+	tap_pass 'body is empty'
     fi
 }
 

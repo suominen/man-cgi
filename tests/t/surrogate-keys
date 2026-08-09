@@ -5,8 +5,9 @@
 # response carries `all` plus its class keys: coll:<resolved
 # collection> everywhere, page:<coll>:<cmd>.<sect> (arch-free, so
 # all arch aliases of a machine-independent page purge together)
-# and arch keys on pages, form on HTML that embeds the arch and
-# collection lists, and home/notfound/redirect class keys.
+# and arch keys on pages, form on the api list objects (the lists
+# live there now, not in page bodies), and home/notfound/redirect
+# class keys.
 #
 # 20260809  Kimmo Suominen
 #
@@ -22,45 +23,48 @@ test_init
 
 # Plain page in the default collection.
 run_cgi /ls.1
-assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1$'
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1$'
 
 # MI page under an arch URL: arch-free page key plus the requested
 # arch.
 run_cgi /i386/ls.1
-assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1 arch:i386$'
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1 arch:i386$'
 
 # MD page: requested arch equals the canonical arch, one arch key.
 run_cgi /i386/apm.4
-assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:apm.4 arch:i386$'
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:apm.4 arch:i386$'
 
 # Machine-class page: requested arch plus the class directory.
 run_cgi /i386/cpuctl.4
-assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:cpuctl.4 arch:i386 arch:x86$'
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:cpuctl.4 arch:i386 arch:x86$'
 
 # Branch collection page.
 run_cgi /NetBSD-9.x-BRANCH/ls.1
-assert_header '^Surrogate-Key: all form coll:NetBSD-9.x-BRANCH page:NetBSD-9.x-BRANCH:ls.1$'
+assert_header '^Surrogate-Key: all coll:NetBSD-9.x-BRANCH page:NetBSD-9.x-BRANCH:ls.1$'
 
 # A hostile arch segment (":" is outside the guard's character
-# class) must not contribute an arch key or corrupt the header.
+# class) must not contribute an arch key or corrupt the header,
+# and must not be reflected into the form markup either.
 run_cgi '/ev:il/ls.1'
-assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1$'
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1$'
 assert_no_header ' arch:'
+assert_body_absent 'data-url="ev:il"'
+assert_body_absent 'value="ev:il"'
 
 # Home page.
 run_cgi /
-assert_header '^Surrogate-Key: all home form coll:NetBSD-current$'
+assert_header '^Surrogate-Key: all home coll:NetBSD-current$'
 
 # 404 (carries coll: a rebuild can add a page that 404'd).
 run_cgi /nosuchcommand.1
-assert_header '^Surrogate-Key: all notfound form coll:NetBSD-current$'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
 
 # 404 in an absent collection (no directory, no branch or current
 # fallback) keys the requested (sanitized) collection, not the
 # default.
 run_cgi /NetBSD-6.1/ls.1
 assert_header '^Status: 404 Not Found$'
-assert_header '^Surrogate-Key: all notfound form coll:NetBSD-6.1$'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-6.1$'
 # No build file for the absent collection: no Last-Modified, so
 # this 404 can never turn into a 304.
 assert_no_header '^Last-Modified:'
