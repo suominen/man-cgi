@@ -39,11 +39,16 @@ constraints are load-bearing; see the notes at the bottom.
   cutover itself (deploy of RCS 1.100, nginx cache wipes on both
   hosts, `manno-purge all`, Fastly UI purge-all for the key-less
   pre-deploy objects) was performed live on 2026-08-09 and
-  verified end to end; the only check still outstanding is
-  observing the first natural nginx revalidation cycle (needs an
-  entry to age past its 3600 s X-Accel-Expires).
-- [ ] 10. ct-check extensions (branch in `~/src/ct-check`) +
-  `tests/smoke.yml`.
+  verified end to end, including the natural nginx revalidation
+  cycle (STALE served during background revalidation, then HIT with
+  refreshed validity, observed on a seeded entry after its 3600 s
+  X-Accel-Expires).
+- [x] 10. ct-check extensions (branch `response-headers` in
+  `~/src/ct-check`: response-header assertions, location compare,
+  request headers, revalidate, --delay) + `tests/smoke.yml` (any
+  tier; green against production through Fastly) and
+  `tests/smoke-origin.yml` (origin/QA, Surrogate headers; entries
+  verified, full-run greens limited only by refill-storm 502s).
 - [ ] 11. Script: `/api/archlist` + `/api/colllist` endpoints.
 - [ ] 12. Script: JS query form + localStorage; drop embedded
   lists; write its ADR.

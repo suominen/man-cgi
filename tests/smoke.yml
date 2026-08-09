@@ -1,0 +1,95 @@
+# Smoke checklist for man.netbsd.org, usable against any tier:
+#
+#   ct-check --scheme https --server man.netbsd.org --file tests/smoke.yml
+#   ct-check --scheme http --server man.oxygene.qa.nxrns.org --file tests/smoke.yml
+#
+# Asserts only what holds everywhere; Surrogate headers are stripped
+# by Fastly, so their checks live in smoke-origin.yml.
+#
+# Rare flake: during Fastly's stale-while-revalidate window right
+# after a rebuild, a revalidate entry can compare a stale object's
+# Last-Modified against the refreshed one and report a spurious 200.
+# Re-run before believing such a failure.
+
+checklist:
+
+# Home page.
+- path: /
+  type: text/html
+  headers:
+    cache-control: "public, max-age=7200"
+    last-modified: present
+  revalidate: true
+
+# Current-collection page (the default collection).
+- path: /ls.1
+  type: text/html
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+  revalidate: true
+
+# Machine-dependent page under its arch.
+- path: /i386/apm.4
+  type: text/html
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+
+# MI page under an arch URL serves 200 today; becomes a 301 when
+# canonical-arch redirects land (TODO step 13) - update then.
+- path: /i386/ls.1
+  type: text/html
+  headers:
+    cache-control: "public, max-age=3600"
+
+# Release-collection page. (Will 302 to the branch when the 10.1
+# directory is eventually retired - update to a newer release then.)
+- path: /NetBSD-10.1/ls.1
+  type: text/html
+  headers:
+    cache-control: "public, max-age=86400"
+    last-modified: present
+  revalidate: true
+
+# Branch-collection page. (Dies when the 10 branch EOLs - update.)
+- path: /NetBSD-10.x-BRANCH/ls.1
+  type: text/html
+  headers:
+    cache-control: "public, max-age=3600"
+
+# 404 with a validator. No revalidate here: Fastly answers
+# conditionals with 304 only for cached 200s, so through Fastly a
+# conditional 404 request gets the full 404 (the origin-side 304 is
+# checked in smoke-origin.yml).
+- path: /qqzz-smoke-nonesuch.1
+  code: 404
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+
+# Sectionless request canonicalizes permanently.
+- path: /ls
+  code: 301
+  location: /ls.1
+  headers:
+    cache-control: "public, max-age=86400"
+
+# Legacy query-string URL canonicalizes permanently.
+- path: /cgi-bin/man-cgi?ls+1
+  code: 301
+  location: /ls.1
+
+# A .0 release that never existed falls back to current.
+- path: /NetBSD-99.0/ls.1
+  code: 302
+  location: /ls.1
+  headers:
+    cache-control: "public, max-age=86400"
+
+# Health check.
+- path: /.well-known/health
+  type: text/plain
+  headers:
+    cache-control: "public, max-age=30"
+    x-powered-by: present

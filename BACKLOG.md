@@ -26,3 +26,7 @@ snapshot, not a source of truth.
 - Align lcm's cache disk device with oxygene: the cache filesystem is
   `ld3a` on lcm but `ld2a` on oxygene, which invites wipe-procedure
   mistakes.
+- Review fcgiwrap worker capacity on oxygene: during the 2026-08-09
+  post-cutover refill storm, roughly a third of uncached requests
+  (including the QA vhost's) 502'd for hours while crawlers re-filled
+  the caches.

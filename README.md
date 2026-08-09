@@ -34,8 +34,10 @@ The test harness runs the CGI script against fixture manual-page
 trees. Tests execute on a real NetBSD host (equinoxe) via
 `tests/run-remote`, because the script depends on NetBSD `stat -s`,
 BSD `date -r`, and NetBSD `man -C`. Smoke tests against the QA and
-production sites will use `ct-check` (its own repository) with a
-checklist in `tests/smoke.yml` (TODO step 10).
+production sites use `ct-check` (its own repository):
+`tests/smoke.yml` works against any tier, and
+`tests/smoke-origin.yml` additionally checks the Surrogate headers,
+which only the origin and the QA vhost expose (Fastly strips them).
 
 ## Layout
 

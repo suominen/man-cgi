@@ -51,6 +51,14 @@ cached object is keyed — but it is the recovery tool if key-less
 objects somehow reappear (e.g. after the CGI stopped emitting keys
 for a while). The purge token cannot do this; it requires UI access.
 
+Expect a **refill storm** after a purge-all (observed at the
+cutover): with the edge empty, crawler traffic hits the origin as
+full renders until the caches rewarm; the shared fcgiwrap pool can
+502 intermittently (which also affects the QA vhost) and the
+shield POP's `limit_req` budget can 429. It settles as popular
+objects refill. Pace any smoke checks through it (`ct-check
+--delay`).
+
 ## Purging / wiping nginx
 
 nginx (open source) has no cache-purge module: the only options are

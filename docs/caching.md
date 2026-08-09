@@ -65,7 +65,10 @@ measurements). Any mismatch falls through to a full response.
 
 Client conditionals are answered without origin involvement:
 
-- Fastly answers 304s from its own cache.
+- Fastly answers 304s from its own cache — for cached **200s**
+  only; a conditional request for a cached 404 gets the full 404
+  (observed live). 404 revalidation still pays off at the nginx
+  tier.
 - nginx answers 304s from its cache (valid entries and fresh fills)
   via its not-modified filter.
 - Only when nginx's entry has expired does a conditional round trip
