@@ -51,8 +51,18 @@ MANCGI_DATE=2026-04-06
 
 # The HTTPD server may not pass the enviroment variables to the script.
 # You should add your system path here :
+#
+# Outside a gateway context (e.g. the test harness) MANCGI_PATH and
+# MANCGI_MANROOT may override the fixed values.
+case "${GATEWAY_INTERFACE:-}" in
+'')
+    ;;
+*)
+    unset MANCGI_PATH MANCGI_MANROOT
+    ;;
+esac
 export PATH
-PATH=/usr/local/bin:/bin:/usr/bin
+PATH=${MANCGI_PATH:-/usr/local/bin:/bin:/usr/bin}
 
 # The same for the man path here :
 #export MANPATH
@@ -69,7 +79,7 @@ OSNAME=$(uname -s)
 OSREL=$(uname -r)
 
 # Man page collections
-MANROOT=/p/netbsd/man/man
+MANROOT=${MANCGI_MANROOT:-/p/netbsd/man/man}
 
 # Last modified is NetBSD-current build retrieval date
 LASTMODFILE="$MANROOT/NetBSD-current/build"
