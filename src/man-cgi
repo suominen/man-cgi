@@ -99,8 +99,7 @@ healthcheck()
     echo "X-Powered-By: man-cgi (${MANCGI_DATE})"
     echo 'Content-Type: text/plain'
 
-    EXPSECS=30
-    expires
+    emit_cache_headers health
 
     # End of headers
     echo ''
@@ -401,32 +400,52 @@ END
 END
 }
 
-expires()
+# Emit the caching headers for a response of the given content
+# class: health, home, redirect-found, redirect-permanent, page,
+# or notfound.
+emit_cache_headers()
 {
-    case "${EXPSECS:-}" in
-    '')
+    local class expdate expires expsecs
+    class="${1}"
+
+    case "${class}" in
+    health)
+	# 30 seconds
+	expsecs=30
+	;;
+    home)
+	# 2 hours
+	expsecs=7200
+	;;
+    redirect-found)
+	# 24 hours
+	expsecs=86400
+	;;
+    *)
+	# page, notfound, redirect-permanent
 	case "${COLL}" in
 	*-current|*-BRANCH)
 	    # 24 hours
-	    EXPSECS=86400
+	    expsecs=86400
 	    ;;
 	*)
 	    # 90 days
-	    EXPSECS=7776000
+	    expsecs=7776000
 	    ;;
 	esac
 	;;
     esac
 
-    EXPDATE=$(($(date '+%s') + $EXPSECS))
-    EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
+    expdate=$(($(date '+%s') + expsecs))
+    expires=$(date -u -r "${expdate}" '+%a, %d %b %Y %H:%M:%S GMT')
 
-    echo "Expires: $EXPIRES"
-    echo "Cache-Control: public, max-age=$EXPSECS"
+    echo "Expires: ${expires}"
+    echo "Cache-Control: public, max-age=${expsecs}"
 }
 
 redirect()
 {
+    local class
     ME="$(canonical_url)"
     case "${1}" in
     303)
@@ -434,21 +453,22 @@ redirect()
 	echo 'Status: 303 See Other'
 	;;
     308)
+	class=redirect-permanent
 	echo 'Status: 308 Permanent Redirect'
 	;;
     *)
 	# Collection not found
-	# 24 hours
-	EXPSECS=86400
+	class=redirect-found
 	echo 'Status: 302 Found'
 	;;
     esac
     echo "Location: $ME"
+    echo "Content-Type: text/html; charset=$CHARSET"
     case "$REQUEST_METHOD" in
     POST)
 	;;
     *)
-	expires
+	emit_cache_headers "${class}"
 	;;
     esac
 
@@ -578,8 +598,6 @@ set -- $SECTION
 SECTION="$1"
 set -- $COLL
 COLL="$1"
-
-echo "Content-Type: text/html; charset=$CHARSET"
 
 case "$REQUEST_METHOD" in
 POST)
@@ -740,8 +758,6 @@ fi
 
 case "${COMMAND}" in
 '')
-    # 2 hours
-    EXPSECS=7200
     ;;
 *)
     case "${SECTION}" in
@@ -813,6 +829,8 @@ case "${LASTMODFILE}" in
     ;;
 esac
 
+echo "Content-Type: text/html; charset=$CHARSET"
+
 if [ -f "$LASTMODFILE" ]
 then
     eval $(stat -s "$LASTMODFILE")
@@ -823,7 +841,19 @@ then
     fi
 fi
 
-expires
+case "${COMMAND}" in
+'')
+    emit_cache_headers home
+    ;;
+*)
+    if [ ${notfound:-0} -ne 0 ]
+    then
+	emit_cache_headers notfound
+    else
+	emit_cache_headers page
+    fi
+    ;;
+esac
 
 # End of headers
 cat <<END
