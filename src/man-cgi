@@ -204,6 +204,125 @@ list_collections()
     cat "${MANROOT}/colllist"
 }
 
+# One shared section list: the /api/v1/sectlist endpoint, the query
+# form, and the intro table all use it. ANY is form-only.
+list_sections()
+{
+    cat <<END
+ANY Search in All Sections
+1 General Commands
+2 System Calls
+3 C Library Functions
+3f Fortran Library Functions
+3lua Lua Modules
+4 Special Files and Hardware Support
+5 File Formats
+6 Games and Demos
+7 Miscellaneous Information Pages
+8 System Maintenance Commands
+9 Kernel Internals
+9lua Lua Kernel Bindings
+END
+}
+
+# Serve one of the /api/v1 list endpoints: newline-delimited
+# text/plain, revalidatable via Last-Modified (the list file's
+# mtime; the script's own for the embedded sectlist).
+api_list()
+{
+    local file lastmod
+
+    APILIST="${1}"
+
+    case "${APILIST}" in
+    archlist|colllist)
+	file="${MANROOT}/${APILIST}"
+	;;
+    *)
+	file="${0}"
+	;;
+    esac
+
+    # NB: archlist/colllist bodies also depend on DEFAULT_ARCH
+    # and DEFAULT_COLLECTION (a DEFAULT line is synthesized when
+    # unset), which the file-mtime validator does not cover:
+    # after changing those params, touch the list files or purge
+    # the api key.
+    if [ -f "${file}" ]
+    then
+	eval $(stat -s "${file}")
+	lastmod=$(date -u -r "${st_mtime}" '+%a, %d %b %Y %H:%M:%S GMT')
+    fi
+
+    case "${REQUEST_METHOD:-GET}" in
+    GET|HEAD)
+	if [ -n "${lastmod:-}" ] &&
+	[ "${HTTP_IF_MODIFIED_SINCE:-}" = "${lastmod}" ]
+	then
+	    echo 'Status: 304 Not Modified'
+	    echo "Last-Modified: ${lastmod}"
+	    emit_cache_headers api
+
+	    # End of headers; a 304 carries no body
+	    echo ''
+	    exit 0
+	fi
+	;;
+    esac
+
+    echo 'Content-Type: text/plain'
+    if [ -n "${lastmod:-}" ]
+    then
+	echo "Last-Modified: ${lastmod}"
+    fi
+    emit_cache_headers api
+
+    # End of headers
+    echo ''
+
+    case "${REQUEST_METHOD:-GET}" in
+    HEAD)
+	;;
+    *)
+	case "${APILIST}" in
+	archlist)
+	    list_archs
+	    ;;
+	colllist)
+	    list_collections
+	    ;;
+	sectlist)
+	    list_sections
+	    ;;
+	esac
+	;;
+    esac
+
+    exit 0
+}
+
+# Unknown /api paths must not fall through to page parsing (they
+# would be canonicalized into man-page redirects).
+api_notfound()
+{
+    echo 'Status: 404 Not Found'
+    echo 'Content-Type: text/plain'
+    emit_cache_headers api-notfound
+
+    # End of headers
+    echo ''
+
+    case "${REQUEST_METHOD:-GET}" in
+    HEAD)
+	;;
+    *)
+	echo 'Not found'
+	;;
+    esac
+
+    exit 0
+}
+
 introtable()
 {
     cat <<END
@@ -219,70 +338,29 @@ introtable()
 <td>a portable, network-transparent window system</a></td>
 </tr>
 <tr><td class="spacer" colspan="2">&nbsp;</td></tr>
-<tr>
-<td class="section">1</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.1"
-    >GENERAL COMMANDS</a></td>
-</tr>
-<tr>
-<td class="section">2</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.2"
-    >SYSTEM CALLS AND ERROR NUMBERS</a></td>
-</tr>
-<tr>
-<td class="section">3</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.3"
-    >SYSTEM LIBRARIES</a></td>
-</tr>
-<tr>
-<!-- nothing there
-<td class="section">3f</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.3f"
-    >FORTRAN LIBRARIES</a></td>
-</tr>
--->
-<tr>
-<td class="section">3lua</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.3lua"
-    >LUA MODULES</a></td>
-</tr>
-<tr>
-<td class="section">4</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.4"
-    >DEVICES AND DEVICE DRIVERS</a></td>
-</tr>
-<tr>
-<td class="section">5</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.5"
-    >FILE FORMATS</a></td>
-</tr>
-<tr>
-<td class="section">6</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.6"
-    >GAMES</a></td>
-</tr>
-<tr>
-<td class="section">7</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.7"
-    >MISCELLANEOUS INFORMATION PAGES</a></td>
-</tr>
-<tr>
-<td class="section">8</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.8"
-    >SYSTEM MAINTENANCE PROCEDURES AND COMMANDS</a></td>
-</tr>
-<tr>
-<td class="section">9</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.9"
-    >KERNEL INTERNALS</a></td>
-</tr>
-<tr>
-<td class="section">9lua</td>
-<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.9lua"
-    >LUA KERNEL BINDINGS</a></td>
-</tr>
-</table>
 END
+
+    # Sections from the shared list; ANY is form-only and there is
+    # no intro.3f page.
+    list_sections |
+    while read -r s d
+    do
+	case "$s" in
+	ANY|3f)
+	    ;;
+	*)
+	    cat <<END
+<tr>
+<td class="section">$s</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.$s"
+    >$d</a></td>
+</tr>
+END
+	    ;;
+	esac
+    done
+
+    echo '</table>'
 }
 
 queryform()
@@ -300,32 +378,15 @@ queryform()
     <select name="section" id="section">
 END
 
-    # XXX: Create a seclist and use that?
-    for i in \
-	'ANY Search in All Sections' \
-	'1 General Commands' \
-	'2 System Calls' \
-	'3 C Library Functions' \
-	'3f Fortran Library Functions' \
-	'3lua Lua Modules' \
-	'4 Special Files and Hardware Support' \
-	'5 File Formats' \
-	'6 Games and Demos' \
-	'7 Miscellaneous Information Pages' \
-	'8 System Maintenance Commands' \
-	'9 Kernel Internals' \
-	'9lua Lua Kernel Bindings' \
-	;
+    list_sections |
+    while read -r s d
     do
-	set -- ${i}
-	s="${1}"
-	shift
 	case "$s" in
 	"$SECTION")
-	    echo "      <option value=\"$s\" selected>$s - $@</option>"
+	    echo "      <option value=\"$s\" selected>$s - $d</option>"
 	    ;;
 	*)
-	    echo "      <option value=\"$s\">$s - $@</option>"
+	    echo "      <option value=\"$s\">$s - $d</option>"
 	    ;;
 	esac
     done
@@ -417,6 +478,12 @@ emit_cache_headers()
     # briefly (expiry costs only a 304 revalidation), Fastly long
     # (purgeable by Surrogate-Key).
     case "${class}" in
+    api)
+	# 1 hour; a week at Fastly
+	expsecs=3600
+	accel=3600
+	surrogate='max-age=604800, stale-while-revalidate=3600'
+	;;
     health)
 	# 30 seconds everywhere
 	expsecs=30
@@ -429,7 +496,7 @@ emit_cache_headers()
 	accel=7200
 	surrogate='max-age=86400, stale-while-revalidate=3600'
 	;;
-    notfound)
+    notfound|api-notfound)
 	# 1 hour; a day at Fastly (a rebuild can add the page)
 	expsecs=3600
 	accel=3600
@@ -478,6 +545,12 @@ emit_cache_headers()
     # against unsafe characters: PATH_INFO is user input) and the
     # canonical arch when it differs (e.g. the x86 machine class).
     case "${class}" in
+    api)
+	keys="all api form ${APILIST}"
+	;;
+    api-notfound)
+	keys='all api notfound'
+	;;
     health)
 	keys='all'
 	;;
@@ -586,6 +659,12 @@ case "$PATH_INFO" in
 /.well-known/health)
     healthcheck
     ;;
+/api/v1/archlist|/api/v1/colllist|/api/v1/sectlist)
+    api_list "${PATH_INFO##*/}"
+    ;;
+/api/*)
+    api_notfound
+    ;;
 ''|/)
     if [ $# -lt 2 ]
     then
@@ -611,6 +690,9 @@ case "$PATH_INFO" in
     case "${COMMAND}" in
     /.well-known/health)
 	healthcheck
+	;;
+    /api/*)
+	api_notfound
 	;;
     '')
 	;;
