@@ -25,31 +25,28 @@ test_init
 run_cgi /ls.1
 assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1$'
 
-# MI page under an arch URL: arch-free page key plus the requested
-# arch.
-run_cgi /i386/ls.1
-assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1 arch:i386$'
-
-# MD page: requested arch equals the canonical arch, one arch key.
+# MD page served under its own (canonical) arch: one arch key.
 run_cgi /i386/apm.4
 assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:apm.4 arch:i386$'
 
-# Machine-class page: requested arch plus the class directory.
-run_cgi /i386/cpuctl.4
-assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:cpuctl.4 arch:i386 arch:x86$'
+# Machine-class page served under its class directory: the class
+# arch key.
+run_cgi /x86/cpuctl.4
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:cpuctl.4 arch:x86$'
 
 # Branch collection page.
 run_cgi /NetBSD-9.x-BRANCH/ls.1
 assert_header '^Surrogate-Key: all coll:NetBSD-9.x-BRANCH page:NetBSD-9.x-BRANCH:ls.1$'
 
-# A hostile arch segment (":" is outside the guard's character
-# class) must not contribute an arch key or corrupt the header,
-# and must not be reflected into the form markup either.
-run_cgi '/ev:il/ls.1'
-assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1$'
+# A hostile arch on a 404 (which renders the form but is not
+# canonicalized) must not contribute an arch key or be reflected
+# into the form markup. (A hostile arch on a resolvable page is
+# dropped by the canonical-arch redirect instead.)
+run_cgi '/ev:il/nosuchcommand.1'
+assert_header '^Status: 404 Not Found$'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
 assert_no_header ' arch:'
-assert_body_absent 'data-url="ev:il"'
-assert_body_absent 'value="ev:il"'
+assert_body_absent 'ev:il'
 
 # Home page.
 run_cgi /

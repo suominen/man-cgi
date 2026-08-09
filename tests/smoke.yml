@@ -36,12 +36,12 @@ checklist:
     cache-control: "public, max-age=3600"
     last-modified: present
 
-# MI page under an arch URL serves 200 today; becomes a 301 when
-# canonical-arch redirects land (TODO step 13) - update then.
+# MI page under an arch URL 301s to the arch-less canonical URL.
 - path: /i386/ls.1
-  type: text/html
+  code: 301
+  location: /ls.1
   headers:
-    cache-control: "public, max-age=3600"
+    cache-control: "public, max-age=86400"
 
 # Release-collection page. (Will 302 to the branch when the 10.1
 # directory is eventually retired - update to a newer release then.)

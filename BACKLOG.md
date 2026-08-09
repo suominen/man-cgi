@@ -24,6 +24,11 @@ snapshot, not a source of truth.
 - Align lcm's cache disk device with oxygene: the cache filesystem is
   `ld3a` on lcm but `ld2a` on oxygene, which invites wipe-procedure
   mistakes.
+- Fix the COLL sanitizer's `tr` set `'[-.A-Za-z0-9]'`: the intent is
+  the characters `-.A-Za-z0-9`, but tr reads `[` and `]` as literal
+  set members and `[-.` as a range (which GNU tr rejects outright,
+  making the suite NetBSD-only). The portable form is
+  `tr -cd 'A-Za-z0-9.-'`.
 - Review fcgiwrap worker capacity on oxygene: during the 2026-08-09
   post-cutover refill storm, roughly a third of uncached requests
   (including the QA vhost's) 502'd for hours while crawlers re-filled

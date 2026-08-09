@@ -17,16 +17,24 @@ checklist:
     surrogate-control: "max-age=86400, stale-while-revalidate=3600, stale-if-error=604800"
     surrogate-key: "all coll:NetBSD-current page:NetBSD-current:ls.1"
 
+# MI page under an arch URL now 301s to the arch-less canonical
+# URL, keyed as a redirect.
 - path: /i386/ls.1
+  code: 301
   headers:
-    surrogate-key: "all coll:NetBSD-current page:NetBSD-current:ls.1 arch:i386"
+    surrogate-key: "all redirect coll:NetBSD-current"
 
-# A machine-class page (man4/x86): both arch keys. (Depends on
-# est(4) staying in man4/x86 - pick another x86-class page if it
-# moves.)
-- path: /i386/est.4
+# A machine-dependent page served under its own arch keeps the arch
+# key. (Depends on apm(4) staying i386-only.)
+- path: /i386/apm.4
   headers:
-    surrogate-key: "all coll:NetBSD-current page:NetBSD-current:est.4 arch:i386 arch:x86"
+    surrogate-key: "all coll:NetBSD-current page:NetBSD-current:apm.4 arch:i386"
+
+# A machine-class page served under its class directory (man4/x86).
+# (Depends on est(4) staying in man4/x86.)
+- path: /x86/est.4
+  headers:
+    surrogate-key: "all coll:NetBSD-current page:NetBSD-current:est.4 arch:x86"
 
 - path: /NetBSD-10.1/ls.1
   headers:

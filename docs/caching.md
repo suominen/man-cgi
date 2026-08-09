@@ -104,10 +104,11 @@ emitted before the conditional check runs.
 The nginx cache was 110 GB before the 2026-08-09 wipe, mostly
 bot-crawled URL space (arch aliases of machine-independent pages).
 Shorter TTLs do **not** shrink disk usage — expired entries stay on
-disk for revalidation — so the cache will regrow toward one object
-per crawled URL. The planned canonical-arch redirects (TODO step 13)
-are what collapses the alias multiplier: up to ~60 arch aliases per
-MI page become one page object plus tiny redirect objects.
+disk for revalidation — so the cache regrows toward one object per
+crawled URL. The canonical-arch redirects (ADR-0009) collapse the
+alias multiplier: up to ~60 arch aliases per MI page become one
+page object plus tiny redirect objects. The full effect appears
+only after crawlers re-follow the new 301s.
 
 ## Sample response headers
 

@@ -58,19 +58,20 @@ constraints are load-bearing; see the notes at the bottom.
   arch/collection selects server-render fallback options only; an
   inline script loads the lists from /api/v1 and remembers choices
   in localStorage; pages, home, and 404s dropped the `form` key.
-- [ ] 13. Script (after step 12 bakes one browser-TTL cycle + soft
-  purge): canonical-arch 301 redirects; write its ADR.
+- [x] 13. Script: canonical-arch 301 redirects (ADR-0009). MI
+  pages drop the arch, MD pages keep it, machine-class pages go to
+  the class directory; folded into the section-inference redirect
+  for a single hop. Steps 11-13 are the same script and ship as
+  one artifact (nothing to sequence). The localStorage form
+  (step 12) preserves the user's arch once MI URLs drop it; with
+  nothing remembered, the form falls back to the default arch.
 - [ ] 14. Rewrite ADR: keep improved shell CGI vs rewrite
   (Python/Perl/C/Go), using origin-QPS data gathered after steps
   8-9.
 
 ## Ordering constraints
 
-- Step 13 only after step 12 has baked: cached pages must no longer
-  rely on URL-borne arch for form preselection before arch is dropped
-  from machine-independent URLs. Bake means at least one browser-TTL
-  cycle after step 12's deploy, plus a soft purge of `all`.
-
-(Steps up to 9 are done — step 1, the repo bootstrap, predates this
-list. Their ordering constraints held and their operational lessons
-now live in docs/, not here.)
+None remaining. (Steps up to 9 are done — step 1, the repo
+bootstrap, predates this list. Their ordering constraints held and
+their operational lessons now live in docs/, not here. Steps 11-13
+are one script and ship together.)

@@ -1,10 +1,10 @@
 #!/bin/sh
 # @(#)$KimmoSuominen$
 #
-# Characterize arch handling: a machine-dependent page (in an arch
-# subdirectory) keeps its arch in the canonical link, a
-# machine-independent page served under an arch URL advertises the
-# arch-less canonical URL but still serves (no redirect today), and
+# Arch handling and canonicalization: a machine-independent page
+# served under an arch URL redirects (301) to the arch-less
+# canonical URL, a machine-dependent page keeps (or gains) its
+# arch, a machine-class page redirects to the class directory, and
 # an MD page is invisible from other arches.
 #
 # 20260809  Kimmo Suominen
@@ -19,7 +19,8 @@ TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
 
 test_init
 
-# MD page under its own arch.
+# MD page under its own arch: canonical, so it serves (no redirect)
+# and keeps the arch in the form and canonical link.
 run_cgi /i386/apm.4
 
 assert_exit 0
@@ -32,16 +33,21 @@ assert_body 'rel="canonical" href="https://man.netbsd.org/i386/apm.4"'
 assert_body '<select name="arch" id="arch" data-url="i386">'
 assert_body '<option value="i386" selected>i386</option>'
 
-# MI page under an arch URL: serves 200 with full cacheability,
-# canonical link drops the arch. (A future step will turn this
-# into a 301 redirect; this test pins today's behavior.)
+# MI page under an arch URL: 301 to the arch-less canonical URL.
 run_cgi /i386/ls.1
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/ls.1$'
+assert_header '^Cache-Control: public, max-age=86400$'
+assert_header '^Surrogate-Key: all redirect coll:NetBSD-current$'
+
+# The canonical MI URL itself serves.
+run_cgi /ls.1
 
 assert_exit 0
 assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_LS1}\$"
-assert_header '^Cache-Control: public, max-age=3600$'
-assert_body 'rel="canonical" href="https://man.netbsd.org/ls.1"'
 
 # The MD page does not exist for another arch, including a
 # class-mate arch: amd64 searches man4/amd64 and man4/x86 but
@@ -56,27 +62,50 @@ run_cgi /amd64/apm.4
 assert_exit 0
 assert_header '^Status: 404 Not Found$'
 
-# The arch itself works; only the MD page is absent there.
+# The arch itself works; only the MD page is absent there. A
+# machine-independent page requested under sparc 301s to arch-less.
 run_cgi /sparc/ls.1
 
 assert_exit 0
-assert_no_header '^Status:'
-assert_header "^Last-Modified: ${LM_LS1}\$"
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/ls.1$'
 
-# A page in a machine-class subdirectory (man4/x86) is reachable
-# from both class members, and the canonical link uses the class
-# directory's name, not the requested arch.
+# A machine-class page (man4/x86) requested under a class member
+# 301s to the class directory's name, not the requested arch.
 run_cgi /i386/cpuctl.4
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/x86/cpuctl.4$'
+
+run_cgi /amd64/cpuctl.4
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/x86/cpuctl.4$'
+
+# Requested under its own class directory: canonical, serves.
+run_cgi /x86/cpuctl.4
 
 assert_exit 0
 assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_CPUCTL4}\$"
 assert_body 'rel="canonical" href="https://man.netbsd.org/x86/cpuctl.4"'
 
-run_cgi /amd64/cpuctl.4
+# Sectionless MI page under an arch: one redirect canonicalizes
+# both the section and the arch.
+run_cgi /i386/ls
 
 assert_exit 0
-assert_no_header '^Status:'
-assert_header "^Last-Modified: ${LM_CPUCTL4}\$"
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/ls.1$'
+
+# The collection survives an arch-drop redirect: only the arch
+# leaves the URL, not the (non-default) collection.
+run_cgi /NetBSD-9.x-BRANCH/i386/ls.1
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-9.x-BRANCH/ls.1$'
 
 test_done
