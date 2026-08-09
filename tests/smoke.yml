@@ -87,6 +87,23 @@ checklist:
   headers:
     cache-control: "public, max-age=86400"
 
+# API list endpoints.
+- path: /api/v1/archlist
+  type: text/plain
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+  revalidate: true
+
+- path: /api/v1/sectlist
+  type: text/plain
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+
+- path: /api/v1/nosuch
+  code: 404
+
 # Health check.
 - path: /.well-known/health
   type: text/plain

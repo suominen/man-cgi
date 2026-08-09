@@ -34,6 +34,17 @@ assert_body '<option value="i386">i386</option>'
 assert_body '<option value="NetBSD-10.1">NetBSD-10.1</option>'
 assert_body_absent 'rel="canonical"'
 
+# The intro table and the form's section select share one section
+# list (mixed case; the old uppercase intro copy is gone). ANY
+# stays in the select but not the table; 3f is table-skipped.
+assert_body 'intro.1'
+assert_body '>General Commands</a>'
+assert_body '<option value="3lua">3lua - Lua Modules</option>'
+assert_body '<option value="ANY">ANY - Search in All Sections</option>'
+assert_body_absent 'GENERAL COMMANDS'
+assert_body_absent 'intro\.ANY'
+assert_body_absent 'intro\.3f'
+
 # The empty PATH_INFO form of the home page behaves the same.
 run_cgi ''
 

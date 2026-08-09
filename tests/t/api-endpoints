@@ -1,0 +1,128 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# The /api/v1 list endpoints: newline-delimited text/plain with the
+# api cache class, their own Surrogate-Keys, Last-Modified from the
+# list file (the script itself for sectlist), 304 revalidation, and
+# HEAD support. Unknown /api paths 404 without falling through to
+# page parsing.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# archlist: NONE synthesized (DEFAULT_ARCH is set) plus the file
+# contents.
+run_cgi /api/v1/archlist
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Content-Type: text/plain$'
+assert_header "^Last-Modified: ${LM_ARCHLIST}\$"
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
+assert_header '^Surrogate-Control: max-age=604800, stale-while-revalidate=3600$'
+assert_header '^Surrogate-Key: all api form archlist$'
+assert_body '^NONE$'
+assert_body '^i386$'
+assert_body '^x86$'
+
+# colllist: straight file contents.
+run_cgi /api/v1/colllist
+
+assert_exit 0
+assert_header "^Last-Modified: ${LM_COLLLIST}\$"
+assert_header '^Surrogate-Key: all api form colllist$'
+assert_body '^NetBSD-current$'
+assert_body '^NetBSD-9.x-BRANCH$'
+
+# sectlist: shared section list including ANY; Last-Modified comes
+# from the script file itself.
+run_cgi /api/v1/sectlist
+
+assert_exit 0
+assert_header '^Content-Type: text/plain$'
+assert_header '^Last-Modified: '
+assert_header '^Surrogate-Key: all api form sectlist$'
+assert_body '^ANY Search in All Sections$'
+assert_body '^1 General Commands$'
+assert_body '^3lua Lua Modules$'
+assert_body '^9lua Lua Kernel Bindings$'
+
+# The sectlist validator round-trips: echoing the emitted
+# Last-Modified back yields a 304 even though the mtime is the
+# script's own.
+ims=$(sed -n 's/^Last-Modified: //p' "${TESTTMP}/hdrs")
+CGI_IMS="${ims}"
+run_cgi /api/v1/sectlist
+CGI_IMS=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_no_body
+
+# 304 revalidation with the exact validator.
+CGI_IMS="${LM_ARCHLIST}"
+run_cgi /api/v1/archlist
+CGI_IMS=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_header '^Surrogate-Key: all api form archlist$'
+assert_no_header '^Content-Type:'
+assert_no_body
+
+# HEAD: headers only.
+CGI_METHOD=HEAD
+run_cgi /api/v1/colllist
+CGI_METHOD=
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Content-Type: text/plain$'
+assert_no_body
+
+# Unknown /api paths are plain 404s, not canonicalization fodder,
+# and carry the api key so endpoint additions can purge them.
+run_cgi /api/v1/nosuch
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header '^Content-Type: text/plain$'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^Surrogate-Control: max-age=86400, stale-if-error=86400$'
+assert_header '^Surrogate-Key: all api notfound$'
+assert_no_header '^Location:'
+assert_body '^Not found$'
+
+# Two-segment /api paths must hit the same arm, not the page
+# parser (which would also 404, but with an HTML body).
+run_cgi /api/nosuch
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header '^Content-Type: text/plain$'
+assert_header '^Surrogate-Key: all api notfound$'
+assert_no_header '^Location:'
+assert_body '^Not found$'
+
+# The legacy query-string door must not turn /api paths into
+# cached canonicalization redirects either.
+CGI_QUERY='/api/v1/archlist'
+run_cgi ''
+CGI_QUERY=
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header '^Surrogate-Key: all api notfound$'
+assert_no_header '^Location:'
+
+test_done

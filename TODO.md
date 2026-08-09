@@ -49,7 +49,11 @@ constraints are load-bearing; see the notes at the bottom.
   tier; green against production through Fastly) and
   `tests/smoke-origin.yml` (origin/QA, Surrogate headers; entries
   verified, full-run greens limited only by refill-storm 502s).
-- [ ] 11. Script: `/api/archlist` + `/api/colllist` endpoints.
+- [x] 11. Script: `/api/v1/{archlist,colllist,sectlist}` endpoints
+  (versioned per Kim; sectlist added). One shared `list_sections`
+  now feeds the endpoint, the query form, and the intro table —
+  whose hardcoded uppercase copy is gone (wording now matches the
+  form's mixed-case descriptions).
 - [ ] 12. Script: JS query form + localStorage; drop embedded
   lists; write its ADR.
 - [ ] 13. Script (after step 12 bakes one browser-TTL cycle + soft

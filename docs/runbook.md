@@ -28,7 +28,8 @@ page at manage.fastly.com (also in its URL).
 |-----|------------|
 | `coll:<collection>` | That collection's man tree was rebuilt. The common case: `manno-purge coll:NetBSD-current` after the daily build pull. Covers the collection's pages, 404s (a rebuild can add a page that 404'd), and redirects. |
 | `page:<coll>:<cmd>.<sect>` | One page needs refreshing; hits all its arch aliases at once (the key is arch-free). |
-| `form` | `archlist` or `colllist` changed (until the JS query form lands, every HTML page embeds the lists). |
+| `form` | `archlist` or `colllist` changed (until the JS query form lands, every HTML page embeds the lists; the `/api/v1` list objects carry it too). |
+| `api` | The three `/api/v1` list objects (archlist, colllist, sectlist), also individually keyed by name. |
 | `home` | The home page needs refreshing. |
 | `notfound` | Mass-refresh of 404s. |
 | `redirect` | Redirect logic changed, or a collection appeared/disappeared. |

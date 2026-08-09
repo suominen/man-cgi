@@ -20,6 +20,8 @@ LM_BR_LS1='Mon, 05 Jan 2026 16:17:18 GMT'
 LM_BR_BUILD='Wed, 07 Jan 2026 18:19:20 GMT'
 LM_REL_LS1='Thu, 08 Jan 2026 19:20:21 GMT'
 LM_REL_BUILD='Fri, 09 Jan 2026 10:21:22 GMT'
+LM_ARCHLIST='Sat, 10 Jan 2026 11:12:13 GMT'
+LM_COLLLIST='Sun, 11 Jan 2026 12:13:14 GMT'
 
 TAP_N=0
 TAP_FAIL=0
@@ -46,6 +48,8 @@ setup_fixtures()
     TZ=UTC touch -t 202601051617.18 "${MANROOT}/NetBSD-9.x-BRANCH/man1/ls.1"
     TZ=UTC touch -t 202601091021.22 "${MANROOT}/NetBSD-10.1/build"
     TZ=UTC touch -t 202601081920.21 "${MANROOT}/NetBSD-10.1/man1/ls.1"
+    TZ=UTC touch -t 202601101112.13 "${MANROOT}/archlist"
+    TZ=UTC touch -t 202601111213.14 "${MANROOT}/colllist"
 }
 
 # Run the CGI with PATH_INFO="${1}". Optional request parameters come
