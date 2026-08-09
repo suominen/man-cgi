@@ -61,9 +61,12 @@ assert_header '^Surrogate-Key: all notfound form coll:NetBSD-current$'
 run_cgi /NetBSD-6.1/ls.1
 assert_header '^Status: 404 Not Found$'
 assert_header '^Surrogate-Key: all notfound form coll:NetBSD-6.1$'
+# No build file for the absent collection: no Last-Modified, so
+# this 404 can never turn into a 304.
+assert_no_header '^Last-Modified:'
 
 # Redirects: 302 collection fallback keys the resolved target
-# collection; 308 canonicalization keys the resolved collection.
+# collection; 301 canonicalization keys the resolved collection.
 run_cgi /NetBSD-9.3/ls.1
 assert_header '^Surrogate-Key: all redirect coll:NetBSD-9.x-BRANCH$'
 

@@ -30,7 +30,7 @@ assert_body 'rel="canonical" href="https://man.netbsd.org/i386/apm.4"'
 
 # MI page under an arch URL: serves 200 with full cacheability,
 # canonical link drops the arch. (A future step will turn this
-# into a 308 redirect; this test pins today's behavior.)
+# into a 301 redirect; this test pins today's behavior.)
 run_cgi /i386/ls.1
 
 assert_exit 0

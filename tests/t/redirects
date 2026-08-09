@@ -2,7 +2,7 @@
 # @(#)$KimmoSuominen$
 #
 # Characterize redirects: collection fallback (302) and
-# extra-path-component canonicalization (308).
+# extra-path-component canonicalization (301).
 #
 # 20260809  Kimmo Suominen
 #
@@ -18,11 +18,16 @@ test_init
 
 # A release that has moved on to its branch collection: the
 # collection directory NetBSD-9.3 does not exist but
-# NetBSD-9.x-BRANCH does, so the request 302s there.
+# NetBSD-9.x-BRANCH does, so the request 302s there. A matching
+# If-Modified-Since must not turn the redirect into a 304:
+# redirects fire before the conditional check.
+CGI_IMS="${LM_BR_LS1}"
 run_cgi /NetBSD-9.3/ls.1
+CGI_IMS=
 
 assert_exit 0
 assert_header '^Status: 302 Found$'
+assert_no_header '^Status: 304'
 assert_header '^Location: https://man.netbsd.org/NetBSD-9.x-BRANCH/ls.1$'
 assert_header '^Cache-Control: public, max-age=86400$'
 assert_header '^X-Accel-Expires: 86400$'
@@ -35,7 +40,7 @@ assert_body 'Goto:'
 run_cgi /i386/i386/ls.1
 
 assert_exit 0
-assert_header '^Status: 308 Permanent Redirect$'
+assert_header '^Status: 301 Moved Permanently$'
 assert_header '^Location: https://man.netbsd.org/i386/ls.1$'
 assert_header '^Cache-Control: public, max-age=86400$'
 assert_header '^X-Accel-Expires: 2592000$'

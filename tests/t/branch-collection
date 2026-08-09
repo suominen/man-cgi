@@ -38,6 +38,6 @@ assert_header '^Cache-Control: public, max-age=3600$'
 assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=86400, stale-if-error=86400$'
 assert_header '^Expires: '
-assert_no_header '^Last-Modified:'
+assert_header "^Last-Modified: ${LM_BR_BUILD}$"
 
 test_done

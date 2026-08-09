@@ -1,0 +1,106 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# The fast 304 path: an If-Modified-Since exactly matching the
+# response's Last-Modified yields a 304 with the full
+# caching-header block (so nginx and Fastly refresh entry validity
+# and keys on revalidation), no Content-Type, and no body. Any
+# mismatch falls through to a full 200. These tests pin the
+# response shape; that the render is skipped is not observable
+# from here. HEAD returns headers only on page and 404 responses
+# (redirect and health bodies are discarded by the front servers).
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# Exact match on a page: 304 with caching headers, no body.
+CGI_IMS="${LM_LS1}"
+run_cgi /ls.1
+CGI_IMS=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_header "^Last-Modified: ${LM_LS1}\$"
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
+assert_header '^Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800$'
+assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1$'
+assert_header '^Expires: '
+assert_no_header '^Content-Type:'
+assert_no_body
+
+# A mismatching validator falls through to a full 200.
+CGI_IMS='Thu, 01 Jan 2026 00:00:00 GMT'
+run_cgi /ls.1
+CGI_IMS=
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Content-Type: text/html; charset=windows-1252$'
+assert_body '<pre>'
+
+# 404s revalidate against the collection build date; the 304
+# replaces the 404 status for the conditional request.
+CGI_IMS="${LM_BUILD}"
+run_cgi /nosuchcommand.1
+CGI_IMS=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_no_header '^Status: 404'
+assert_header '^Surrogate-Key: all notfound form coll:NetBSD-current$'
+assert_no_body
+
+# The home page revalidates the same way.
+CGI_IMS="${LM_BUILD}"
+run_cgi /
+CGI_IMS=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_header '^Surrogate-Key: all home form coll:NetBSD-current$'
+assert_no_body
+
+# HEAD returns the full 200 header block without a body.
+CGI_METHOD=HEAD
+run_cgi /ls.1
+CGI_METHOD=
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Content-Type: text/html; charset=windows-1252$'
+assert_header "^Last-Modified: ${LM_LS1}\$"
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_no_body
+
+# HEAD on a 404 returns the 404 header block without a body.
+CGI_METHOD=HEAD
+run_cgi /nosuchcommand.1
+CGI_METHOD=
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_no_body
+
+# HEAD with a matching validator gets the 304.
+CGI_METHOD=HEAD
+CGI_IMS="${LM_LS1}"
+run_cgi /ls.1
+CGI_METHOD=
+CGI_IMS=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_no_body
+
+test_done

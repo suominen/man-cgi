@@ -16,15 +16,20 @@ TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
 
 test_init
 
+# A matching If-Modified-Since must not turn a POST into a 304:
+# the 303 fires long before the conditional check.
 CGI_METHOD=POST
 CGI_BODY='command=ls&section=1&arch=DEFAULT&coll=DEFAULT'
+CGI_IMS="${LM_LS1}"
 run_cgi ''
+CGI_IMS=
 
 assert_exit 0
 assert_header '^Status: 303 See Other$'
+assert_no_header '^Status: 304'
 assert_header '^Location: https://man.netbsd.org/ls.1$'
 assert_header '^Content-Type: text/html; charset=windows-1252$'
-assert_no_header '^Cache-Control:'
+assert_header '^Cache-Control: no-store$'
 assert_no_header '^Expires:'
 assert_no_header '^X-Accel-Expires:'
 assert_no_header '^Surrogate-Control:'

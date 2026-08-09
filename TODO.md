@@ -28,18 +28,28 @@ constraints are load-bearing; see the notes at the bottom.
   (COLL is emptied when it equals DEFAULT_COLLECTION), so
   NetBSD-current pages — rebuilt daily from TNF's builds via a
   once-a-day cron pull — were cached for 90 days everywhere.
-- [ ] 8. Script: fast 304 handler + HEAD + 404 Last-Modified + 303
-  `no-store`. Deploy only after step 4 is applied in production.
+- [x] 8. Script: fast 304 handler + HEAD + 404 Last-Modified + 303
+  `no-store`; canonicalization redirects switched from 308 to 301
+  (Fastly's default-cacheable statuses include 301 but not 308, and
+  the active VCL has no cacheability overrides; 303 keeps the
+  POST-to-GET switch). Step 4 (nginx revalidation) is already
+  applied in production.
 - [ ] 9. Docs: `docs/caching.md`, `docs/runbook.md`, `docs/nginx.md`;
   ADRs 0002-0004, 0008-0009. Then one-time nginx cache wipe + Fastly
   soft purge + live verification. Verification checklist from the
   step-7 review: Fastly does not cache 308s (or 503s) by default —
   confirm Surrogate-Control on them is inert and nginx absorbs 308s
   (X-Accel-Expires 30d); confirm stale-if-error delivery; runbook
-  must note that recovering from a bad 308 means deleting nginx
+  must note that recovering from a bad 301 means deleting nginx
   cache files (no purge module). Also note nginx forwards
   Surrogate-Key to non-Fastly clients (harmless; stripping is
-  tidier).
+  tidier). From the step-8 review: with the 304 fast path,
+  frozen-collection objects at nginx revalidate indefinitely, and
+  their bodies contain content the validator does not cover (form
+  lists until step 12, markup, MANCGI_DATE) — the runbook must list
+  nginx-wipe triggers: script deploys with observable output
+  changes, and archlist/colllist changes until step 12 removes the
+  embedded lists.
 - [ ] 10. ct-check extensions (branch in `~/src/ct-check`) +
   `tests/smoke.yml`.
 - [ ] 11. Script: `/api/archlist` + `/api/colllist` endpoints.

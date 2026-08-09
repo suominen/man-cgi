@@ -1,8 +1,9 @@
 #!/bin/sh
 # @(#)$KimmoSuominen$
 #
-# Characterize the 404 response: status, caching headers, no
-# Last-Modified, and the search-engine suggestion body.
+# The 404 response: status, caching headers, Last-Modified from
+# the resolved collection's build file (so 404s revalidate too),
+# and the search-engine suggestion body.
 #
 # 20260809  Kimmo Suominen
 #
@@ -24,7 +25,7 @@ assert_header '^Content-Type: text/html; charset=windows-1252$'
 assert_header '^Cache-Control: public, max-age=3600$'
 assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=86400, stale-if-error=86400$'
-assert_no_header '^Last-Modified:'
+assert_header "^Last-Modified: ${LM_BUILD}$"
 assert_body 'The manual page was not found'
 assert_body 'duckduckgo.com'
 assert_body_absent 'rel="canonical"'
