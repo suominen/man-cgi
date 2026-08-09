@@ -11,7 +11,7 @@ constraints are load-bearing; see the notes at the bottom.
   `MANCGI_MANROOT` overrides; 2-line diff) + `run_cgi` harness +
   first characterization tests (URL parsing, redirects, 404, current
   headers).
-- [ ] 3. Remaining characterization tests (MD/MI canonical arch, home
+- [x] 3. Remaining characterization tests (MD/MI canonical arch, home
   page, health check, POST form).
 - [ ] 4. Ansible (`~/src/cloud`): `fastcgi_cache_revalidate on` in
   `mancgi.j2`, plus conditional-clearing params if QA verification

@@ -1,0 +1,43 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Characterize the POST query form: a 303 redirect to the page URL,
+# with no caching headers on the redirect.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+CGI_METHOD=POST
+CGI_BODY='command=ls&section=1&arch=DEFAULT&coll=DEFAULT'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man.netbsd.org/ls.1$'
+assert_header '^Content-Type: text/html; charset=windows-1252$'
+assert_no_header '^Cache-Control:'
+assert_no_header '^Expires:'
+assert_no_header '^Last-Modified:'
+assert_body 'Goto:'
+
+# Section ANY drops the section from the redirect target.
+CGI_BODY='command=ls&section=ANY&arch=DEFAULT&coll=DEFAULT'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man.netbsd.org/ls$'
+
+CGI_METHOD=
+CGI_BODY=
+
+test_done

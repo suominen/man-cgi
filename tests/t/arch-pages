@@ -1,0 +1,78 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Characterize arch handling: a machine-dependent page (in an arch
+# subdirectory) keeps its arch in the canonical link, a
+# machine-independent page served under an arch URL advertises the
+# arch-less canonical URL but still serves (no redirect today), and
+# an MD page is invisible from other arches.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# MD page under its own arch.
+run_cgi /i386/apm.4
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_APM4}\$"
+assert_header '^Cache-Control: public, max-age=7776000$'
+assert_body 'rel="canonical" href="https://man.netbsd.org/i386/apm.4"'
+
+# MI page under an arch URL: serves 200 with full cacheability,
+# canonical link drops the arch. (A future step will turn this
+# into a 308 redirect; this test pins today's behavior.)
+run_cgi /i386/ls.1
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_LS1}\$"
+assert_header '^Cache-Control: public, max-age=7776000$'
+assert_body 'rel="canonical" href="https://man.netbsd.org/ls.1"'
+
+# The MD page does not exist for another arch, including a
+# class-mate arch: amd64 searches man4/amd64 and man4/x86 but
+# never man4/i386.
+run_cgi /sparc/apm.4
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+
+run_cgi /amd64/apm.4
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+
+# The arch itself works; only the MD page is absent there.
+run_cgi /sparc/ls.1
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_LS1}\$"
+
+# A page in a machine-class subdirectory (man4/x86) is reachable
+# from both class members, and the canonical link uses the class
+# directory's name, not the requested arch.
+run_cgi /i386/cpuctl.4
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_CPUCTL4}\$"
+assert_body 'rel="canonical" href="https://man.netbsd.org/x86/cpuctl.4"'
+
+run_cgi /amd64/cpuctl.4
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_CPUCTL4}\$"
+
+test_done

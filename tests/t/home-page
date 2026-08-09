@@ -1,0 +1,43 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Characterize the home/query page: caching headers, Last-Modified
+# from the default collection's build file, the intro table, and
+# the query form with the arch and collection lists embedded
+# (list embedding is what a future step will remove).
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+run_cgi /
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Content-Type: text/html; charset=windows-1252$'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header '^Cache-Control: public, max-age=7200$'
+assert_no_header '^X-Powered-By:'
+assert_body '<title>NetBSD Manual Pages</title>'
+assert_body 'href="/afterboot.8"'
+assert_body '<option value="i386">i386</option>'
+assert_body '<option value="NetBSD-10.1">NetBSD-10.1</option>'
+assert_body_absent 'rel="canonical"'
+
+# The empty PATH_INFO form of the home page behaves the same.
+run_cgi ''
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header '^Cache-Control: public, max-age=7200$'
+
+test_done
