@@ -1,0 +1,147 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Purge man.netbsd.org content from Fastly by surrogate key.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+PATH=/bin:/usr/bin:/usr/pkg/bin:/usr/local/bin
+export PATH
+
+PROG="${0##*/}"
+
+CONFDIR="${HOME}/.config/manno"
+TOKEN_FILE="${MANNO_TOKEN_FILE:-${CONFDIR}/fastly-purge-token}"
+SERVICE_FILE="${MANNO_SERVICE_FILE:-${CONFDIR}/fastly-service-id}"
+API=https://api.fastly.com
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+warn()
+{
+    echo "${PROG}: ${*}" 1>&2
+}
+
+usage()
+{
+    cat <<EOF
+Usage:	${PROG} [-Hh] key [key ...]
+
+Purge man.netbsd.org content from Fastly by surrogate key. Purges
+are soft by default: objects are marked stale and revalidated on
+the next fetch, so clients keep getting responses throughout. -H
+purges hard, dropping the objects immediately; reserve that for
+content that must stop being served at once.
+
+Useful keys: all (everything), home, notfound, redirect, form
+(list-embedding pages until the JS form lands),
+coll:<collection> (after a collection rebuild),
+page:<collection>:<page>.<section> (one page, all arch aliases),
+arch:<arch>.
+
+A failed key is reported and the remaining keys are still purged;
+the exit status is then 1.
+
+Configuration files (override with MANNO_TOKEN_FILE and
+MANNO_SERVICE_FILE):
+
+${TOKEN_FILE}
+	Fastly API token with purge_select scope
+${SERVICE_FILE}
+	Fastly service id
+
+Options:
+-H	Hard purge instead of soft
+-h	Show this help
+EOF
+}
+
+# The token is fed to curl as a config file on stdin so that it
+# never appears on a command line (visible in ps).
+purge()
+{
+    local key
+    key="${1}"
+
+    {
+	printf 'header = "Fastly-Key: %s"\n' "${token}"
+	${hard:-false} ||
+	printf 'header = "fastly-soft-purge: 1"\n'
+    } |
+    curl -sS --fail-with-body -X POST -K - \
+	"${API}/service/${service}/purge/${key}"
+}
+
+hard=
+
+while getopts Hh opt
+do
+    case "${opt}" in
+    H)  hard=true;;
+    h)  usage; exit 0;;
+    *)  usage 1>&2; exit 2;;
+    esac
+done
+shift $((${OPTIND} - 1))
+
+if [ ${#} -lt 1 ]
+then
+    usage 1>&2
+    exit 2
+fi
+
+for key
+do
+    case "${key}" in
+    ''|*[!A-Za-z0-9._:-]*)
+	die "Invalid key: ${key}"
+	;;
+    esac
+done
+
+command -v curl > /dev/null ||
+die 'curl is required'
+
+[ -r "${TOKEN_FILE}" ] ||
+die "Cannot read token file: ${TOKEN_FILE}"
+[ -r "${SERVICE_FILE}" ] ||
+die "Cannot read service-id file: ${SERVICE_FILE}"
+
+token="$(cat "${TOKEN_FILE}")"
+service="$(cat "${SERVICE_FILE}")"
+
+case "${token}" in
+''|*[!A-Za-z0-9_-]*)
+    die "Malformed token in: ${TOKEN_FILE}"
+    ;;
+esac
+
+case "${service}" in
+''|*[!A-Za-z0-9]*)
+    die "Malformed service id in: ${SERVICE_FILE}"
+    ;;
+esac
+
+rc=0
+
+for key
+do
+    printf '%s: ' "${key}"
+    if purge "${key}"
+    then
+	echo
+    else
+	echo
+	warn "Purge failed for key: ${key}"
+	rc=1
+    fi
+done
+
+exit "${rc}"

@@ -39,6 +39,7 @@ checklist in `tests/smoke.yml`.
 
 ## Layout
 
+    bin/            operational tools (manno-purge)
     docs/adr/       architecture decision records (MADR)
     docs/           caching design, runbook, nginx notes, deployment
     tests/          harness, fixtures, per-feature test scripts
