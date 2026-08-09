@@ -34,8 +34,14 @@ constraints are load-bearing; see the notes at the bottom.
   the active VCL has no cacheability overrides; 303 keeps the
   POST-to-GET switch). Step 4 (nginx revalidation) is already
   applied in production.
-- [ ] 9. Docs: `docs/caching.md`, `docs/runbook.md`, `docs/nginx.md`;
-  ADRs 0002-0004, 0008-0009. Then one-time nginx cache wipe + Fastly
+- [ ] 9. Docs: `docs/caching.md`, `docs/runbook.md`,
+  `docs/nginx.md`; ADRs 0002-0004, 0008-0009. For caching.md's
+  size-dynamics section: the nginx cache was 110 GB before the
+  2026-08-09 wipe (bot-crawled URL space, largely arch aliases);
+  shorter TTLs do not shrink disk usage (expired entries stay for
+  revalidation; inactive=365d and max_size govern eviction) — the
+  canonical-arch redirects (step 13) are what collapses the alias
+  multiplier. Then one-time nginx cache wipe + Fastly
   soft purge + live verification. Verification checklist from the
   step-7 review: Fastly does not cache 308s (or 503s) by default —
   confirm Surrogate-Control on them is inert and nginx absorbs 308s
@@ -49,7 +55,24 @@ constraints are load-bearing; see the notes at the bottom.
   lists until step 12, markup, MANCGI_DATE) — the runbook must list
   nginx-wipe triggers: script deploys with observable output
   changes, and archlist/colllist changes until step 12 removes the
-  embedded lists.
+  embedded lists. Wipe method (per Kim, applies to every host):
+  stop nginx, `umount /p/fcgicache`, `newfs -i 8192` the cache
+  device (`ld2a` on oxygene), `mount /p/fcgicache` (relies on the
+  /etc/fstab entry), recreate the cache directory with
+  `install -d -o nginx -g nginx -m 755 /p/fcgicache/man-cache`
+  (as root), and start nginx — faster than find-deleting 500 GB of
+  cache files. The `-i 8192` matters: the plain newfs default for
+  filesystems >=128 GB is 16 KB per inode, which halves the inode
+  count this cache historically had (many small objects);
+  nginx must be stopped first, and Fastly's health probe fails the
+  shield over to the other host meanwhile. For docs/deployment.md:
+  the deployed site syncs from oxygene to lcm with
+  `/root/bin/site-rsync man-www` (as root); lcm also runs that from
+  cron ("53 6,18 * * *"), so manual runs are only needed when the
+  sync must happen immediately. Fastly purge token (purge_select
+  scope, for the man.netbsd.org service — "manno" is its
+  affectionate nickname): `~kim/.config/manno/fastly-purge-token`
+  on oxygene, mode 600.
 - [ ] 10. ct-check extensions (branch in `~/src/ct-check`) +
   `tests/smoke.yml`.
 - [ ] 11. Script: `/api/archlist` + `/api/colllist` endpoints.
