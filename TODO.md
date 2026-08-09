@@ -5,12 +5,6 @@ reviewable changeset (a feature branch here, an RCS revision of
 `../sh/man-cgi`, or a branch in the repo named). Unscheduled
 collects open ideas and known defects not yet part of any effort.
 
-## Scheduled
-
-- [ ] Rewrite ADR: keep improved shell CGI vs rewrite
-  (Python/Perl/C/Go), using origin-QPS data gathered after the
-  2026-08-09 caching cutover.
-
 ## Unscheduled
 
 Open ideas and known defects not part of any scheduled effort.
