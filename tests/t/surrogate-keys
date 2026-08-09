@@ -1,0 +1,85 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Surrogate-Key emission for Fastly purging. Every cacheable
+# response carries `all` plus its class keys: coll:<resolved
+# collection> everywhere, page:<coll>:<cmd>.<sect> (arch-free, so
+# all arch aliases of a machine-independent page purge together)
+# and arch keys on pages, form on HTML that embeds the arch and
+# collection lists, and home/notfound/redirect class keys.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# Plain page in the default collection.
+run_cgi /ls.1
+assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1$'
+
+# MI page under an arch URL: arch-free page key plus the requested
+# arch.
+run_cgi /i386/ls.1
+assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1 arch:i386$'
+
+# MD page: requested arch equals the canonical arch, one arch key.
+run_cgi /i386/apm.4
+assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:apm.4 arch:i386$'
+
+# Machine-class page: requested arch plus the class directory.
+run_cgi /i386/cpuctl.4
+assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:cpuctl.4 arch:i386 arch:x86$'
+
+# Branch collection page.
+run_cgi /NetBSD-9.x-BRANCH/ls.1
+assert_header '^Surrogate-Key: all form coll:NetBSD-9.x-BRANCH page:NetBSD-9.x-BRANCH:ls.1$'
+
+# A hostile arch segment (":" is outside the guard's character
+# class) must not contribute an arch key or corrupt the header.
+run_cgi '/ev:il/ls.1'
+assert_header '^Surrogate-Key: all form coll:NetBSD-current page:NetBSD-current:ls.1$'
+assert_no_header ' arch:'
+
+# Home page.
+run_cgi /
+assert_header '^Surrogate-Key: all home form coll:NetBSD-current$'
+
+# 404 (carries coll: a rebuild can add a page that 404'd).
+run_cgi /nosuchcommand.1
+assert_header '^Surrogate-Key: all notfound form coll:NetBSD-current$'
+
+# 404 in a known-but-absent collection keys the requested
+# (sanitized) collection, not the default.
+run_cgi /NetBSD-10.1/ls.1
+assert_header '^Status: 404 Not Found$'
+assert_header '^Surrogate-Key: all notfound form coll:NetBSD-10.1$'
+
+# Redirects: 302 collection fallback keys the resolved target
+# collection; 308 canonicalization keys the resolved collection.
+run_cgi /NetBSD-9.3/ls.1
+assert_header '^Surrogate-Key: all redirect coll:NetBSD-9.x-BRANCH$'
+
+run_cgi /i386/i386/ls.1
+assert_header '^Surrogate-Key: all redirect coll:NetBSD-current$'
+
+# Health check: only the catch-all key.
+run_cgi /.well-known/health
+assert_header '^Surrogate-Key: all$'
+
+# POST 303 responses are uncacheable and carry no keys.
+CGI_METHOD=POST
+CGI_BODY='command=ls&section=1&arch=DEFAULT&coll=DEFAULT'
+run_cgi ''
+CGI_METHOD=
+CGI_BODY=
+assert_header '^Status: 303 See Other$'
+assert_no_header '^Surrogate-Key:'
+
+test_done

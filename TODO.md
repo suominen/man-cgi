@@ -20,7 +20,7 @@ constraints are load-bearing; see the notes at the bottom.
   revalidation, so they are deliberately omitted.
 - [x] 5. Script: header-emission refactor (`emit_cache_headers`,
   content classes; no header-value changes yet).
-- [ ] 6. Script: Surrogate-Key emission.
+- [x] 6. Script: Surrogate-Key emission.
 - [ ] 7. Script: TTL layering (X-Accel-Expires, Surrogate-Control,
   new Cache-Control values per class).
 - [ ] 8. Script: fast 304 handler + HEAD + 404 Last-Modified + 303
