@@ -365,6 +365,8 @@ END
 
 queryform()
 {
+    local coll safearch
+
     cat <<END
 <div class="queryform">
 <form method=post action="$SCRIPT_NAME">
@@ -391,51 +393,57 @@ END
 	esac
     done
 
+    # ARCH is a raw URL path segment; reflect it into HTML only
+    # when it is a plain arch token (same guard as the arch
+    # Surrogate-Key), never as arbitrary bytes.
+    case "${ARCH}" in
+    ''|*[!-.A-Za-z0-9_]*)	safearch=;;
+    *)			safearch="${ARCH}";;
+    esac
+
     cat <<END
     </select>
   </div>
   <div>
     <label for="arch">Arch:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-    <select name="arch" id="arch">
+    <select name="arch" id="arch"${safearch:+ data-url="$safearch"}>
 END
 
-    for i in $(list_archs)
-    do
-	case "$i" in
-	DEFAULT)
-	    echo "      <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
-	    ;;
-	"${ARCH}")
-	    echo "      <option value=\"$i\" selected>$i</option>"
-	    ;;
-	*)
-	    echo "      <option value=\"$i\">$i</option>"
-	    ;;
-	esac
-    done
+    # Fallback options only: the inline script loads the full list
+    # from /api/v1/archlist, so cached pages do not embed it.
+    case "${DEFAULT_ARCH}" in
+    '')
+	echo "      <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+	;;
+    esac
+    echo '      <option value="NONE">NONE</option>'
+    case "${safearch}" in
+    '')
+	;;
+    *)
+	echo "      <option value=\"$safearch\" selected>$safearch</option>"
+	;;
+    esac
 
     cat <<END
     </select>
   </div>
   <div>
     <label for="coll">Collection:</label>
-    <select name="coll" id="coll">
+    <select name="coll" id="coll"${COLL:+ data-url="$COLL"}>
 END
 
-    for i in $(list_collections)
-    do
-	case "$i" in
-	DEFAULT)
-	    echo "      <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
-	    ;;
-	"$COLL")
-	    echo "      <option value=\"$i\" selected>$i</option>"
-	    ;;
-	*)
-	    echo "      <option value=\"$i\">$i</option>"
-	    ;;
-	esac
-    done
+    # Fallback option: the resolved collection; the full list comes
+    # from /api/v1/colllist.
+    coll="${COLL:-${DEFAULT_COLLECTION:-DEFAULT}}"
+    case "${coll}" in
+    DEFAULT)
+	echo "      <option value=\"DEFAULT\" selected>DEFAULT ($OSNAME-$OSREL)</option>"
+	;;
+    *)
+	echo "      <option value=\"$coll\" selected>$coll</option>"
+	;;
+    esac
 
     cat <<END
     </select>
@@ -458,6 +466,84 @@ END
     cat <<END
 </form>
 </div>
+END
+
+    js_queryform
+}
+
+# Emit the inline script that populates the arch and collection
+# selects from /api/v1 and remembers the choices in localStorage
+# (no cookies: nothing varies at any cache tier). Preselection
+# order: URL-carried value (data-url), remembered value, default.
+# Without JavaScript the fallback options keep the form usable.
+js_queryform()
+{
+    cat <<'END'
+<script>
+(function () {
+  function remember(key, value) {
+    try {
+      localStorage.setItem('man-cgi.' + key, value);
+    } catch (e) {}
+  }
+
+  function recall(key) {
+    try {
+      return localStorage.getItem('man-cgi.' + key);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function fill(name, fallback) {
+    var sel = document.getElementById(name);
+    if (!sel) {
+      return;
+    }
+    fetch('/api/v1/' + name + 'list').then(function (r) {
+      if (!r.ok) {
+        throw new Error(r.status);
+      }
+      return r.text();
+    }).then(function (text) {
+      var names = text.split('\n');
+      var want = sel.getAttribute('data-url') || recall(name) || fallback;
+      var i, opt;
+      sel.options.length = 0;
+      for (i = 0; i < names.length; i++) {
+        if (!names[i]) {
+          continue;
+        }
+        opt = document.createElement('option');
+        opt.value = names[i];
+        opt.textContent = names[i];
+        if (names[i] === want) {
+          opt.selected = true;
+        }
+        sel.appendChild(opt);
+      }
+    }).catch(function (e) {});
+  }
+
+  var arch;
+
+  if (!window.fetch) {
+    return;
+  }
+  fill('arch', 'NONE');
+  fill('coll', '');
+  arch = document.getElementById('arch');
+  if (arch && arch.form) {
+    arch.form.addEventListener('submit', function () {
+      var coll = document.getElementById('coll');
+      remember('arch', arch.value);
+      if (coll) {
+        remember('coll', coll.value);
+      }
+    });
+  }
+})();
+</script>
 END
 }
 
@@ -555,17 +641,17 @@ emit_cache_headers()
 	keys='all'
 	;;
     home)
-	keys="all home form coll:${coll}"
+	keys="all home coll:${coll}"
 	;;
     notfound)
-	keys="all notfound form coll:${coll}"
+	keys="all notfound coll:${coll}"
 	;;
     redirect-found|redirect-permanent)
 	keys="all redirect coll:${coll}"
 	;;
     *)
 	# page
-	keys="all form coll:${coll}"
+	keys="all coll:${coll}"
 	keys="${keys} page:${coll}:${COMMAND}${SECTION:+.${SECTION}}"
 	case "${ARCH}" in
 	''|*[!-.A-Za-z0-9_]*)
