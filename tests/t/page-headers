@@ -37,6 +37,17 @@ assert_body '<b>ls</b>'
 assert_body '<i>file</i>'
 assert_body 'href="/cat.1"'
 
+# Literal <, >, and & in the man output are HTML-escaped (the
+# HTMLizer stashes < and > in placeholders while it inserts its
+# own tags, then entifies them at the end).
+assert_body '&lt;file&gt;'
+assert_body 'a&lt;b'
+assert_body 'a&gt;b'
+assert_body 'x&amp;y'
+assert_body_absent '<file>'
+# No placeholder byte may leak anywhere in the page.
+assert_body_absent "$(printf '[\001\002]')"
+
 # The section select preselects the page's own section.
 assert_body '<option value="1" selected>1 - General Commands</option>'
 
