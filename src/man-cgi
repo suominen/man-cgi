@@ -405,7 +405,7 @@ END
 # or notfound.
 emit_cache_headers()
 {
-    local class expdate expires expsecs
+    local class coll expdate expires expsecs keys
     class="${1}"
 
     case "${class}" in
@@ -436,11 +436,53 @@ emit_cache_headers()
 	;;
     esac
 
+    # Surrogate-Key tokens for purging at Fastly. The page key is
+    # arch-free so all arch aliases of a machine-independent page
+    # purge together; arch keys carry the requested arch (guarded
+    # against unsafe characters: PATH_INFO is user input) and the
+    # canonical arch when it differs (e.g. the x86 machine class).
+    coll="${COLL:-${DEFAULT_COLLECTION:-DEFAULT}}"
+
+    case "${class}" in
+    health)
+	keys='all'
+	;;
+    home)
+	keys="all home form coll:${coll}"
+	;;
+    notfound)
+	keys="all notfound form coll:${coll}"
+	;;
+    redirect-found|redirect-permanent)
+	keys="all redirect coll:${coll}"
+	;;
+    *)
+	# page
+	keys="all form coll:${coll}"
+	keys="${keys} page:${coll}:${COMMAND}${SECTION:+.${SECTION}}"
+	case "${ARCH}" in
+	''|*[!-.A-Za-z0-9_]*)
+	    ;;
+	*)
+	    keys="${keys} arch:${ARCH}"
+	    ;;
+	esac
+	case "${CANONICAL_ARCH:-NONE}" in
+	NONE|"${ARCH}")
+	    ;;
+	*)
+	    keys="${keys} arch:${CANONICAL_ARCH}"
+	    ;;
+	esac
+	;;
+    esac
+
     expdate=$(($(date '+%s') + expsecs))
     expires=$(date -u -r "${expdate}" '+%a, %d %b %Y %H:%M:%S GMT')
 
     echo "Expires: ${expires}"
     echo "Cache-Control: public, max-age=${expsecs}"
+    echo "Surrogate-Key: ${keys}"
 }
 
 redirect()
