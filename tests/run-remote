@@ -1,0 +1,89 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Sync the test suite and the CGI script to the NetBSD test host
+# and run the tests there.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+PATH=/bin:/usr/bin
+export PATH
+
+# An exported CDPATH would make cd echo directory names, corrupting
+# $(cd ... && pwd) captures.
+CDPATH=
+
+PROG="${0##*/}"
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+usage()
+{
+    cat <<EOF
+Usage:	${PROG} [-h] [test ...]
+
+Rsync the tests directory and the CGI script to the NetBSD test
+host and run run-tests there, passing any test names through. The
+tests must run on a NetBSD host because man-cgi depends on NetBSD
+stat(1), date(1), and man(1) behaviour.
+
+Environment:
+MANCGI_TEST_REMOTE	remote user@host (default kimmo@equinoxe)
+MANCGI_TEST_IDENTITY	ssh identity (default ~/.ssh/id-kimmo-ai)
+MANCGI_TEST_DEST	remote directory (default man-cgi-tests)
+
+Concurrent runs against the same remote directory clobber each
+other; run one at a time (or point MANCGI_TEST_DEST elsewhere).
+
+Options:
+-h	Show this help
+EOF
+}
+
+while getopts h opt
+do
+    case "${opt}" in
+    h)  usage; exit 0;;
+    *)  usage 1>&2; exit 2;;
+    esac
+done
+shift $((${OPTIND} - 1))
+
+REMOTE="${MANCGI_TEST_REMOTE:-kimmo@equinoxe}"
+IDENTITY="${MANCGI_TEST_IDENTITY:-${HOME}/.ssh/id-kimmo-ai}"
+DEST="${MANCGI_TEST_DEST:-man-cgi-tests}"
+
+command -v ssh > /dev/null ||
+die 'ssh is required'
+command -v rsync > /dev/null ||
+die 'rsync is required'
+
+TESTS_DIR=$(cd "$(dirname "${0}")" && pwd)
+SH_DIR=$(cd "${TESTS_DIR}/../../sh" && pwd)
+
+[ -f "${SH_DIR}/man-cgi" ] ||
+die "No CGI script at ${SH_DIR}/man-cgi"
+[ -f "${IDENTITY}" ] ||
+die "No ssh identity at ${IDENTITY}"
+
+# BatchMode keeps a key/agent problem from stalling at a password
+# prompt; IdentitiesOnly pins authentication to the named key.
+SSH="ssh -i ${IDENTITY} -o BatchMode=yes -o IdentitiesOnly=yes"
+RSYNC_RSH="${SSH}"
+export RSYNC_RSH
+
+# The remote repo/tests + sh layout mirrors the local checkout so
+# that lib.sh's default MANCGI path (tests/../../sh/man-cgi)
+# resolves on the remote as well.
+${SSH} "${REMOTE}" "mkdir -p '${DEST}/repo/tests' '${DEST}/sh'"
+rsync -a --delete "${TESTS_DIR}/" "${REMOTE}:${DEST}/repo/tests/"
+rsync -a --delete "${SH_DIR}/man-cgi" "${REMOTE}:${DEST}/sh/"
+
+exec ${SSH} "${REMOTE}" "sh '${DEST}/repo/tests/run-tests'" "${@}"

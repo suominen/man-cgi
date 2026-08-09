@@ -7,7 +7,7 @@ constraints are load-bearing; see the notes at the bottom.
 
 ## Steps
 
-- [ ] 2. Testability hooks in the script (`MANCGI_PATH`,
+- [x] 2. Testability hooks in the script (`MANCGI_PATH`,
   `MANCGI_MANROOT` overrides; 2-line diff) + `run_cgi` harness +
   first characterization tests (URL parsing, redirects, 404, current
   headers).

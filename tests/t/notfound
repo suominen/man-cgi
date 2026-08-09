@@ -1,0 +1,30 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Characterize the 404 response: status, caching headers, no
+# Last-Modified, and the search-engine suggestion body.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+run_cgi /nosuchcommand.1
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header '^Content-Type: text/html; charset=windows-1252$'
+assert_header '^Cache-Control: public, max-age=7776000$'
+assert_no_header '^Last-Modified:'
+assert_body 'The manual page was not found'
+assert_body 'duckduckgo.com'
+assert_body_absent 'rel="canonical"'
+
+test_done

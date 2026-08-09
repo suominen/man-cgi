@@ -1,0 +1,38 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Characterize headers and body for a plain man-page request
+# in the default collection.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+run_cgi /ls.1
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Content-Type: text/html; charset=windows-1252$'
+assert_header "^Last-Modified: ${LM_LS1}\$"
+assert_header '^Cache-Control: public, max-age=7776000$'
+assert_header '^Expires: '
+assert_body '<pre>'
+assert_body 'rel="canonical" href="https://man.netbsd.org/ls.1"'
+assert_body 'Powered by man-cgi'
+
+# The sed HTMLizer: section anchors, bold/italic conversion from
+# nroff overstrike, and SEE-ALSO cross-linking.
+assert_body 'id="NAME"'
+assert_body '<b>ls</b>'
+assert_body '<i>file</i>'
+assert_body 'href="/cat.1"'
+
+test_done

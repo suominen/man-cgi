@@ -1,0 +1,92 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Run the man-cgi test scripts in t/ and summarize results.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+PATH=/bin:/usr/bin
+export PATH
+
+# An exported CDPATH would make cd echo directory names, corrupting
+# $(cd ... && pwd) captures.
+CDPATH=
+
+PROG="${0##*/}"
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+msg()
+{
+    echo "${PROG}: ${*}" 1>&2
+}
+
+usage()
+{
+    cat <<EOF
+Usage:	${PROG} [-h] [test ...]
+
+Run the man-cgi characterization and regression tests against the
+CGI script (default ../../sh/man-cgi relative to the tests
+directory; override with the MANCGI environment variable). With no
+arguments all scripts in t/ run; otherwise only the named tests
+run. Failing tests have their TAP output shown.
+
+Options:
+-h	Show this help
+EOF
+}
+
+while getopts h opt
+do
+    case "${opt}" in
+    h)  usage; exit 0;;
+    *)  usage 1>&2; exit 2;;
+    esac
+done
+shift $((${OPTIND} - 1))
+
+TESTS_DIR=$(cd "$(dirname "${0}")" && pwd)
+
+if [ ${#} -eq 0 ]
+then
+    set -- "${TESTS_DIR}/t/"*
+else
+    for name
+    do
+	shift
+	set -- "${@}" "${TESTS_DIR}/t/${name##*/}"
+    done
+fi
+
+for t
+do
+    [ -f "${t}" ] ||
+    die "No such test: ${t}"
+done
+
+failed=0
+for t in "${@}"
+do
+    if out=$(sh "${t}" 2>&1)
+    then
+	msg "PASS ${t##*/}"
+    else
+	failed=$((${failed} + 1))
+	msg "FAIL ${t##*/}"
+	printf '%s\n' "${out}" | sed -e 's/^/    /' 1>&2
+    fi
+done
+
+if [ "${failed}" -gt 0 ]
+then
+    die "${failed} of ${#} test scripts failed"
+fi
+msg "All ${#} test scripts passed"

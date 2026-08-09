@@ -1,0 +1,40 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# The MANCGI_* testability overrides are honored only outside a
+# gateway context: with GATEWAY_INTERFACE set (as under real CGI)
+# they are ignored and the fixed production paths apply.
+#
+# Assumes the production MANROOT (/p/netbsd/man/man) does not exist
+# on the test host, so the health check degrades to 503 when the
+# fixture override is ignored.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# Outside a gateway context the fixture MANROOT applies: healthy.
+run_cgi /.well-known/health
+
+assert_exit 0
+assert_header '^Status: 200 OK$'
+assert_header '^Cache-Control: public, max-age=30$'
+
+# In a gateway context the override is ignored: the production
+# MANROOT is missing here, so the health check reports 503.
+CGI_GATEWAY=CGI/1.1
+run_cgi /.well-known/health
+CGI_GATEWAY=
+
+assert_exit 0
+assert_header '^Status: 503 Service Unavailable$'
+
+test_done

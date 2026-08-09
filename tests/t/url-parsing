@@ -1,0 +1,39 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Characterize URL parsing: legacy query strings and sectionless
+# requests both canonicalize with a 308 redirect.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# Legacy query string: COMMAND+SECTION.
+CGI_QUERY='ls+1'
+run_cgi ''
+CGI_QUERY=
+
+assert_exit 0
+assert_header '^Status: 308 Permanent Redirect$'
+assert_header '^Location: https://man.netbsd.org/ls.1$'
+assert_header '^Cache-Control: public, max-age=7776000$'
+assert_no_header '^Last-Modified:'
+
+# Sectionless request: section is inferred from the resolved file
+# and the URL is canonicalized.
+run_cgi /ls
+
+assert_exit 0
+assert_header '^Status: 308 Permanent Redirect$'
+assert_header '^Location: https://man.netbsd.org/ls.1$'
+assert_header '^Cache-Control: public, max-age=7776000$'
+
+test_done
