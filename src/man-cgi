@@ -442,9 +442,9 @@ emit_cache_headers()
 	surrogate='max-age=604800'
 	;;
     redirect-permanent)
-	# 24 hours for browsers; 30 days at nginx. Fastly does not
-	# cache 308s by default, so its tier passes them to nginx;
-	# Surrogate-Control is emitted for symmetry and future VCL.
+	# 24 hours for browsers; 30 days at nginx and Fastly (301
+	# is in Fastly's default-cacheable status set; 308 was not,
+	# which is why these redirects are 301s).
 	expsecs=86400
 	accel=2592000
 	surrogate='max-age=2592000'
@@ -530,9 +530,9 @@ redirect()
 	# POST (form query)
 	echo 'Status: 303 See Other'
 	;;
-    308)
+    301)
 	class=redirect-permanent
-	echo 'Status: 308 Permanent Redirect'
+	echo 'Status: 301 Moved Permanently'
 	;;
     *)
 	# Collection not found
@@ -544,6 +544,7 @@ redirect()
     echo "Content-Type: text/html; charset=$CHARSET"
     case "$REQUEST_METHOD" in
     POST)
+	echo 'Cache-Control: no-store'
 	;;
     *)
 	emit_cache_headers "${class}"
@@ -831,7 +832,7 @@ esac
 
 if ${need_redirect:-false}
 then
-    redirect 308
+    redirect 301
 fi
 
 case "${COMMAND}" in
@@ -859,7 +860,8 @@ case "${COMMAND}" in
 
     if [ ${notfound:-0} -ne 0 ]
     then
-	echo 'Status: 404 Not Found'
+	# Let 404s revalidate against the collection build date
+	LASTMODFILE="${MANROOT}/${COLL:-${DEFAULT_COLLECTION:-}}/build"
     fi
     ;;
 esac
@@ -896,7 +898,7 @@ case "${LASTMODFILE}" in
 	"")
 	    ;;
 	[1-9]|3f|[39]lua)
-	    redirect 308
+	    redirect 301
 	    ;;
 	*)
 	    SECTION=
@@ -907,29 +909,65 @@ case "${LASTMODFILE}" in
     ;;
 esac
 
-echo "Content-Type: text/html; charset=$CHARSET"
-
 if [ -f "$LASTMODFILE" ]
 then
     eval $(stat -s "$LASTMODFILE")
     LASTMOD=$(date -u -r "$st_mtime" '+%a, %d %b %Y %H:%M:%S GMT')
-    if [ -n "$LASTMOD" ]
-    then
-	echo "Last-Modified: $LASTMOD"
-    fi
 fi
 
 case "${COMMAND}" in
 '')
-    emit_cache_headers home
+    CLASS=home
     ;;
 *)
     if [ ${notfound:-0} -ne 0 ]
     then
-	emit_cache_headers notfound
+	CLASS=notfound
     else
-	emit_cache_headers page
+	CLASS=page
     fi
+    ;;
+esac
+
+# Fast 304 path: nginx cache revalidation echoes our own
+# Last-Modified back, so an exact string match is a complete test;
+# any mismatch falls through to a full response.
+case "${REQUEST_METHOD:-GET}" in
+GET|HEAD)
+    if [ -n "${LASTMOD:-}" ] &&
+    [ "${HTTP_IF_MODIFIED_SINCE:-}" = "${LASTMOD}" ]
+    then
+	echo 'Status: 304 Not Modified'
+	echo "Last-Modified: ${LASTMOD}"
+	emit_cache_headers "${CLASS}"
+
+	# End of headers; a 304 carries no body
+	echo ''
+	exit 0
+    fi
+    ;;
+esac
+
+case "${CLASS}" in
+notfound)
+    echo 'Status: 404 Not Found'
+    ;;
+esac
+
+echo "Content-Type: text/html; charset=$CHARSET"
+
+if [ -n "${LASTMOD:-}" ]
+then
+    echo "Last-Modified: ${LASTMOD}"
+fi
+
+emit_cache_headers "${CLASS}"
+
+case "${REQUEST_METHOD:-GET}" in
+HEAD)
+    # End of headers; no body for a HEAD request
+    echo ''
+    exit 0
     ;;
 esac
 
