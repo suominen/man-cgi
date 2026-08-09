@@ -16,6 +16,7 @@ LM_LS1='Fri, 02 Jan 2026 13:14:15 GMT'
 LM_APM4='Sat, 03 Jan 2026 14:15:16 GMT'
 LM_BUILD='Sun, 04 Jan 2026 15:16:17 GMT'
 LM_CPUCTL4='Tue, 06 Jan 2026 17:18:19 GMT'
+LM_BR_LS1='Mon, 05 Jan 2026 16:17:18 GMT'
 
 TAP_N=0
 TAP_FAIL=0
@@ -36,7 +37,9 @@ setup_fixtures()
     TZ=UTC touch -t 202601031415.16 "${MANROOT}/NetBSD-current/man4/i386/apm.4"
     TZ=UTC touch -t 202601061718.19 "${MANROOT}/NetBSD-current/man4/x86/cpuctl.4"
     TZ=UTC touch -t 202601041516.17 "${MANROOT}/NetBSD-current/build"
-    TZ=UTC touch -t 202601051617.18 "${MANROOT}/NetBSD-9.x-BRANCH/build"
+    # The branch build file gets a stamp distinct from the branch
+    # ls.1 so Last-Modified assertions can tell them apart.
+    TZ=UTC touch -t 202601071819.20 "${MANROOT}/NetBSD-9.x-BRANCH/build"
     TZ=UTC touch -t 202601051617.18 "${MANROOT}/NetBSD-9.x-BRANCH/man1/ls.1"
 }
 

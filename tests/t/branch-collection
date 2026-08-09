@@ -1,0 +1,39 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Characterize responses for an explicitly named branch collection:
+# 200s and 404s there use the 24-hour Cache-Control (the *-BRANCH
+# arm of the TTL selection), unlike the default collection's 90
+# days, and the canonical link keeps the collection prefix.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+run_cgi /NetBSD-9.x-BRANCH/ls.1
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Content-Type: text/html; charset=windows-1252$'
+assert_header "^Last-Modified: ${LM_BR_LS1}\$"
+assert_header '^Cache-Control: public, max-age=86400$'
+assert_header '^Expires: '
+assert_body 'rel="canonical" href="https://man.netbsd.org/NetBSD-9.x-BRANCH/ls.1"'
+
+run_cgi /NetBSD-9.x-BRANCH/nosuchcommand.1
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header '^Cache-Control: public, max-age=86400$'
+assert_header '^Expires: '
+assert_no_header '^Last-Modified:'
+
+test_done

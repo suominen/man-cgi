@@ -18,7 +18,7 @@ constraints are load-bearing; see the notes at the bottom.
   alone; conditional-clearing params are unnecessary (nginx already
   withholds client conditionals from the backend) and would disable
   revalidation, so they are deliberately omitted.
-- [ ] 5. Script: header-emission refactor (`emit_cache_headers`,
+- [x] 5. Script: header-emission refactor (`emit_cache_headers`,
   content classes; no header-value changes yet).
 - [ ] 6. Script: Surrogate-Key emission.
 - [ ] 7. Script: TTL layering (X-Accel-Expires, Surrogate-Control,
