@@ -969,7 +969,7 @@ DEFAULT|"")
     COLL=
     ;;
 *)
-    COLL=$(echo "$COLL" | tr -c -d '[-.A-Za-z0-9]')
+    COLL=$(echo "$COLL" | tr -cd 'A-Za-z0-9.-')
     if [ ! -d "${MANROOT}/${COLL}" ]
     then
 	NCOLL="${COLL%.*}.x-BRANCH"
@@ -1258,6 +1258,13 @@ END
 
 queryform
 
+# Single-byte placeholders that stash literal < and > from the man
+# output while the HTMLizer inserts its own tags; they turn into
+# &lt;/&gt; at the end. SOH and STX never occur in man output, and
+# generating them with printf keeps the script itself pure ASCII.
+LT=$(printf '\001')
+GT=$(printf '\002')
+
 if [ -z "$COMMAND" ]
 then
     case "${DEFAULT_COLLECTION}" in
@@ -1307,8 +1314,8 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 \2/
 }' \
-	    -e 's/</«/g' \
-	    -e 's/>/»/g' \
+	    -e "s/</${LT}/g" \
+	    -e "s/>/${GT}/g" \
    \
 	    -e '/^[A-Z]/s/.//g' \
 	    -e 's/^[A-Z][-+() ,A-Z_\/]*$/<br \/><b class="section"><a id="&" href="#&">&<\/a><\/b><br \/>/' \
@@ -1333,8 +1340,8 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_/]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"/${COLL:+$COLL/}${ARCH:+$ARCH/}\3.\5\">\1</a>#g" \
    \
 	    -e 's/\&/\&amp;/g' \
-	    -e 's/«/\&lt;/g' \
-	    -e 's/»/\&gt;/g' \
+	    -e "s/${LT}/\&lt;/g" \
+	    -e "s/${GT}/\&gt;/g" \
 	    -e "s#^\(\([0-9A-z_][-0-9A-z_/]*\) *(\([1-9][A-z_]*\))\)#<a href=\"/${COLL:+$COLL/}${ARCH:+$ARCH/}\2.\3\">\1</a>#" \
 	    2>/dev/null
 	echo "</pre>"
