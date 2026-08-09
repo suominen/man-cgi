@@ -365,7 +365,7 @@ END
 
 queryform()
 {
-    local coll safearch
+    local archattr coll collattr safearch
 
     cat <<END
 <div class="queryform">
@@ -400,13 +400,17 @@ END
     ''|*[!-.A-Za-z0-9_]*)	safearch=;;
     *)			safearch="${ARCH}";;
     esac
+    case "${safearch}" in
+    '')	archattr=;;
+    *)	archattr=" data-url=\"${safearch}\"";;
+    esac
 
     cat <<END
     </select>
   </div>
   <div>
     <label for="arch">Arch:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-    <select name="arch" id="arch"${safearch:+ data-url="$safearch"}>
+    <select name="arch" id="arch"${archattr}>
 END
 
     # Fallback options only: the inline script loads the full list
@@ -424,13 +428,17 @@ END
 	echo "      <option value=\"$safearch\" selected>$safearch</option>"
 	;;
     esac
+    case "${COLL}" in
+    '')	collattr=;;
+    *)	collattr=" data-url=\"${COLL}\"";;
+    esac
 
     cat <<END
     </select>
   </div>
   <div>
     <label for="coll">Collection:</label>
-    <select name="coll" id="coll"${COLL:+ data-url="$COLL"}>
+    <select name="coll" id="coll"${collattr}>
 END
 
     # Fallback option: the resolved collection; the full list comes
@@ -1059,6 +1067,23 @@ case "${LASTMODFILE}" in
 	;;
     esac
 
+    # Canonicalize the architecture: send each page to the URL
+    # matching where man(1) resolved it. Machine-independent
+    # pages (CANONICAL_ARCH=NONE) drop the arch; machine-
+    # dependent pages keep or gain the resolved subdirectory's
+    # arch. Setting ARCH before the section-inference redirect
+    # folds both into a single hop.
+    case "${CANONICAL_ARCH}" in
+    NONE)	canarch=;;
+    *)		canarch="${CANONICAL_ARCH}";;
+    esac
+    arch_changed=false
+    if [ "${ARCH}" != "${canarch}" ]
+    then
+	ARCH="${canarch}"
+	arch_changed=true
+    fi
+
     case "${SECTION}" in
     "")
 	SECTION="${LASTMODFILE##*.}"
@@ -1074,6 +1099,11 @@ case "${LASTMODFILE}" in
 	esac
 	;;
     esac
+
+    if ${arch_changed}
+    then
+	redirect 301
+    fi
     ;;
 esac
 
