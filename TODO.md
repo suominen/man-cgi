@@ -57,8 +57,8 @@ constraints are load-bearing; see the notes at the bottom.
   changes, and archlist/colllist changes until step 12 removes the
   embedded lists. Wipe method (per Kim, applies to every host):
   stop nginx, `umount /p/fcgicache`, `newfs -i 8192` the cache
-  device (`ld2a` on oxygene), `mount /p/fcgicache` (relies on the
-  /etc/fstab entry), recreate the cache directory with
+  device (`ld2a` on oxygene, `ld3a` on lcm), `mount /p/fcgicache`
+  (relies on the /etc/fstab entry), recreate the cache directory with
   `install -d -o nginx -g nginx -m 755 /p/fcgicache/man-cache`
   (as root), and start nginx — faster than find-deleting 500 GB of
   cache files. The `-i 8192` matters: the plain newfs default for

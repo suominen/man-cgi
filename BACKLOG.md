@@ -21,3 +21,6 @@ snapshot, not a source of truth.
 - Apply the Fastly `real_ip` list so `limit_req` keys on end-client
   addresses instead of Fastly POP addresses (current per-POP limiting
   is intentional).
+- Align lcm's cache disk device with oxygene: the cache filesystem is
+  `ld3a` on lcm but `ld2a` on oxygene, which invites wipe-procedure
+  mistakes.
