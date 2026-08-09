@@ -13,9 +13,11 @@ constraints are load-bearing; see the notes at the bottom.
   headers).
 - [x] 3. Remaining characterization tests (MD/MI canonical arch, home
   page, health check, POST form).
-- [ ] 4. Ansible (`~/src/cloud`): `fastcgi_cache_revalidate on` in
-  `mancgi.j2`, plus conditional-clearing params if QA verification
-  passes.
+- [x] 4. Ansible (`~/src/cloud`): `fastcgi_cache_revalidate on` in
+  `mancgi.j2`. Verified with `tests/nginx-lab/`: revalidation works
+  alone; conditional-clearing params are unnecessary (nginx already
+  withholds client conditionals from the backend) and would disable
+  revalidation, so they are deliberately omitted.
 - [ ] 5. Script: header-emission refactor (`emit_cache_headers`,
   content classes; no header-value changes yet).
 - [ ] 6. Script: Surrogate-Key emission.
@@ -38,10 +40,14 @@ constraints are load-bearing; see the notes at the bottom.
 
 ## Ordering constraints
 
-- Step 4 (nginx revalidation) must be live in production before step
-  8's 304 handler deploys: otherwise nginx background-update
-  subrequests carrying a client's If-Modified-Since receive
-  uncacheable 304s and cache entries stay stale indefinitely.
+- Step 4 (nginx revalidation) is applied before step 8's 304 handler
+  deploys. The lab (tests/nginx-lab) showed either order is in fact
+  safe: with caching enabled nginx never forwards client
+  conditionals to the CGI, so in production the only source of
+  If-Modified-Since at the CGI is nginx's own revalidation — the 304
+  handler stays inert until step 4 is live. (The originally feared
+  background-update-carries-client-IMS stale-forever case does not
+  occur.)
 - Step 9's one-time nginx cache wipe is mandatory after step 8:
   existing entries have up to 90-day validity and no Surrogate-Key;
   Fastly could re-fill from key-less objects and purge-by-key would

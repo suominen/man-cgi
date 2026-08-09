@@ -1,0 +1,137 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Drive the fastcgi_cache_revalidate experiments against the
+# synthetic FastCGI backend. Meant to run on the NetBSD test host;
+# see README.md.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+set -o pipefail
+
+# Wider than the house PATH: nginx lives in /usr/pkg/sbin on NetBSD.
+PATH=/bin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
+export PATH
+
+CDPATH=
+
+PROG="${0##*/}"
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+LAB=$(cd "$(dirname "${0}")" && pwd)
+cd "${LAB}"
+
+LM='Fri, 02 Jan 2026 13:14:15 GMT'
+
+# The ports also appear in nginx-base.conf (8481) and
+# fcgi-backend.py (9481); keep the three files in sync.
+URL=http://127.0.0.1:8481/a
+
+BACKEND_PID=
+
+stop_nginx()
+{
+    # The pid file is the only handle on a possibly stale nginx.
+    if [ -f logs/nginx.pid ]
+    then
+	kill "$(cat logs/nginx.pid)" 2> /dev/null || true
+	sleep 1
+    fi
+}
+
+stop_backend()
+{
+    if [ -n "${BACKEND_PID}" ]
+    then
+	kill "${BACKEND_PID}" 2> /dev/null || true
+	wait "${BACKEND_PID}" 2> /dev/null || true
+	BACKEND_PID=
+    fi
+}
+
+cleanup()
+{
+    stop_nginx
+    stop_backend
+}
+
+trap cleanup EXIT
+trap 'exit 1' INT TERM HUP
+
+req()
+{
+    curl -s -o /dev/null -D - "${@}" "${URL}" | tr -d '\r' |
+    awk '/^HTTP\//{s=$2}
+	/^X-Lab-Cache:/{c=$2}
+	END{printf "status=%s cache=%s\n", s, (c=="")?"-":c}'
+}
+
+start_nginx()
+{
+    nginx -p "${LAB}" -c "${1}"
+    sleep 1
+}
+
+run_variant()
+{
+    name="${1}"
+    conf="${2}"
+    echo "=== variant: ${name} ==="
+
+    # Recover from a previous crashed run before removing state.
+    stop_nginx
+    stop_backend
+    rm -rf cache logs tmp requests.log
+    mkdir -p cache logs tmp
+
+    python3 fcgi-backend.py &
+    BACKEND_PID=$!
+    sleep 1
+    kill -0 "${BACKEND_PID}" 2> /dev/null ||
+    die 'backend failed to start (stale process on port 9481?)'
+    start_nginx "${conf}"
+
+    echo "-- 1 cold GET (expect MISS)"
+    req
+    echo "-- 2 warm GET (expect HIT)"
+    req
+    echo "-- 3 warm GET with client IMS (expect 304 HIT)"
+    req -H "If-Modified-Since: ${LM}"
+    echo "-- 4 sleep past max-age, GET (revalidation attempt)"
+    sleep 3
+    req
+    echo "-- 5 flush cache; GET with client IMS (MISS + IMS)"
+    stop_nginx
+    rm -rf cache
+    mkdir cache
+    start_nginx "${conf}"
+    req -H "If-Modified-Since: ${LM}"
+    echo "-- 6 plain GET right after (did the cache fill?)"
+    req
+
+    stop_nginx
+    stop_backend
+    echo "-- backend saw:"
+    cat requests.log
+    echo ""
+}
+
+cp nginx-base.conf nginx-plain.conf
+awk '{
+    if ($0 ~ /#CLEAR_IMS#/) {
+	print "            fastcgi_param HTTP_IF_MODIFIED_SINCE \"\";"
+	print "            fastcgi_param HTTP_IF_NONE_MATCH \"\";"
+    } else {
+	print
+    }
+}' nginx-base.conf > nginx-clear.conf
+
+run_variant plain nginx-plain.conf
+run_variant clear-ims nginx-clear.conf

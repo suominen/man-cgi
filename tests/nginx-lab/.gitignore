@@ -1,0 +1,6 @@
+cache/
+logs/
+tmp/
+nginx-plain.conf
+nginx-clear.conf
+requests.log
