@@ -25,7 +25,7 @@ run_cgi /i386/apm.4
 assert_exit 0
 assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_APM4}\$"
-assert_header '^Cache-Control: public, max-age=7776000$'
+assert_header '^Cache-Control: public, max-age=3600$'
 assert_body 'rel="canonical" href="https://man.netbsd.org/i386/apm.4"'
 
 # MI page under an arch URL: serves 200 with full cacheability,
@@ -36,7 +36,7 @@ run_cgi /i386/ls.1
 assert_exit 0
 assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_LS1}\$"
-assert_header '^Cache-Control: public, max-age=7776000$'
+assert_header '^Cache-Control: public, max-age=3600$'
 assert_body 'rel="canonical" href="https://man.netbsd.org/ls.1"'
 
 # The MD page does not exist for another arch, including a

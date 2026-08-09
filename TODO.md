@@ -21,13 +21,25 @@ constraints are load-bearing; see the notes at the bottom.
 - [x] 5. Script: header-emission refactor (`emit_cache_headers`,
   content classes; no header-value changes yet).
 - [x] 6. Script: Surrogate-Key emission.
-- [ ] 7. Script: TTL layering (X-Accel-Expires, Surrogate-Control,
-  new Cache-Control values per class).
+- [x] 7. Script: TTL layering (X-Accel-Expires, Surrogate-Control,
+  new Cache-Control values per class). The page arm now branches on
+  the resolved collection, fixing a long-standing error: the
+  *-current match could never fire for the default collection
+  (COLL is emptied when it equals DEFAULT_COLLECTION), so
+  NetBSD-current pages — rebuilt daily from TNF's builds via a
+  once-a-day cron pull — were cached for 90 days everywhere.
 - [ ] 8. Script: fast 304 handler + HEAD + 404 Last-Modified + 303
   `no-store`. Deploy only after step 4 is applied in production.
 - [ ] 9. Docs: `docs/caching.md`, `docs/runbook.md`, `docs/nginx.md`;
   ADRs 0002-0004, 0008-0009. Then one-time nginx cache wipe + Fastly
-  soft purge + live verification.
+  soft purge + live verification. Verification checklist from the
+  step-7 review: Fastly does not cache 308s (or 503s) by default —
+  confirm Surrogate-Control on them is inert and nginx absorbs 308s
+  (X-Accel-Expires 30d); confirm stale-if-error delivery; runbook
+  must note that recovering from a bad 308 means deleting nginx
+  cache files (no purge module). Also note nginx forwards
+  Surrogate-Key to non-Fastly clients (harmless; stripping is
+  tidier).
 - [ ] 10. ct-check extensions (branch in `~/src/ct-check`) +
   `tests/smoke.yml`.
 - [ ] 11. Script: `/api/archlist` + `/api/colllist` endpoints.

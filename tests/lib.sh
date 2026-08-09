@@ -17,6 +17,7 @@ LM_APM4='Sat, 03 Jan 2026 14:15:16 GMT'
 LM_BUILD='Sun, 04 Jan 2026 15:16:17 GMT'
 LM_CPUCTL4='Tue, 06 Jan 2026 17:18:19 GMT'
 LM_BR_LS1='Mon, 05 Jan 2026 16:17:18 GMT'
+LM_REL_LS1='Thu, 08 Jan 2026 19:20:21 GMT'
 
 TAP_N=0
 TAP_FAIL=0
@@ -41,6 +42,8 @@ setup_fixtures()
     # ls.1 so Last-Modified assertions can tell them apart.
     TZ=UTC touch -t 202601071819.20 "${MANROOT}/NetBSD-9.x-BRANCH/build"
     TZ=UTC touch -t 202601051617.18 "${MANROOT}/NetBSD-9.x-BRANCH/man1/ls.1"
+    TZ=UTC touch -t 202601091021.22 "${MANROOT}/NetBSD-10.1/build"
+    TZ=UTC touch -t 202601081920.21 "${MANROOT}/NetBSD-10.1/man1/ls.1"
 }
 
 # Run the CGI with PATH_INFO="${1}". Optional request parameters come

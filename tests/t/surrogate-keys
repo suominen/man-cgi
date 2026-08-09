@@ -55,11 +55,12 @@ assert_header '^Surrogate-Key: all home form coll:NetBSD-current$'
 run_cgi /nosuchcommand.1
 assert_header '^Surrogate-Key: all notfound form coll:NetBSD-current$'
 
-# 404 in a known-but-absent collection keys the requested
-# (sanitized) collection, not the default.
-run_cgi /NetBSD-10.1/ls.1
+# 404 in an absent collection (no directory, no branch or current
+# fallback) keys the requested (sanitized) collection, not the
+# default.
+run_cgi /NetBSD-6.1/ls.1
 assert_header '^Status: 404 Not Found$'
-assert_header '^Surrogate-Key: all notfound form coll:NetBSD-10.1$'
+assert_header '^Surrogate-Key: all notfound form coll:NetBSD-6.1$'
 
 # Redirects: 302 collection fallback keys the resolved target
 # collection; 308 canonicalization keys the resolved collection.

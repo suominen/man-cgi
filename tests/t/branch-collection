@@ -1,10 +1,10 @@
 #!/bin/sh
 # @(#)$KimmoSuominen$
 #
-# Characterize responses for an explicitly named branch collection:
-# 200s and 404s there use the 24-hour Cache-Control (the *-BRANCH
-# arm of the TTL selection), unlike the default collection's 90
-# days, and the canonical link keeps the collection prefix.
+# Responses for an explicitly named branch collection: 200s use
+# the frequently-rebuilt arm of the TTL table (short browser and
+# nginx TTLs, purgeable day-long Fastly TTL), 404s the uniform 404
+# class, and the canonical link keeps the collection prefix.
 #
 # 20260809  Kimmo Suominen
 #
@@ -24,7 +24,9 @@ assert_exit 0
 assert_no_header '^Status:'
 assert_header '^Content-Type: text/html; charset=windows-1252$'
 assert_header "^Last-Modified: ${LM_BR_LS1}\$"
-assert_header '^Cache-Control: public, max-age=86400$'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
+assert_header '^Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800$'
 assert_header '^Expires: '
 assert_body 'rel="canonical" href="https://man.netbsd.org/NetBSD-9.x-BRANCH/ls.1"'
 
@@ -32,7 +34,9 @@ run_cgi /NetBSD-9.x-BRANCH/nosuchcommand.1
 
 assert_exit 0
 assert_header '^Status: 404 Not Found$'
-assert_header '^Cache-Control: public, max-age=86400$'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
+assert_header '^Surrogate-Control: max-age=86400, stale-if-error=86400$'
 assert_header '^Expires: '
 assert_no_header '^Last-Modified:'
 

@@ -26,6 +26,8 @@ assert_header '^Location: https://man.netbsd.org/ls.1$'
 assert_header '^Content-Type: text/html; charset=windows-1252$'
 assert_no_header '^Cache-Control:'
 assert_no_header '^Expires:'
+assert_no_header '^X-Accel-Expires:'
+assert_no_header '^Surrogate-Control:'
 assert_no_header '^Last-Modified:'
 assert_body 'Goto:'
 

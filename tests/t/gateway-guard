@@ -27,6 +27,8 @@ run_cgi /.well-known/health
 assert_exit 0
 assert_header '^Status: 200 OK$'
 assert_header '^Cache-Control: public, max-age=30$'
+assert_header '^X-Accel-Expires: 30$'
+assert_header '^Surrogate-Control: max-age=30$'
 
 # In a gateway context the override is ignored: the production
 # MANROOT is missing here, so the health check reports 503.
@@ -36,5 +38,8 @@ CGI_GATEWAY=
 
 assert_exit 0
 assert_header '^Status: 503 Service Unavailable$'
+# The unhealthy response carries the same short caching headers.
+assert_header '^Cache-Control: public, max-age=30$'
+assert_header '^X-Accel-Expires: 30$'
 
 test_done

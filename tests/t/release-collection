@@ -1,0 +1,43 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Responses for a frozen release collection use the release arm of
+# the TTL table: day-long browser and nginx TTLs and a 90-day
+# purgeable Fastly TTL. 404s use the uniform 404 class regardless
+# of collection.
+#
+# 20260809  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+run_cgi /NetBSD-10.1/ls.1
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_REL_LS1}\$"
+assert_header '^Cache-Control: public, max-age=86400$'
+assert_header '^X-Accel-Expires: 86400$'
+assert_header '^Surrogate-Control: max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800$'
+assert_header '^Surrogate-Key: all form coll:NetBSD-10.1 page:NetBSD-10.1:ls.1$'
+assert_body 'rel="canonical" href="https://man.netbsd.org/NetBSD-10.1/ls.1"'
+
+run_cgi /NetBSD-10.1/nosuchcommand.1
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
+assert_header '^Surrogate-Control: max-age=86400, stale-if-error=86400$'
+assert_header '^Surrogate-Key: all notfound form coll:NetBSD-10.1$'
+assert_header '^Expires: '
+assert_no_header '^Last-Modified:'
+
+test_done
