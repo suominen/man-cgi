@@ -405,32 +405,68 @@ END
 # or notfound.
 emit_cache_headers()
 {
-    local class coll expdate expires expsecs keys
+    local accel class coll expdate expires expsecs keys surrogate
     class="${1}"
 
+    coll="${COLL:-${DEFAULT_COLLECTION:-DEFAULT}}"
+
+    # Each cache tier gets its own lifetime: Cache-Control reaches
+    # browsers (and is the fallback for the other tiers),
+    # X-Accel-Expires is consumed by nginx, Surrogate-Control by
+    # Fastly. Browsers cache briefly (they cannot be purged), nginx
+    # briefly (expiry costs only a 304 revalidation), Fastly long
+    # (purgeable by Surrogate-Key).
     case "${class}" in
     health)
-	# 30 seconds
+	# 30 seconds everywhere
 	expsecs=30
+	accel=30
+	surrogate='max-age=30'
 	;;
     home)
-	# 2 hours
+	# 2 hours; a day at Fastly
 	expsecs=7200
+	accel=7200
+	surrogate='max-age=86400, stale-while-revalidate=3600'
+	;;
+    notfound)
+	# 1 hour; a day at Fastly (a rebuild can add the page)
+	expsecs=3600
+	accel=3600
+	surrogate='max-age=86400, stale-if-error=86400'
 	;;
     redirect-found)
-	# 24 hours
+	# 24 hours; a week at Fastly
 	expsecs=86400
+	accel=86400
+	surrogate='max-age=604800'
+	;;
+    redirect-permanent)
+	# 24 hours for browsers; 30 days at nginx. Fastly does not
+	# cache 308s by default, so its tier passes them to nginx;
+	# Surrogate-Control is emitted for symmetry and future VCL.
+	expsecs=86400
+	accel=2592000
+	surrogate='max-age=2592000'
 	;;
     *)
-	# page, notfound, redirect-permanent
-	case "${COLL}" in
+	# page: the resolved collection decides
+	case "${coll}" in
 	*-current|*-BRANCH)
-	    # 24 hours
-	    expsecs=86400
+	    # Rebuilt frequently: 1 hour for browsers and nginx,
+	    # a day at Fastly
+	    expsecs=3600
+	    accel=3600
+	    surrogate='max-age=86400, stale-while-revalidate=3600'
+	    surrogate="${surrogate}, stale-if-error=604800"
 	    ;;
 	*)
-	    # 90 days
-	    expsecs=7776000
+	    # Frozen release: a day for browsers and nginx,
+	    # 90 days at Fastly
+	    expsecs=86400
+	    accel=86400
+	    surrogate='max-age=7776000, stale-while-revalidate=86400'
+	    surrogate="${surrogate}, stale-if-error=604800"
 	    ;;
 	esac
 	;;
@@ -441,8 +477,6 @@ emit_cache_headers()
     # purge together; arch keys carry the requested arch (guarded
     # against unsafe characters: PATH_INFO is user input) and the
     # canonical arch when it differs (e.g. the x86 machine class).
-    coll="${COLL:-${DEFAULT_COLLECTION:-DEFAULT}}"
-
     case "${class}" in
     health)
 	keys='all'
@@ -482,6 +516,8 @@ emit_cache_headers()
 
     echo "Expires: ${expires}"
     echo "Cache-Control: public, max-age=${expsecs}"
+    echo "X-Accel-Expires: ${accel}"
+    echo "Surrogate-Control: ${surrogate}"
     echo "Surrogate-Key: ${keys}"
 }
 
