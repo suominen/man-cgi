@@ -52,13 +52,14 @@ MANCGI_DATE=2026-08-09
 # The HTTPD server may not pass the enviroment variables to the script.
 # You should add your system path here :
 #
-# Outside a gateway context (e.g. the test harness) MANCGI_PATH and
-# MANCGI_MANROOT may override the fixed values.
+# Outside a gateway context (e.g. the test harness) MANCGI_PATH,
+# MANCGI_MANROOT, and MANCGI_MINLASTMOD may override the fixed
+# values.
 case "${GATEWAY_INTERFACE:-}" in
 '')
     ;;
 *)
-    unset MANCGI_PATH MANCGI_MANROOT
+    unset MANCGI_PATH MANCGI_MANROOT MANCGI_MINLASTMOD
     ;;
 esac
 export PATH
@@ -83,6 +84,16 @@ MANROOT=${MANCGI_MANROOT:-/p/netbsd/man/man}
 
 # Last modified is NetBSD-current build retrieval date
 LASTMODFILE="$MANROOT/NetBSD-current/build"
+
+# Floor for Last-Modified on rendered output (seconds since the
+# epoch, UTC): every validator is max(file mtime, MINLASTMOD).
+# Bump to the checkin time (date +%s) whenever a script change
+# alters rendered output: the sed HTMLizer, the section list,
+# query-form defaults (ANY/NONE/DEFAULT), cache headers, canonical
+# URLs, page chrome, error bodies. Signature and MANCGI_DATE
+# changes do not qualify.
+# 2026-08-11 09:53:26 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1786442006}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -227,30 +238,44 @@ END
 
 # Serve one of the /api/v1 list endpoints: newline-delimited
 # text/plain, revalidatable via Last-Modified (the list file's
-# mtime; the script's own for the embedded sectlist).
+# mtime clamped to MINLASTMOD; MINLASTMOD alone for the embedded
+# sectlist).
 api_list()
 {
     local file lastmod
+
+    # Not inherited from the environment: empty means no validator.
+    lastmod=
 
     APILIST="${1}"
 
     case "${APILIST}" in
     archlist|colllist)
 	file="${MANROOT}/${APILIST}"
+	st_mtime=
+	if [ -f "${file}" ]
+	then
+	    eval $(stat -s "${file}")
+	fi
 	;;
     *)
-	file="${0}"
+	# The embedded sectlist has no backing file; MINLASTMOD
+	# tracks output-affecting script changes.
+	st_mtime="${MINLASTMOD}"
 	;;
     esac
 
     # NB: archlist/colllist bodies also depend on DEFAULT_ARCH
     # and DEFAULT_COLLECTION (a DEFAULT line is synthesized when
-    # unset), which the file-mtime validator does not cover:
-    # after changing those params, touch the list files or purge
-    # the api key.
-    if [ -f "${file}" ]
+    # unset), which the clamped file-mtime validator does not
+    # cover: after changing those params, bump MINLASTMOD, touch
+    # the list files, or purge the api key.
+    if [ -n "${st_mtime}" ]
     then
-	eval $(stat -s "${file}")
+	if [ "${st_mtime}" -lt "${MINLASTMOD}" ]
+	then
+	    st_mtime="${MINLASTMOD}"
+	fi
 	lastmod=$(date -u -r "${st_mtime}" '+%a, %d %b %Y %H:%M:%S GMT')
     fi
 
@@ -1110,6 +1135,10 @@ esac
 if [ -f "$LASTMODFILE" ]
 then
     eval $(stat -s "$LASTMODFILE")
+    if [ "$st_mtime" -lt "$MINLASTMOD" ]
+    then
+	st_mtime="$MINLASTMOD"
+    fi
     LASTMOD=$(date -u -r "$st_mtime" '+%a, %d %b %Y %H:%M:%S GMT')
 fi
 
