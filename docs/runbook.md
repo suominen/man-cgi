@@ -12,6 +12,15 @@ fetch, so clients keep receiving responses throughout. `-H` purges
 hard — reserve it for content that must stop being served
 immediately (e.g. something that should never have been published).
 
+Mind the ordering: purged objects refill from **nginx**, not from
+the CGI. While nginx still holds a stale-but-valid entry (within
+its `X-Accel-Expires` TTL — see the table in `caching.md`), a
+Fastly purge just re-caches the same old object. After a change
+reaches the origin, purge once nginx's entries have expired and
+revalidated — or run the purge a second time past that point. (The
+nginx wipe procedure below already orders this correctly: wipe
+first, then `manno-purge all`.)
+
 Configuration (on the purging host):
 
     ~/.config/manno/fastly-purge-token    API token, purge_select scope
