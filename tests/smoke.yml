@@ -1,7 +1,12 @@
 # Smoke checklist for man.netbsd.org, usable against any tier:
 #
-#   ct-check --scheme https --server man.netbsd.org --file tests/smoke.yml
-#   ct-check --scheme http --server man.oxygene.qa.nxrns.org --file tests/smoke.yml
+#   ct-check --scheme https --server man.netbsd.org \
+#       --delay 1 --file tests/smoke.yml
+#   ct-check --scheme http --server man.oxygene.qa.nxrns.org \
+#       --delay 1 --file tests/smoke.yml
+#
+# Always pace the requests (--delay): the QA vhost is uncached, so
+# every request lands on the fcgiwrap workers shared with production.
 #
 # Asserts only what holds everywhere; Surrogate headers are stripped
 # by Fastly, so their checks live in smoke-origin.yml.

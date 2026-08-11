@@ -3,7 +3,10 @@
 # the QA vhost or the origin directly:
 #
 #   ct-check --scheme http --server man.oxygene.qa.nxrns.org \
-#       --file tests/smoke-origin.yml
+#       --delay 1 --file tests/smoke-origin.yml
+#
+# Always pace the requests (--delay): these tiers are uncached, so
+# every request lands on the fcgiwrap workers shared with production.
 
 checklist:
 
