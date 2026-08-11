@@ -15,11 +15,15 @@ immediately (e.g. something that should never have been published).
 Mind the ordering: purged objects refill from **nginx**, not from
 the CGI. While nginx still holds a stale-but-valid entry (within
 its `X-Accel-Expires` TTL — see the table in `caching.md`), a
-Fastly purge just re-caches the same old object. After a change
-reaches the origin, purge once nginx's entries have expired and
-revalidated — or run the purge a second time past that point. (The
-nginx wipe procedure below already orders this correctly: wipe
-first, then `manno-purge all`.)
+Fastly purge just re-caches the same old object. Even past that
+TTL, the purge-triggered fetch can be the very request that kicks
+off nginx's background revalidation and still get handed the stale
+copy (`X-Man-Cache: STALE` on the refilled object is the tell). So
+after a change reaches the origin, don't count purges — verify:
+purge, compare `Last-Modified` at the edge against the origin's
+(the QA vhost shows the origin's), and repeat until they match; a
+couple of rounds is normal. (The nginx wipe procedure below is
+immune by construction: wipe first, then `manno-purge all`.)
 
 Configuration (on the purging host):
 
