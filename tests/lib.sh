@@ -23,6 +23,12 @@ LM_REL_BUILD='Fri, 09 Jan 2026 10:21:22 GMT'
 LM_ARCHLIST='Sat, 10 Jan 2026 11:12:13 GMT'
 LM_COLLLIST='Sun, 11 Jan 2026 12:13:14 GMT'
 
+# Pinned MINLASTMOD floor for the suite (see t/minlastmod): fixed,
+# and below every fixture stamp above so file mtimes stay the
+# operative validators throughout the suite.
+MINLASTMOD_EPOCH=1767261600
+LM_MINLASTMOD='Thu, 01 Jan 2026 10:00:00 GMT'
+
 TAP_N=0
 TAP_FAIL=0
 
@@ -54,7 +60,8 @@ setup_fixtures()
 
 # Run the CGI with PATH_INFO="${1}". Optional request parameters come
 # from CGI_METHOD, CGI_QUERY, CGI_IMS, CGI_BODY (POST input),
-# CGI_MANROOT, and CGI_GATEWAY (GATEWAY_INTERFACE, unset by default
+# CGI_MANROOT, CGI_MINLASTMOD (overrides the pinned MINLASTMOD
+# floor), and CGI_GATEWAY (GATEWAY_INTERFACE, unset by default
 # so the MANCGI_* overrides stay honored). Results: CGI_EXIT, plus
 # out/err/hdrs/body files under ${TESTTMP}.
 run_cgi()
@@ -77,6 +84,7 @@ run_cgi()
 	DEFAULT_ARCH=NONE \
 	DEFAULT_COLLECTION=NetBSD-current \
 	"MANCGI_MANROOT=${CGI_MANROOT:-${MANROOT}}" \
+	"MANCGI_MINLASTMOD=${CGI_MINLASTMOD:-${MINLASTMOD_EPOCH}}" \
 	MANCGI_PATH=/usr/bin:/bin \
 	sh "${MANCGI}" > "${TESTTMP}/out" 2> "${TESTTMP}/err" ||
     rc=$?

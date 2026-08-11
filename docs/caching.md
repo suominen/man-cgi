@@ -42,9 +42,14 @@ collection, so NetBSD-current pages were accidentally cached for 90
 days at every tier.)
 
 `Last-Modified` is the mtime of the manual page's source file (found
-via `man -w`); for 404s it is the mtime of the resolved collection's
-`build` file and for the home page the NetBSD-current `build` file,
-so those revalidate as well. A 404 in a collection that has no
+via `man -w`), clamped to at least `MINLASTMOD` — a floor embedded
+in the CGI and bumped whenever a script change alters rendered
+output (ADR-0011), so such changes reach every tier through normal
+revalidation instead of cache wipes. For 404s the mtime is the
+resolved collection's `build` file and for the home page the
+NetBSD-current `build` file, so those revalidate as well; the
+`/api/v1` list endpoints clamp the same way, with the embedded
+sectlist using the floor alone. A 404 in a collection that has no
 directory has no validator and never returns 304.
 
 ## Conditional requests

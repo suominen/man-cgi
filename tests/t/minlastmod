@@ -1,0 +1,108 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# The MINLASTMOD floor folds output-affecting script changes into
+# Last-Modified: validated responses emit max(file mtime,
+# MINLASTMOD), and the embedded sectlist uses the floor alone. The
+# harness pins the floor below every fixture stamp through
+# MANCGI_MINLASTMOD (CGI_MINLASTMOD to vary it); in a gateway
+# context the override is ignored like the other MANCGI_*
+# variables.
+#
+# 20260811  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# A floor above every fixture stamp, for the clamped cases.
+EPOCH_JUN1=1780272000
+LM_JUN1='Mon, 01 Jun 2026 00:00:00 GMT'
+
+# With the pinned (low) floor the file mtime is the validator.
+run_cgi /ls.1
+
+assert_exit 0
+assert_header "^Last-Modified: ${LM_LS1}\$"
+
+# A floor above the page mtime becomes the validator.
+CGI_MINLASTMOD="${EPOCH_JUN1}"
+run_cgi /ls.1
+
+assert_exit 0
+assert_header "^Last-Modified: ${LM_JUN1}\$"
+
+# The home page (build-file validator) clamps the same way.
+run_cgi /
+
+assert_exit 0
+assert_header "^Last-Modified: ${LM_JUN1}\$"
+
+# So do the file-backed list endpoints.
+run_cgi /api/v1/archlist
+
+assert_exit 0
+assert_header "^Last-Modified: ${LM_JUN1}\$"
+
+run_cgi /api/v1/colllist
+
+assert_exit 0
+assert_header "^Last-Modified: ${LM_JUN1}\$"
+
+# An If-Modified-Since carrying the pre-bump validator (the file
+# mtime) no longer matches: the cached copy refreshes with a full
+# 200 — the point of bumping the floor.
+CGI_IMS="${LM_LS1}"
+run_cgi /ls.1
+CGI_IMS=
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_JUN1}\$"
+assert_body '<pre>'
+
+# The clamped validator round-trips to a 304.
+CGI_IMS="${LM_JUN1}"
+run_cgi /ls.1
+CGI_IMS=
+CGI_MINLASTMOD=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_no_body
+
+# sectlist: the floor alone is the validator (no backing file).
+run_cgi /api/v1/sectlist
+
+assert_exit 0
+assert_header "^Last-Modified: ${LM_MINLASTMOD}\$"
+
+# ... and it round-trips to a 304.
+CGI_IMS="${LM_MINLASTMOD}"
+run_cgi /api/v1/sectlist
+CGI_IMS=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_no_body
+
+# In a gateway context MANCGI_MINLASTMOD is ignored and the
+# embedded floor applies (sectlist needs no MANROOT, so it renders
+# under the guard).
+CGI_GATEWAY=CGI/1.1
+CGI_MINLASTMOD="${EPOCH_JUN1}"
+run_cgi /api/v1/sectlist
+CGI_GATEWAY=
+CGI_MINLASTMOD=
+
+assert_exit 0
+assert_header '^Last-Modified: '
+assert_no_header "^Last-Modified: ${LM_JUN1}\$"
+
+test_done

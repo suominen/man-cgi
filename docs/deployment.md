@@ -12,29 +12,35 @@ checkout, outside git). Development workflow:
    knobs). All tests green before check-in.
 3. `ci -u` (not `-l`) so the checked-in file is unlocked and
    read-only between edits.
-4. Bump `MANCGI_DATE` (its own revision) when observable output
+4. When a change alters *rendered output* (markup, headers — not
+   the signature), bump `MINLASTMOD` to the checkin time in the
+   same revision: it floors every `Last-Modified`, so cached
+   objects revalidate to the new output as they expire (ADR-0011).
+5. Bump `MANCGI_DATE` (its own revision) when observable output
    changed; it is visible in `X-Powered-By` on the health check and
    in the page signature, which makes deployed-version checks easy.
-5. Copy to the QA vhost (man.oxygene.qa.nxrns.org — uncached, no
+6. Copy to the QA vhost (man.oxygene.qa.nxrns.org — uncached, no
    rate limits, serves the production man tree) and smoke-test the
    response classes there.
-6. Deploy into the man-www site on oxygene; sync to lcm with
+7. Deploy into the man-www site on oxygene; sync to lcm with
    `/root/bin/site-rsync man-www` (as root). lcm also runs that
    sync from cron at 06:53 and 18:53, so a manual run is only
    needed when the deploy must reach lcm immediately.
-7. If the change altered observable output (markup, headers): wipe
-   the nginx caches (runbook) — frozen-collection objects
-   revalidate forever and never pick up body changes through expiry
-   — then `manno-purge all`.
+8. If the change altered rendered output and `MINLASTMOD` was
+   bumped, caches converge on their own: every validator moved, so
+   nginx entries pick up the new output as they expire. Wipe the
+   nginx caches (runbook) and `manno-purge all` only when the
+   change must be visible immediately — or when the bump was
+   missed.
 
 ## Testability
 
-The script honors two environment overrides, `MANCGI_PATH` and
-`MANCGI_MANROOT`, **only outside a gateway context**: when
-`GATEWAY_INTERFACE` is set (as under real CGI), both are ignored
-and the fixed production paths apply. The test harness runs the
-script with `env -i` and fixture trees; production behavior cannot
-be influenced through them.
+The script honors three environment overrides — `MANCGI_PATH`,
+`MANCGI_MANROOT`, and `MANCGI_MINLASTMOD` — **only outside a
+gateway context**: when `GATEWAY_INTERFACE` is set (as under real
+CGI), they are ignored and the fixed production values apply. The
+test harness runs the script with `env -i` and fixture trees;
+production behavior cannot be influenced through them.
 
 ## nginx configuration changes
 

@@ -87,11 +87,14 @@ the other host while nginx is down, so wipe one host at a time.
 
 ### When an nginx wipe is needed
 
-- **Script deploys with observable output changes.** Frozen-release
-  objects revalidate indefinitely (their validators never change),
-  so markup or header changes never reach them through expiry alone.
-  (List changes stopped being a wipe trigger when the JS query form
-  removed the embedded lists from page bodies.)
+- **Script deploys with output changes that must land immediately,
+  or where the `MINLASTMOD` bump was missed.** A bumped
+  `MINLASTMOD` (ADR-0011) moves every validator, so even
+  frozen-release objects stop revalidating to 304s and pick up the
+  new output as they expire — without it their validators never
+  change and markup or header changes never reach them through
+  expiry alone. (List changes stopped being a wipe trigger when
+  the JS query form removed the embedded lists from page bodies.)
 - **A bad permanent redirect**: 301s are purgeable at Fastly (the
   `redirect` key) but live 30 days in nginx's cache with no purge
   mechanism — a wrong 301 needs `manno-purge redirect` *and* an

@@ -3,9 +3,9 @@
 #
 # The /api/v1 list endpoints: newline-delimited text/plain with the
 # api cache class, their own Surrogate-Keys, Last-Modified from the
-# list file (the script itself for sectlist), 304 revalidation, and
-# HEAD support. Unknown /api paths 404 without falling through to
-# page parsing.
+# list file (the MINLASTMOD floor for sectlist), 304 revalidation,
+# and HEAD support. Unknown /api paths 404 without falling through
+# to page parsing.
 #
 # 20260809  Kimmo Suominen
 #
@@ -44,13 +44,13 @@ assert_header '^Surrogate-Key: all api form colllist$'
 assert_body '^NetBSD-current$'
 assert_body '^NetBSD-9.x-BRANCH$'
 
-# sectlist: shared section list including ANY; Last-Modified comes
-# from the script file itself.
+# sectlist: shared section list including ANY; Last-Modified is the
+# MINLASTMOD floor (no backing file; the harness pins the floor).
 run_cgi /api/v1/sectlist
 
 assert_exit 0
 assert_header '^Content-Type: text/plain$'
-assert_header '^Last-Modified: '
+assert_header "^Last-Modified: ${LM_MINLASTMOD}\$"
 assert_header '^Surrogate-Key: all api form sectlist$'
 assert_body '^ANY Search in All Sections$'
 assert_body '^1 General Commands$'
@@ -58,8 +58,7 @@ assert_body '^3lua Lua Modules$'
 assert_body '^9lua Lua Kernel Bindings$'
 
 # The sectlist validator round-trips: echoing the emitted
-# Last-Modified back yields a 304 even though the mtime is the
-# script's own.
+# Last-Modified back yields a 304.
 ims=$(sed -n 's/^Last-Modified: //p' "${TESTTMP}/hdrs")
 CGI_IMS="${ims}"
 run_cgi /api/v1/sectlist
