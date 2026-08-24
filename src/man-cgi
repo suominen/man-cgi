@@ -45,7 +45,7 @@
 #   QUERY_STRING=/.well-known/health
 #
 
-MANCGI_DATE=2026-08-11
+MANCGI_DATE=2026-08-25
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
