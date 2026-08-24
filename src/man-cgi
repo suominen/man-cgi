@@ -85,13 +85,15 @@ MANROOT=${MANCGI_MANROOT:-/p/netbsd/man/man}
 # Last modified is NetBSD-current build retrieval date
 LASTMODFILE="$MANROOT/NetBSD-current/build"
 
-# Floor for Last-Modified on rendered output (seconds since the
-# epoch, UTC): every validator is max(file mtime, MINLASTMOD).
-# Bump to the checkin time (date +%s) whenever a script change
-# alters rendered output: the sed HTMLizer, the section list,
-# query-form defaults (ANY/NONE/DEFAULT), cache headers, canonical
-# URLs, page chrome, error bodies. Signature and MANCGI_DATE
-# changes do not qualify.
+# Floor for Last-Modified on rendered output (seconds since the epoch,
+# UTC): every validator is max(file mtime, MINLASTMOD).
+#
+# Bump to the checkin time (date +%s) whenever a script change alters
+# rendered output: the sed HTMLizer, the section list, query-form
+# defaults (ANY/NONE/DEFAULT), cache headers, canonical URLs, page
+# chrome, error bodies. Signature and MANCGI_DATE changes do not
+# qualify.
+#
 # 2026-08-24 18:56:24 UTC
 MINLASTMOD=${MANCGI_MINLASTMOD:-1787597784}
 
@@ -174,6 +176,101 @@ canonical_url()
 	echo "${REQUEST_SCHEME:-http}://${SERVER_NAME}${port}${coll:+/$coll}${arch:+/$arch}/${COMMAND}${section:+.$section}"
 	;;
     esac
+}
+
+# COLL reaches Location and canonical URLs, Surrogate-Key tokens, HTML
+# attributes and MANPATH, so it is filtered once here, before any of
+# them.
+#
+# What survives the character filter still has to look like a collection
+# name, which is what refuses the three that otherwise get through: ''
+# (nothing survived, so MANPATH would become MANROOT itself), '.' and
+# '..' (real directories, so they satisfy the -d probe below and would
+# point MANPATH at MANROOT and its parent).
+#
+# The PATH_INFO parser already takes a leading component as the
+# collection only when it starts with an uppercase letter; this applies
+# the same rule to the query-string and POST forms.
+sanitize_coll()
+{
+    case "${COLL}" in
+    DEFAULT|'')
+	return
+	;;
+    esac
+
+    COLL=$(printf '%s' "${COLL}" | tr -cd 'A-Za-z0-9.-')
+
+    case "${COLL}" in
+    [A-Z]*)
+	;;
+    *)
+	BADCOLL=true
+	COLL=DEFAULT
+	;;
+    esac
+}
+
+# ARCH reaches the same places and reached them unfiltered. Unlike
+# a collection it has no single filesystem test: an architecture is
+# a directory under some manN/catN, so asking the tree means a glob
+# per section -- and the tree answers the wrong question anyway.
+# Those directories hold only the pages that differ by
+# architecture; ls(1) exists on a port whether or not the port has
+# a directory here, so a collection shipping no pc532-specific page
+# does not make /pc532/ls.1 meaningless.
+#
+# archlist is the right list. $MANROOT/Makefile builds it by
+# finding those directories across every collection at once, so it
+# names every architecture that has ever existed rather than the
+# ones one collection ships, and it is exactly what list_archs()
+# offers the query form. Validating against it means the names the
+# form can produce and the names a URL will accept are one set.
+#
+# Unreadable, fall back to the shape rule rather than answer 404
+# for every architecture on the site. Note this makes archlist
+# load-bearing for serving and not just for the form: an arch that
+# a rebuild adds is unusable in a URL until make(1) runs here.
+#
+# Dropped whole rather than repaired: keeping the part that passes
+# the filter would invent a name the client never asked for. The
+# value becomes DEFAULT so that it degrades correctly whether or
+# not DEFAULT_ARCH is set, and BADARCH makes the request a 404 --
+# an architecture that is not one names nothing, the same as a
+# collection that is not one.
+sanitize_arch()
+{
+    local clean
+
+    case "${ARCH}" in
+    DEFAULT|NONE|'')
+	return
+	;;
+    esac
+
+    clean=$(printf '%s' "${ARCH}" | tr -cd '.A-Za-z0-9_-')
+
+    if [ "${clean}" != "${ARCH}" ]
+    then
+	BADARCH=true
+    elif [ -r "${MANROOT}/archlist" ]
+    then
+	grep -q -x -F -e "${ARCH}" "${MANROOT}/archlist" ||
+	BADARCH=true
+    else
+	case "${ARCH}" in
+	[a-z]*)
+	    ;;
+	*)
+	    BADARCH=true
+	    ;;
+	esac
+    fi
+
+    if ${BADARCH:-false}
+    then
+	ARCH=DEFAULT
+    fi
 }
 
 rel_canonical_url()
@@ -953,9 +1050,15 @@ SECTION="$1"
 set -- $COLL
 COLL="$1"
 
+# Not inherited from the environment: these are the sanitizers'
+# verdicts on this request, and an inherited value would decide a
+# response class.
+BADCOLL=
+BADARCH=
+
 case "$REQUEST_METHOD" in
 POST)
-    read a
+    read -r a
     OIFS="$IFS"
     IFS="${OIFS}&+"
     set -- $a
@@ -963,34 +1066,71 @@ POST)
 
     for i
     do
+	# Every value is scrubbed of control characters as it is
+	# taken, before the sanitizers below judge it. A body line's
+	# own terminator arrives as part of the last field it parsed
+	# (the split set has no CR), and that is framing rather than
+	# anything the client chose: sanitize_arch drops a value it
+	# would have to change, so leaving the CR in would throw away
+	# a perfectly good architecture. The field names are matched
+	# before the scrub, so a mangled name stays mangled.
 	case "$i" in
 	arch=*)
-	    ARCH="${i#arch=}"
+	    ARCH="$(printf '%s' "${i#arch=}" | tr -d '\000-\037\177')"
 	    ;;
 	coll=*)
-	    COLL="${i#coll=}"
+	    COLL="$(printf '%s' "${i#coll=}" | tr -d '\000-\037\177')"
 	    ;;
 	command=*)
+	    # A page name can hold characters no other field does, so
+	    # this one keeps its character set and is only scrubbed.
+	    # Reflecting it into page chrome is a separate matter; here
+	    # it only has to stay out of the header's line structure.
 	    COMMAND="$(
-		echo "$i" \
+		printf '%s' "${i#command=}" \
 		| sed \
-		    -e 's/command=//' \
 		    -e 's,%2F,/,gi' \
 		    -e 's,%2B,+,gi' \
 		    -e 's,%5B,[,gi' \
 		    -e 's,%5D,],gi' \
-		    ;
+		| tr -d '\000-\037\177'
 	    )"
 	    ;;
 	section=*)
-	    SECTION="${i#section=}"
+	    # The form's own values are ANY and the section names, and
+	    # the split below also accepts SECTION.ARCH and .ARCH, so
+	    # the set is the arch one, which subsumes the scrub. No
+	    # shape rule: a leading dot is how an arch-only section
+	    # arrives.
+	    SECTION="$(
+		printf '%s' "${i#section=}" | tr -cd '.A-Za-z0-9_-'
+	    )"
 	    ;;
 	esac
     done
 
+    # Scrubbed but not yet judged, and the 303 quotes all four
+    # into a header.
+    #
+    # The body is the only one of the three entry forms that can
+    # hold a raw control character in practice -- nginx passes
+    # PATH_INFO and QUERY_STRING undecoded and rejects a request
+    # line carrying one -- so COMMAND and SECTION are filtered
+    # here rather than on the shared path below. That is a
+    # property of the front end, not of this script: decode
+    # PATH_INFO at the front end and the other two need the same
+    # treatment.
+    sanitize_coll
+    sanitize_arch
+
     redirect 303
     ;;
 esac
+
+# Early enough that the DEFAULT_COLLECTION mapping below sees a
+# name that is either a collection name or DEFAULT, never the
+# remains of one.
+sanitize_coll
 
 case "$SECTION" in
 .*)
@@ -1022,6 +1162,13 @@ case "$COMMAND" in
     COMMAND="${COMMAND##*/}"
     ;;
 esac
+
+# After every path that can set it: the URL component and the
+# legacy query string's SECTION.ARCH field. (The arch-prefixed
+# COMMAND just above is reachable only from the command line --
+# PATH_INFO is split on / before it gets here, QUERY_STRING is not
+# %2F-decoded, and the POST arm returns at its 303.)
+sanitize_arch
 
 case "${DEFAULT_ARCH}" in
 "")
@@ -1068,7 +1215,6 @@ DEFAULT|"")
     COLL=
     ;;
 *)
-    COLL=$(echo "$COLL" | tr -cd 'A-Za-z0-9.-')
     if [ ! -d "${MANROOT}/${COLL}" ]
     then
 	NCOLL="${COLL%.*}.x-BRANCH"
@@ -1104,6 +1250,18 @@ case "${COLL}" in
     COLL=
     ;;
 esac
+
+# A name that is not a collection or not an architecture cannot be
+# canonicalized: there is no page to point at, and a 301 is
+# durable (ADR-0005). Only the legacy query string and the POST
+# body can produce a bad collection -- the PATH_INFO parser takes
+# one only from an [A-Z]* component, which always survives both
+# the character set and the shape check -- but any entry form can
+# produce a bad architecture.
+if ${BADCOLL:-false} || ${BADARCH:-false}
+then
+    need_redirect=
+fi
 
 if ${need_redirect:-false}
 then
@@ -1183,6 +1341,22 @@ case "${COMMAND}" in
     ;;
 esac
 
+# Whatever man(1) just said, a request whose collection or
+# architecture did not survive validation has no page. (A
+# well-formed name for a collection that merely does not exist is a
+# different thing, and so is an architecture that is real but ships
+# no pages of its own in this collection; both are left alone.)
+# Both names were reset to the default first, so the response still
+# gets a validator and cache keys that can be purged, but the
+# lookup's result is not this request's answer.
+if ${BADCOLL:-false} || ${BADARCH:-false}
+then
+    notfound=1
+    LASTMODFILE="${COLLSTAMP}"
+    MATCHES=
+    MATCHES_REST=
+fi
+
 # The page that gets rendered is the first path man(1) would find.
 LASTMODFILE="$(printf '%s\n' "${LASTMODFILE}" | sed -e 1q)"
 
@@ -1239,7 +1413,7 @@ case "${LASTMODFILE}" in
     NONE)	canarch=;;
     *)		canarch="${CANONICAL_ARCH}";;
     esac
-    arch_changed=false
+    arch_changed=
     if [ "${ARCH}" != "${canarch}" ]
     then
 	ARCH="${canarch}"
@@ -1262,7 +1436,7 @@ case "${LASTMODFILE}" in
 	;;
     esac
 
-    if ${arch_changed}
+    if ${arch_changed:-false}
     then
 	redirect 301
     fi
@@ -1295,6 +1469,13 @@ case "${COMMAND}" in
     fi
     ;;
 esac
+
+# Not conditional on COMMAND: a bad name with no command would
+# otherwise be classed as the home page and answered 200.
+if ${BADCOLL:-false} || ${BADARCH:-false}
+then
+    CLASS=notfound
+fi
 
 # Fast 304 path: nginx cache revalidation echoes our own
 # Last-Modified back, so an exact string match is a complete test;
