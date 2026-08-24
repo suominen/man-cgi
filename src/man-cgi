@@ -92,8 +92,8 @@ LASTMODFILE="$MANROOT/NetBSD-current/build"
 # query-form defaults (ANY/NONE/DEFAULT), cache headers, canonical
 # URLs, page chrome, error bodies. Signature and MANCGI_DATE
 # changes do not qualify.
-# 2026-08-24 09:02:01 UTC
-MINLASTMOD=${MANCGI_MINLASTMOD:-1787562121}
+# 2026-08-24 18:21:35 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1787595695}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -1382,6 +1382,10 @@ label[for="submit"] span { display: none; }
 label[for="submit"]:after { content: '\00a0'; }
 pre, tt, ul.matches { font-family: monospace; }
 pre { white-space: pre-wrap; }
+/* Two blank lines (2 x line-height) where the list of other
+   matches runs straight into the manual page. A menu has no
+   page after it and needs none. */
+ul.matches + pre.manpage { margin-top: 2.4em; }
 @media screen and (max-width: 800px) {
   body { margin: 0 0.5em; }
   .queryform { position: static; }
@@ -1453,7 +1457,7 @@ END
 	    printf '%s\n' "${MATCHES_REST}" | list_matches
 	    echo '</ul>'
 	fi
-	echo "<pre>"
+	echo '<pre class="manpage">'
 	case "$SECTION" in
 	"")
 	    if [ "$MANPARAM" = "" ]
