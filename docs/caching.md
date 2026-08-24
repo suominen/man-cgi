@@ -41,16 +41,32 @@ though `COLL` is empty by the time headers are emitted. (Before
 collection, so NetBSD-current pages were accidentally cached for 90
 days at every tier.)
 
+A multi-match menu (ADR-0012) takes the page class too: it ages
+with the collection it describes.
+
 `Last-Modified` is the mtime of the manual page's source file (found
 via `man -w`), clamped to at least `MINLASTMOD` — a floor embedded
 in the CGI and bumped whenever a script change alters rendered
 output (ADR-0011), so such changes reach every tier through normal
 revalidation instead of cache wipes. For 404s the mtime is the
-resolved collection's `build` file and for the home page the
-NetBSD-current `build` file, so those revalidate as well; the
+resolved collection's `build` file, and for the home page the
+NetBSD-current `build` file, so those revalidate as well. A
+multi-match menu uses the resolved collection's `build` file for the
+same reason a 404 does: it describes what the collection contains
+rather than any one file, so a rebuild is what can change it. The
 `/api/v1` list endpoints clamp the same way, with the embedded
-sectlist using the floor alone. A 404 in a collection that has no
-directory has no validator and never returns 304.
+sectlist using the floor alone.
+
+Responses validated by a `build` file have none when that file is
+absent, and never return 304. That is not just a collection with no
+directory: **frozen releases have no `build` file at all** — only
+NetBSD-current and the branches get one from the daily pull — so
+their 404s and multi-match menus go out without `Last-Modified`
+(observed on QA: `/NetBSD-11.0/nosuchpagehere.1` and
+`/NetBSD-11.0/i386/boot` carry none, while the NetBSD-current
+equivalents do). They are not stale as a result: with no validator
+nginx refetches them in full when they expire, which is always
+current. It only costs a render that a 304 would have avoided.
 
 ## Conditional requests
 

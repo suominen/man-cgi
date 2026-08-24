@@ -1,0 +1,8 @@
+ZIT(5)                  NetBSD Test Fixtures                  ZIT(5)
+
+NAME
+     zit - section 5 preformatted only (test fixture)
+
+DESCRIPTION
+     The section 5 zit fixture page exists only in preformatted
+     form, so its section can only come from the cat5 directory.

@@ -1,0 +1,8 @@
+ZAP(1)                  NetBSD Test Fixtures                  ZAP(1)
+
+NAME
+     zap - preformatted form (test fixture)
+
+DESCRIPTION
+     The zap fixture page is the preformatted copy that man(1)
+     finds before the source in man1.

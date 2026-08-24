@@ -32,6 +32,13 @@ checkout, outside git). Development workflow:
    nginx caches (runbook) and `manno-purge all` only when the
    change must be visible immediately — or when the bump was
    missed.
+9. Redirects are the exception to step 8. nginx does not
+   revalidate them conditionally (`tests/nginx-lab/`), so no
+   `MINLASTMOD` bump reaches them; they refresh only when their
+   30-day entry expires. If the change makes any URL stop
+   redirecting, or redirect somewhere else, it needs
+   `manno-purge redirect` and an nginx wipe (runbook) to be
+   visible.
 
 ## Testability
 

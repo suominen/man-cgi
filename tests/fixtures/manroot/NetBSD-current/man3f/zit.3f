@@ -1,0 +1,8 @@
+.TH ZIT 3F "January 25, 2026" "NetBSD Test Fixtures"
+.SH NAME
+zit \- section 3f source (test fixture)
+.SH DESCRIPTION
+The section 3f
+.B zit
+fixture page proves the section survives a directory name that is
+not just man plus a digit.

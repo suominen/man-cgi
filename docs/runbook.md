@@ -39,12 +39,14 @@ page at manage.fastly.com (also in its URL).
 
 | Key | Purge when |
 |-----|------------|
-| `coll:<collection>` | That collection's man tree was rebuilt. The common case: `manno-purge coll:NetBSD-current` after the daily build pull. Covers the collection's pages, 404s (a rebuild can add a page that 404'd), and redirects. |
+| `coll:<collection>` | That collection's man tree was rebuilt. The common case: `manno-purge coll:NetBSD-current` after the daily build pull. Covers the collection's pages, 404s (a rebuild can add a page that 404'd), multi-match menus, and redirects. |
 | `page:<coll>:<cmd>.<sect>` | One page needs refreshing; hits all its arch aliases at once (the key is arch-free). |
+| `page:<coll>:<cmd>` | The sectionless form: one command's multi-match menu (ADR-0012). Purge it alongside the `.<sect>` keys when a name gains or loses a page in another section or arch. |
 | `form` | `archlist` or `colllist` changed. Since the JS query form (ADR-0008) only the three `/api/v1` list objects carry it; pages no longer embed the lists. |
 | `api` | The three `/api/v1` list objects (archlist, colllist, sectlist), also individually keyed by name; their 404s carry `api notfound`. |
 | `home` | The home page needs refreshing. |
 | `notfound` | Mass-refresh of 404s. |
+| `menu` | Mass-refresh of multi-match menus, e.g. after changing how they render. |
 | `redirect` | Redirect logic changed, or a collection appeared/disappeared. |
 | `arch:<arch>` | An architecture was retired from `archlist`. |
 | `all` | Everything (soft). The safe whole-site refresh; Fastly's own purge-all is hard-only. |
@@ -112,6 +114,19 @@ the other host while nginx is down, so wipe one host at a time.
   `redirect` key) but live 30 days in nginx's cache with no purge
   mechanism — a wrong 301 needs `manno-purge redirect` *and* an
   nginx wipe.
+- **A change that turns a cached 301 into something else.** Same
+  mechanism as the previous bullet, but easy to miss because the
+  redirect was never *wrong*. A `MINLASTMOD` bump does nothing
+  here: nginx does not revalidate cached redirects conditionally
+  at all — measured in `../tests/nginx-lab/`, it neither sends
+  `If-Modified-Since` upstream when a cached 301 expires nor
+  answers a client's conditional with 304, where the identical
+  setup does both for a 200. Redirects refresh only by expiring,
+  and permanent ones are held 30 days. Multi-match menus
+  (ADR-0012) are the worked example — every sectionless URL they
+  now answer, such as `/printf` and `/i386/apm`, was previously a
+  cached 301 — so that deploy needs `manno-purge redirect` and an
+  nginx wipe, not the bump.
 - After the wipe, follow with `manno-purge all` so Fastly
   revalidates against the fresh origin.
 

@@ -1,0 +1,8 @@
+.TH ZIT 9LUA "January 26, 2026" "NetBSD Test Fixtures"
+.SH NAME
+zit \- section 9lua source (test fixture)
+.SH DESCRIPTION
+The section 9lua
+.B zit
+fixture page is the last of the four zit sections in man.conf
+search order.

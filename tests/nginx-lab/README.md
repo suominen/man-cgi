@@ -14,6 +14,9 @@ before touching production configuration.
   conditional-clearing params for the second variant.
 - `drive` — runs both variants through six scenarios and prints
   client-visible status/cache-state plus what the backend saw.
+- `drive-redirect` — reruns the conditional scenarios with the
+  backend answering 301 instead of 200 (`LAB_STATUS`), to compare
+  how nginx treats cached redirects against cached pages.
 
 Run it on the NetBSD test host:
 
@@ -53,3 +56,34 @@ Conclusions:
 3. Explicitly clearing `HTTP_IF_MODIFIED_SINCE` via `fastcgi_param`
    also overrides the revalidation header nginx injects, silently
    disabling revalidation. Do not add it.
+
+## Redirects are not revalidated (2026-08-24, nginx 1.30.4)
+
+`drive-redirect` runs the same scenarios against the same nginx
+twice, with `LAB_STATUS=200` and `LAB_STATUS=301`, so the status
+code is the only difference. The backend emits a `Last-Modified` in
+both cases, and the 301's `Location` carries the request serial so a
+stale redirect is distinguishable from a fresh one.
+
+| Scenario | 200 | 301 |
+|----------|-----|-----|
+| cold GET | 200 MISS | 301 MISS, `/target-1` |
+| warm GET + matching client IMS | **304** HIT | **301** HIT (no 304) |
+| expired GET | 200 **REVALIDATED**, backend saw IMS and sent 304 | 301 **EXPIRED**, backend saw **no IMS**, full refetch, `/target-2` |
+
+Conclusions:
+
+1. nginx does no conditional handling for cached redirects — it
+   neither sends `If-Modified-Since` upstream when one expires nor
+   answers a client's conditional with 304 — even though the cached
+   301 carries a `Last-Modified`. This matches HTTP: 304 is defined
+   for a request that would otherwise be answered 200, and a
+   redirect has no representation to validate.
+2. So a `Last-Modified` on a redirect would be inert at nginx, and
+   `MINLASTMOD` (ADR-0011) cannot reach redirects. They refresh
+   only by expiring or by a cache wipe, which is why a change that
+   stops a URL redirecting needs the wipe (see `../../docs/runbook.md`).
+3. The flip side is that expiry is always a *full* refetch, so a
+   redirect can never be pinned stale by a 304 the way a page can.
+   Shortening `X-Accel-Expires` for the redirect classes is the only
+   lever on how long the wait is.

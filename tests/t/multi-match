@@ -1,0 +1,406 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Multi-match handling (ADR-0012): man -w can resolve one name to
+# several files, either because an arch or machine-class page
+# shadows a machine-independent one, or because the name exists in
+# several sections. A sectionless request that matches more than
+# one file renders a menu of the matches instead of guessing; a
+# request that renders a page lists the lookup's other matches
+# above it.
+#
+# 20260824  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# --- Arch shadowing: man8/boot.8 and man8/x86/boot.8 -----------
+
+# Sectionless and machine-independent: MACHINE=NONE never searches
+# the arch subdirectories, so boot matches one file and the section
+# is still inferred with a 301.
+run_cgi /boot
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/boot.8$'
+
+# Sectionless under an arch mapped to the x86 machine class: the
+# class page and the machine-independent page both match, so a menu
+# replaces the canonical-arch redirect. Entries are asserted whole,
+# href and label together: separate greps would accept swapped
+# labels.
+run_cgi /i386/boot
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Content-Type: text/html; charset=windows-1252$'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_body 'Several manual pages match'
+assert_body '<ul class="matches">'
+assert_body '^<li><a href="/x86/boot.8">x86/boot(8)</a></li>$'
+assert_body '^<li><a href="/boot.8">boot(8)</a></li>$'
+assert_body_before '"/x86/boot.8"' '"/boot.8"'
+# A menu lists pages, it does not render one.
+assert_body_absent '^<pre class="manpage">$'
+# The menu is its own canonical URL: it must not point at another
+# arch's menu, nor at the sectionless URL that redirects.
+assert_body 'rel="canonical" href="https://man.netbsd.org/i386/boot"'
+
+# The other member of the x86 class behaves identically.
+run_cgi /amd64/boot
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_body 'Several manual pages match'
+assert_body '^<li><a href="/x86/boot.8">x86/boot(8)</a></li>$'
+assert_body '^<li><a href="/boot.8">boot(8)</a></li>$'
+assert_body 'rel="canonical" href="https://man.netbsd.org/amd64/boot"'
+
+# And so does the machine class named directly.
+run_cgi /x86/boot
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_body 'Several manual pages match'
+assert_body '^<li><a href="/x86/boot.8">x86/boot(8)</a></li>$'
+assert_body '^<li><a href="/boot.8">boot(8)</a></li>$'
+assert_body_absent '^<pre class="manpage">$'
+
+# An arch with no boot page of its own matches only the
+# machine-independent file, so it redirects as before.
+run_cgi /sparc/boot
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/boot.8$'
+
+# Sectioned requests keep the ADR-0009 canonical-arch redirect even
+# though the lookup matches two files.
+run_cgi /i386/boot.8
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/x86/boot.8$'
+
+# The canonical arch URL serves the x86 page and names the
+# machine-independent page it shadows, above the page itself. The
+# validator is the served file's own mtime, which the fixtures
+# stamp *older* than the machine-independent page: a validator
+# taken from the newest match would read LM_BOOT8 instead.
+run_cgi /x86/boot.8
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BOOT8_X86}\$"
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:boot.8 arch:x86$'
+assert_body 'Also available:'
+assert_body '^<li><a href="/boot.8">boot(8)</a></li>$'
+assert_body '^<pre class="manpage">$'
+assert_body 'x86 bootstrap'
+assert_body_before 'Also available:' '^<pre class="manpage">$'
+# The gap between the list and the page is scoped to that pairing,
+# so a menu (which has no page after it) does not get it.
+assert_body 'ul.matches + pre.manpage { margin-top: 2.4em; }'
+# The page being served is never offered as an alternative, in any
+# markup.
+assert_body_absent 'x86/boot(8)'
+
+# The machine-independent URL sets MACHINE=NONE, so its lookup sees
+# one file and there is nothing to point at.
+run_cgi /boot.8
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BOOT8}\$"
+assert_body 'machine-independent bootstrap'
+assert_body_absent 'Also available:'
+assert_body_absent '<li>'
+
+# --- Section shadowing: man1/stat.1 and man2/stat.2 ------------
+
+run_cgi /stat
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_body 'Several manual pages match'
+assert_body '^<li><a href="/stat.1">stat(1)</a></li>$'
+assert_body '^<li><a href="/stat.2">stat(2)</a></li>$'
+assert_body_before '"/stat.1"' '"/stat.2"'
+assert_body_absent '^<pre class="manpage">$'
+assert_body 'rel="canonical" href="https://man.netbsd.org/stat"'
+
+# Naming the section resolves the ambiguity: one match each, so the
+# pages serve with no alternatives listed.
+run_cgi /stat.1
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_STAT1}\$"
+assert_body 'display file status'
+assert_body_absent 'Also available:'
+assert_body_absent '<li>'
+
+run_cgi /stat.2
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_STAT2}\$"
+assert_body 'get file status'
+assert_body_absent 'Also available:'
+assert_body_absent '<li>'
+
+# --- Three matches, spanning both axes -------------------------
+#
+# Under i386, mux resolves to man8/mux.8, man4/i386/mux.4 and
+# man4/x86/mux.4 in that order. Two-match fixtures alone would let
+# an implementation that keeps "the first match plus one" pass.
+
+run_cgi /i386/mux
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_body '^<li><a href="/mux.8">mux(8)</a></li>$'
+assert_body '^<li><a href="/i386/mux.4">i386/mux(4)</a></li>$'
+assert_body '^<li><a href="/x86/mux.4">x86/mux(4)</a></li>$'
+assert_body_before '"/mux.8"' '"/i386/mux.4"'
+assert_body_before '"/i386/mux.4"' '"/x86/mux.4"'
+assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:mux arch:i386$'
+assert_body_absent '^<pre class="manpage">$'
+
+# amd64 does not search man4/i386, so it sees two of the three.
+run_cgi /amd64/mux
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_body '^<li><a href="/mux.8">mux(8)</a></li>$'
+assert_body '^<li><a href="/x86/mux.4">x86/mux(4)</a></li>$'
+assert_body_absent 'i386/mux(4)'
+
+# Naming section 4 under i386 still matches two files, so the page
+# serves at its canonical arch and lists the class page it shadows.
+run_cgi /i386/mux.4
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_MUX4_I386}\$"
+assert_body 'i386 multiplexer'
+assert_body 'Also available:'
+assert_body '^<li><a href="/x86/mux.4">x86/mux(4)</a></li>$'
+assert_body_absent 'i386/mux(4)'
+
+# --- Preformatted pages are the same page as their source ------
+#
+# man -w lists catN/name.0 before manN/name.N, so a page that
+# exists in both forms yields two paths for one page. The section
+# has to come from the directory, not the file suffix, and the two
+# have to collapse -- otherwise every such page would get a
+# spurious two-entry menu, both entries identical.
+
+# One page, so no menu -- which is the whole point of collapsing
+# the two forms. It does not gain a section, because the section
+# inference still reads the file suffix and .0 is not a section;
+# that gap predates menus and is left alone here.
+run_cgi /zap
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_body_absent '<li>'
+assert_body_absent 'Several manual pages match'
+
+# The preformatted copy is what man(1) finds first, so it is the
+# validator, and the page carries no alternatives.
+run_cgi /zap.1
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_ZAP0}\$"
+assert_body 'preformatted form'
+assert_body_absent 'Also available:'
+assert_body_absent '<li>'
+
+# zit spans the section directories that are not simply man plus a
+# digit: section 5 exists only as cat5/zit.0, and 3f and 9lua have
+# suffixes a digit-only pattern would mis-read. Order is man.conf's
+# _subdir order: man1, cat5, man3f, man9lua.
+run_cgi /zit
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_body '^<li><a href="/zit.1">zit(1)</a></li>$'
+assert_body '^<li><a href="/zit.5">zit(5)</a></li>$'
+assert_body '^<li><a href="/zit.3f">zit(3f)</a></li>$'
+assert_body '^<li><a href="/zit.9lua">zit(9lua)</a></li>$'
+assert_body_before '"/zit.1"' '"/zit.5"'
+assert_body_before '"/zit.5"' '"/zit.3f"'
+assert_body_before '"/zit.3f"' '"/zit.9lua"'
+
+# Both entries the menu offers resolve.
+run_cgi /zit.1
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_ZIT1}\$"
+assert_body 'section 1 source'
+assert_body_absent '<li>'
+
+run_cgi /zit.5
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_ZIT0}\$"
+assert_body 'section 5 preformatted only'
+assert_body_absent '<li>'
+
+run_cgi /zit.3f
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_ZIT3F}\$"
+assert_body 'section 3f source'
+assert_body_absent '<li>'
+
+run_cgi /zit.9lua
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_ZIT9LUA}\$"
+assert_body 'section 9lua source'
+assert_body_absent '<li>'
+
+# --- cats is an architecture, not a section directory ----------
+#
+# A section pattern written as cat* would read man8/cats/boot.8 as
+# section 's' of a machine-independent page.
+
+run_cgi /cats/boot
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:boot arch:cats$'
+assert_body '^<li><a href="/cats/boot.8">cats/boot(8)</a></li>$'
+assert_body '^<li><a href="/boot.8">boot(8)</a></li>$'
+assert_body_before '"/cats/boot.8"' '"/boot.8"'
+
+run_cgi /cats/boot.8
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BOOT8_CATS}\$"
+assert_body 'cats bootstrap'
+assert_body 'Also available:'
+assert_body '^<li><a href="/boot.8">boot(8)</a></li>$'
+assert_body_absent 'cats/boot(8)'
+
+# --- Collections stay in the menu's links ----------------------
+
+run_cgi /NetBSD-9.x-BRANCH/i386/boot
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BR_BUILD}\$"
+assert_header '^Surrogate-Key: all menu coll:NetBSD-9.x-BRANCH page:NetBSD-9.x-BRANCH:boot arch:i386$'
+assert_body 'Several manual pages match'
+assert_body '^<li><a href="/NetBSD-9.x-BRANCH/x86/boot.8">x86/boot(8)</a></li>$'
+assert_body '^<li><a href="/NetBSD-9.x-BRANCH/boot.8">boot(8)</a></li>$'
+assert_body 'rel="canonical" href="https://man.netbsd.org/NetBSD-9.x-BRANCH/i386/boot"'
+
+# The link the menu offers resolves to the branch page, not to the
+# default collection's.
+run_cgi /NetBSD-9.x-BRANCH/x86/boot.8
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BR_BOOT8_X86}\$"
+assert_body 'x86 bootstrap (branch test fixture)'
+assert_body '^<li><a href="/NetBSD-9.x-BRANCH/boot.8">boot(8)</a></li>$'
+
+# A collection without the fixture 404s rather than producing an
+# empty menu.
+run_cgi /NetBSD-10.1/i386/boot
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header "^Last-Modified: ${LM_REL_BUILD}\$"
+
+# --- Regressions the menu must not cause -----------------------
+
+# A single-match sectionless request still gets its 301.
+run_cgi /ls
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/ls.1$'
+
+# --- Menu caching ----------------------------------------------
+
+# Menus are cached like pages of their collection and purge with
+# the collection, the sectionless page key, or the requested arch.
+run_cgi /i386/boot
+
+assert_exit 0
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
+assert_header '^Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800$'
+assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:boot arch:i386$'
+assert_header '^Expires: '
+
+# Without an arch in the URL there is no arch key.
+run_cgi /stat
+
+assert_exit 0
+assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:stat$'
+
+# Menus revalidate against the collection build date.
+CGI_IMS="${LM_BUILD}"
+run_cgi /i386/boot
+CGI_IMS=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:boot arch:i386$'
+assert_no_body
+
+# A page carrying alternates still revalidates against its own file.
+CGI_IMS="${LM_BOOT8_X86}"
+run_cgi /x86/boot.8
+CGI_IMS=
+
+assert_exit 0
+assert_header '^Status: 304 Not Modified$'
+assert_header "^Last-Modified: ${LM_BOOT8_X86}\$"
+assert_no_body
+
+# HEAD gets the menu's headers and no body.
+CGI_METHOD=HEAD
+run_cgi /i386/boot
+CGI_METHOD=
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:boot arch:i386$'
+assert_no_body
+
+CGI_METHOD=HEAD
+run_cgi /x86/boot.8
+CGI_METHOD=
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BOOT8_X86}\$"
+assert_no_body
+
+test_done

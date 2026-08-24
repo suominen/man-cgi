@@ -65,7 +65,7 @@ CGI_IMS=
 assert_exit 0
 assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_JUN1}\$"
-assert_body '<pre>'
+assert_body '<pre class="manpage">'
 
 # The clamped validator round-trips to a 304.
 CGI_IMS="${LM_JUN1}"

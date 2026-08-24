@@ -8,20 +8,28 @@ out.
 
 Behavior: emits a fixed Last-Modified and short Cache-Control.
 If HTTP_IF_MODIFIED_SINCE matches the Last-Modified exactly, answers
-304 with no body. Every completed request appends a line to
-requests.log:
+304 with no body. LAB_STATUS=301 in the environment makes fresh
+responses permanent redirects whose Location carries the serial,
+which is how a stale redirect is told apart from a fresh one.
+Every completed request appends a line to requests.log:
     <serial> <method> <uri> ims=<value-or-dash> -> <status>
 
 requests.log is opened in append mode; the drive script removes it
 at the start of each variant. Keep those two sides coupled.
 """
 
+import os
 import socket
 import struct
 import sys
 
 LM = "Fri, 02 Jan 2026 13:14:15 GMT"
 MAX_AGE = 2
+
+# LAB_STATUS picks what a fresh (non-304) response looks like: 200
+# with a body, or 301 with a Location that changes on every fetch,
+# so a stale-but-served redirect is visible as an old target.
+STATUS = int(os.environ.get("LAB_STATUS", "200"))
 
 FCGI_BEGIN_REQUEST = 1
 FCGI_END_REQUEST = 3
@@ -103,6 +111,17 @@ def handle(conn, logf, state):
             f"Last-Modified: {LM}\r\n"
             f"Cache-Control: public, max-age={MAX_AGE}\r\n"
             "\r\n"
+        ).encode()
+    elif STATUS == 301:
+        status = 301
+        body = f"redirect serial={serial}\n"
+        payload = (
+            "Status: 301 Moved Permanently\r\n"
+            f"Location: http://127.0.0.1:8481/target-{serial}\r\n"
+            "Content-Type: text/html\r\n"
+            f"Last-Modified: {LM}\r\n"
+            f"Cache-Control: public, max-age={MAX_AGE}\r\n"
+            "\r\n" + body
         ).encode()
     else:
         status = 200

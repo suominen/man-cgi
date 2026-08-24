@@ -1,0 +1,110 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Does nginx treat a cached 301 conditionally the way it treats a
+# cached 200? Runs the same three scenarios against the same nginx
+# with LAB_STATUS=200 and LAB_STATUS=301, so the status code is the
+# only thing that differs. See README.md.
+#
+# 20260824  Kimmo Suominen
+#
+
+set -eu
+
+# Wider than the house PATH: nginx lives in /usr/pkg/sbin on NetBSD.
+PATH=/bin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
+export PATH
+
+CDPATH=
+
+PROG="${0##*/}"
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+LAB=$(cd "$(dirname "${0}")" && pwd)
+cd "${LAB}"
+
+LM='Fri, 02 Jan 2026 13:14:15 GMT'
+
+# The ports also appear in nginx-base.conf (8481) and
+# fcgi-backend.py (9481); keep the three files in sync.
+URL=http://127.0.0.1:8481/r
+
+command -v nginx > /dev/null ||
+die 'nginx is required'
+
+BACKEND_PID=
+
+cleanup()
+{
+    if [ -n "${BACKEND_PID}" ]
+    then
+	kill "${BACKEND_PID}" 2> /dev/null || true
+    fi
+    if [ -f logs/nginx.pid ]
+    then
+	kill "$(cat logs/nginx.pid)" 2> /dev/null || true
+    fi
+}
+
+trap cleanup EXIT
+# Signal traps must exit explicitly: POSIX resumes execution after a
+# non-EXIT trap action. The exit runs the EXIT trap.
+trap 'exit 1' INT TERM HUP
+
+show()
+{
+    local label
+    label="${1}"
+    shift
+
+    printf '  %-36s ' "${label}"
+    curl -sS -o /dev/null -D - "${@}" "${URL}" |
+    awk '
+	/^HTTP\//			{ status = $2 }
+	tolower($0) ~ /^location:/	{ location = $2 }
+	tolower($0) ~ /^x-lab-cache:/	{ state = $2 }
+	END {
+	    printf "%s  %-13s %s\n", status, state, location
+	}
+    ' | tr -d '\r'
+}
+
+variant()
+{
+    local status
+    status="${1}"
+
+    echo "LAB_STATUS=${status}"
+
+    cleanup
+    rm -rf cache logs tmp requests.log
+    mkdir -p cache logs tmp
+
+    LAB_STATUS="${status}" python3 fcgi-backend.py &
+    BACKEND_PID=${!}
+    sleep 1
+
+    nginx -p "${LAB}" -c nginx-base.conf
+    sleep 1
+
+    show 'cold GET' 
+    show 'warm GET + matching client IMS' -H "If-Modified-Since: ${LM}"
+    echo '  ... waiting out max-age=2'
+    sleep 3
+    show 'expired GET'
+
+    echo '  backend saw:'
+    sed -e 's/^/    /' requests.log
+
+    cleanup
+    BACKEND_PID=
+    echo
+}
+
+variant 200
+variant 301

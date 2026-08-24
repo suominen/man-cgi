@@ -1,0 +1,9 @@
+.TH BOOT 8 "January 13, 2026" "NetBSD Test Fixtures"
+.SH NAME
+boot \- machine-independent bootstrap (test fixture)
+.SH DESCRIPTION
+The machine-independent
+.B boot
+fixture page is shadowed by an x86 machine-class page of the same
+name and section, so a sectionless lookup under i386 or amd64
+matches both files.

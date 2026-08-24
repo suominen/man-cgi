@@ -18,3 +18,4 @@ here. Supersede landed records with new ones; never rewrite them.
 | [0009](0009-canonical-arch-redirects.md) | Canonical-arch redirects | accepted |
 | [0010](0010-keep-the-shell-cgi.md) | Keep the shell CGI instead of rewriting | accepted |
 | [0011](0011-minlastmod-validator-floor.md) | MINLASTMOD floor folds script changes into Last-Modified | accepted |
+| [0012](0012-multi-match-menus.md) | Menus for multi-match lookups | accepted |
