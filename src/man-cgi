@@ -92,8 +92,8 @@ LASTMODFILE="$MANROOT/NetBSD-current/build"
 # query-form defaults (ANY/NONE/DEFAULT), cache headers, canonical
 # URLs, page chrome, error bodies. Signature and MANCGI_DATE
 # changes do not qualify.
-# 2026-08-24 18:21:35 UTC
-MINLASTMOD=${MANCGI_MINLASTMOD:-1787595695}
+# 2026-08-24 18:56:24 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1787597784}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -1126,6 +1126,16 @@ MATCHES_REST=
 MENU=
 CANONICAL_ARCH=
 
+# Responses that describe the collection rather than one page --
+# 404s and multi-match menus -- are validated by its
+# tmac/mdoc.local. That file carries the upstream build's timestamp,
+# the same one every page in the tree gets, so it moves exactly when
+# the collection's contents move; build moves on every pull, new
+# content or not. It is also present in every collection, where
+# build exists only for NetBSD-current and the branches, so frozen
+# releases stop going out with no validator at all.
+COLLSTAMP="${MANROOT}/${COLL:-${DEFAULT_COLLECTION:-}}/tmac/mdoc.local"
+
 # A literal newline, for testing whether man -w returned more than
 # one path. Command substitution strips trailing newlines, so this
 # cannot be written with printf.
@@ -1157,8 +1167,8 @@ case "${COMMAND}" in
 
     if [ ${notfound:-0} -ne 0 ]
     then
-	# Let 404s revalidate against the collection build date
-	LASTMODFILE="${MANROOT}/${COLL:-${DEFAULT_COLLECTION:-}}/build"
+	# Let 404s revalidate against the collection's own date
+	LASTMODFILE="${COLLSTAMP}"
     else
 	# Only a multi-line result is worth tokenising: one match is
 	# already the page that will be rendered, and the MANPARAM
@@ -1181,22 +1191,23 @@ LASTMODFILE="$(printf '%s\n' "${LASTMODFILE}" | sed -e 1q)"
 # redirect (ADR-0009): an arch URL searches the arch directory, its
 # machine class and the machine-independent directory, so it too
 # can match several files, and a menu there would only lead back to
-# itself. Pointing LASTMODFILE at the collection's build file both
-# gives the menu its validator and skips the canonicalization block
-# below.
+# itself. Pointing LASTMODFILE at the collection stamp both gives
+# the menu its validator and skips the canonicalization block below.
 case "${SECTION}" in
 '')
     case "${MATCHES_REST}" in
     ?*)
 	MENU=true
-	LASTMODFILE="${MANROOT}/${COLL:-${DEFAULT_COLLECTION:-}}/build"
+	LASTMODFILE="${COLLSTAMP}"
 	;;
     esac
     ;;
 esac
 
 case "${LASTMODFILE}" in
-*/build)
+*/build|*/tmac/mdoc.local)
+    # Not a manual page: the home page's default, or the collection
+    # stamp a 404 or a menu was given. Nothing to canonicalize.
     ;;
 *)
     # XXX: This breaks when # DEFAULT_COLLECTION is not set
