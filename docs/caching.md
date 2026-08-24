@@ -48,25 +48,29 @@ with the collection it describes.
 via `man -w`), clamped to at least `MINLASTMOD` — a floor embedded
 in the CGI and bumped whenever a script change alters rendered
 output (ADR-0011), so such changes reach every tier through normal
-revalidation instead of cache wipes. For 404s the mtime is the
-resolved collection's `build` file, and for the home page the
-NetBSD-current `build` file, so those revalidate as well. A
-multi-match menu uses the resolved collection's `build` file for the
-same reason a 404 does: it describes what the collection contains
-rather than any one file, so a rebuild is what can change it. The
-`/api/v1` list endpoints clamp the same way, with the embedded
-sectlist using the floor alone.
+revalidation instead of cache wipes.
 
-Responses validated by a `build` file have none when that file is
-absent, and never return 304. That is not just a collection with no
-directory: **frozen releases have no `build` file at all** — only
-NetBSD-current and the branches get one from the daily pull — so
-their 404s and multi-match menus go out without `Last-Modified`
-(observed on QA: `/NetBSD-11.0/nosuchpagehere.1` and
-`/NetBSD-11.0/i386/boot` carry none, while the NetBSD-current
-equivalents do). They are not stale as a result: with no validator
-nginx refetches them in full when they expire, which is always
-current. It only costs a render that a 304 would have avoided.
+Responses that describe the **collection** rather than one page —
+404s and multi-match menus — take their mtime from the resolved
+collection's `tmac/mdoc.local`. Every file the pull extracts carries
+the upstream build's timestamp, that one included, so it moves
+exactly when the collection's contents move. The `build` file is
+not used for this: it records when the *pull ran*, so it advances
+daily whether or not anything new arrived, and it exists only for
+NetBSD-current and the branches — every frozen release goes without
+one, which would leave those 404s and menus with no validator at
+all. `tmac/mdoc.local` is present in every collection, back to
+NetBSD-6.0.
+
+The home page keeps the NetBSD-current `build` file, which is also
+the health check's liveness probe. The `/api/v1` list endpoints
+clamp the same way as pages, with the embedded sectlist using the
+floor alone.
+
+A collection missing its `tmac/mdoc.local` (a partial or broken
+extract) has no validator and never returns 304. That is not a
+staleness risk: with no validator nginx refetches on expiry, which
+is always current. It only costs a render a 304 would have avoided.
 
 ## Conditional requests
 

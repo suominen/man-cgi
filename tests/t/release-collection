@@ -42,6 +42,6 @@ assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=86400, stale-if-error=86400$'
 assert_header '^Surrogate-Key: all notfound coll:NetBSD-10.1$'
 assert_header '^Expires: '
-assert_header "^Last-Modified: ${LM_REL_BUILD}$"
+assert_header "^Last-Modified: ${LM_REL_MDOC}$"
 
 test_done

@@ -48,9 +48,9 @@ assert_no_header '^Status:'
 assert_header '^Content-Type: text/html; charset=windows-1252$'
 assert_body '<pre class="manpage">'
 
-# 404s revalidate against the collection build date; the 304
-# replaces the 404 status for the conditional request.
-CGI_IMS="${LM_BUILD}"
+# 404s revalidate against the collection stamp (tmac/mdoc.local);
+# the 304 replaces the 404 status for the conditional request.
+CGI_IMS="${LM_MDOC}"
 run_cgi /nosuchcommand.1
 CGI_IMS=
 
@@ -89,7 +89,7 @@ CGI_METHOD=
 
 assert_exit 0
 assert_header '^Status: 404 Not Found$'
-assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header "^Last-Modified: ${LM_MDOC}\$"
 assert_no_body
 
 # HEAD with a matching validator gets the 304.

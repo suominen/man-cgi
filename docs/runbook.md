@@ -133,8 +133,11 @@ the other host while nginx is down, so wipe one host at a time.
 ## Collection rebuild procedure
 
 1. The build lands in `$MANROOT/<collection>/` (NetBSD-current: the
-   daily cron pull; its `build` file's mtime is the collection's
-   Last-Modified for 404s and the home page).
+   daily cron pull. Its `tmac/mdoc.local` carries the upstream
+   build's timestamp and is the Last-Modified for that
+   collection's 404s and multi-match menus; the `build` file's own
+   mtime is the pull time, and NetBSD-current's is the home page's
+   validator).
 2. `manno-purge coll:<collection>` (soft).
 3. Nothing else: nginx entries revalidate as they expire (at most
    1 h for current/branch, 24 h for releases), and pages whose

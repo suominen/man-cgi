@@ -42,7 +42,7 @@ run_cgi /i386/boot
 assert_exit 0
 assert_no_header '^Status:'
 assert_header '^Content-Type: text/html; charset=windows-1252$'
-assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header "^Last-Modified: ${LM_MDOC}\$"
 assert_body 'Several manual pages match'
 assert_body '<ul class="matches">'
 assert_body '^<li><a href="/x86/boot.8">x86/boot(8)</a></li>$'
@@ -130,7 +130,7 @@ run_cgi /stat
 
 assert_exit 0
 assert_no_header '^Status:'
-assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header "^Last-Modified: ${LM_MDOC}\$"
 assert_body 'Several manual pages match'
 assert_body '^<li><a href="/stat.1">stat(1)</a></li>$'
 assert_body '^<li><a href="/stat.2">stat(2)</a></li>$'
@@ -168,7 +168,7 @@ run_cgi /i386/mux
 
 assert_exit 0
 assert_no_header '^Status:'
-assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header "^Last-Modified: ${LM_MDOC}\$"
 assert_body '^<li><a href="/mux.8">mux(8)</a></li>$'
 assert_body '^<li><a href="/i386/mux.4">i386/mux(4)</a></li>$'
 assert_body '^<li><a href="/x86/mux.4">x86/mux(4)</a></li>$'
@@ -236,7 +236,7 @@ run_cgi /zit
 
 assert_exit 0
 assert_no_header '^Status:'
-assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header "^Last-Modified: ${LM_MDOC}\$"
 assert_body '^<li><a href="/zit.1">zit(1)</a></li>$'
 assert_body '^<li><a href="/zit.5">zit(5)</a></li>$'
 assert_body '^<li><a href="/zit.3f">zit(3f)</a></li>$'
@@ -287,7 +287,7 @@ run_cgi /cats/boot
 
 assert_exit 0
 assert_no_header '^Status:'
-assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header "^Last-Modified: ${LM_MDOC}\$"
 assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:boot arch:cats$'
 assert_body '^<li><a href="/cats/boot.8">cats/boot(8)</a></li>$'
 assert_body '^<li><a href="/boot.8">boot(8)</a></li>$'
@@ -309,7 +309,7 @@ run_cgi /NetBSD-9.x-BRANCH/i386/boot
 
 assert_exit 0
 assert_no_header '^Status:'
-assert_header "^Last-Modified: ${LM_BR_BUILD}\$"
+assert_header "^Last-Modified: ${LM_BR_MDOC}\$"
 assert_header '^Surrogate-Key: all menu coll:NetBSD-9.x-BRANCH page:NetBSD-9.x-BRANCH:boot arch:i386$'
 assert_body 'Several manual pages match'
 assert_body '^<li><a href="/NetBSD-9.x-BRANCH/x86/boot.8">x86/boot(8)</a></li>$'
@@ -332,7 +332,7 @@ run_cgi /NetBSD-10.1/i386/boot
 
 assert_exit 0
 assert_header '^Status: 404 Not Found$'
-assert_header "^Last-Modified: ${LM_REL_BUILD}\$"
+assert_header "^Last-Modified: ${LM_REL_MDOC}\$"
 
 # --- Regressions the menu must not cause -----------------------
 
@@ -363,13 +363,13 @@ assert_exit 0
 assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:stat$'
 
 # Menus revalidate against the collection build date.
-CGI_IMS="${LM_BUILD}"
+CGI_IMS="${LM_MDOC}"
 run_cgi /i386/boot
 CGI_IMS=
 
 assert_exit 0
 assert_header '^Status: 304 Not Modified$'
-assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header "^Last-Modified: ${LM_MDOC}\$"
 assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:boot arch:i386$'
 assert_no_body
 
@@ -390,7 +390,7 @@ CGI_METHOD=
 
 assert_exit 0
 assert_no_header '^Status:'
-assert_header "^Last-Modified: ${LM_BUILD}\$"
+assert_header "^Last-Modified: ${LM_MDOC}\$"
 assert_header '^Surrogate-Key: all menu coll:NetBSD-current page:NetBSD-current:boot arch:i386$'
 assert_no_body
 

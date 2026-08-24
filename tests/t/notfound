@@ -25,7 +25,7 @@ assert_header '^Content-Type: text/html; charset=windows-1252$'
 assert_header '^Cache-Control: public, max-age=3600$'
 assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=86400, stale-if-error=86400$'
-assert_header "^Last-Modified: ${LM_BUILD}$"
+assert_header "^Last-Modified: ${LM_MDOC}$"
 assert_body 'The manual page was not found'
 assert_body 'duckduckgo.com'
 assert_body_absent 'rel="canonical"'

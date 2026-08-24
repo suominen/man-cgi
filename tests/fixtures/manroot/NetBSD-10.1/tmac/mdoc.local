@@ -1,0 +1,4 @@
+.\" Test-fixture mdoc.local for NetBSD-10.1. The real one records the list
+.\" of NetBSD releases; here it exists only to be the collection's
+.\" Last-Modified source for 404s and multi-match menus.
+.ds doc-operating-system-NetBSD-fixture NetBSD-10.1

@@ -44,28 +44,6 @@ Open ideas and known defects not part of any scheduled effort.
   the path rather than a browser following a link — narrow, but
   the markup is genuinely attacker-controlled. Escaping changes
   rendered output, so it needs a MINLASTMOD bump (ADR-0011).
-- Give 404s and multi-match menus a validator in collections with
-  no `build` file, so they can be revalidated instead of refetched.
-  Only NetBSD-current and the branches get a `build` file from the
-  daily pull; every frozen release goes without (verified on QA:
-  NetBSD-current and NetBSD-11.x-BRANCH carry `Last-Modified` on a
-  404, NetBSD-11.0, NetBSD-10.1 and NetBSD-9.0 carry none).
-  Candidates are `tmac/mdoc.local` (per Kim — it would date the
-  collection itself; needs confirming that it exists in every
-  collection) and `MINLASTMOD` alone, which `api_list()` already
-  uses for the embedded sectlist. Either has to be a *fallback*,
-  not a replacement: where `build` exists it is the right validator
-  precisely because the daily pull moves it, which is when a menu's
-  contents can change. A validator that survives a rebuild would
-  let nginx answer its revalidation with a 304 and serve a stale
-  menu indefinitely — the daily `manno-purge coll:<collection>`
-  reaches Fastly, not nginx. Note also that `MINLASTMOD` floors
-  every validator, so a collection installed before the last bump
-  gives the same answer whichever file is picked; the two differ
-  only for one installed since. Correctness is not at stake today
-  (no validator means a full refetch at expiry, so the content is
-  always current). The fixtures give every collection a `build`
-  file, so the suite cannot currently see any of this.
 - Infer the section from the match token rather than the file
   suffix, so a page that exists only preformatted (`catN/name.0`)
   redirects to its section URL like a source page does. Today

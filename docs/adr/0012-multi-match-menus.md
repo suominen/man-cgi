@@ -66,8 +66,8 @@ that carry a section.
 The menu reflects what `man -w` found for the requested `MACHINE`
 and lives at the requested URL — `/i386/boot` and `/sparc/boot` are
 different menus, which is correct: they describe different search
-paths. Menus revalidate against the collection's `build` file, as
-404s do (ADR-0003), because a menu describes what the collection
+paths. Menus revalidate against the collection's stamp, as 404s do
+(ADR-0003, ADR-0013), because a menu describes what the collection
 contains rather than any one file; they carry the page TTL profile
 (ADR-0002) and the keys `all menu coll:<coll> page:<coll>:<cmd>`
 plus `arch:<requested>` when the URL carries one, so a collection

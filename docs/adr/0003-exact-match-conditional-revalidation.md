@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: accepted, amended by ADR-0013
 date: 2026-08-09
 ---
 

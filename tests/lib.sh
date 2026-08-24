@@ -15,6 +15,12 @@ MANROOT="${TESTS_DIR}/fixtures/manroot"
 LM_LS1='Fri, 02 Jan 2026 13:14:15 GMT'
 LM_APM4='Sat, 03 Jan 2026 14:15:16 GMT'
 LM_BUILD='Sun, 04 Jan 2026 15:16:17 GMT'
+# Collection stamps (tmac/mdoc.local): the validator for 404s and
+# multi-match menus. Deliberately distinct from the build stamps,
+# so an assertion cannot pass against the wrong file.
+LM_MDOC='Wed, 28 Jan 2026 09:10:11 GMT'
+LM_BR_MDOC='Thu, 29 Jan 2026 10:11:12 GMT'
+LM_REL_MDOC='Fri, 30 Jan 2026 11:12:13 GMT'
 LM_CPUCTL4='Tue, 06 Jan 2026 17:18:19 GMT'
 LM_BOOT8_X86='Mon, 12 Jan 2026 13:14:15 GMT'
 LM_BOOT8='Tue, 13 Jan 2026 14:15:16 GMT'
@@ -35,7 +41,6 @@ LM_BOOT8_CATS='Tue, 27 Jan 2026 18:19:20 GMT'
 LM_BR_LS1='Mon, 05 Jan 2026 16:17:18 GMT'
 LM_BR_BUILD='Wed, 07 Jan 2026 18:19:20 GMT'
 LM_REL_LS1='Thu, 08 Jan 2026 19:20:21 GMT'
-LM_REL_BUILD='Fri, 09 Jan 2026 10:21:22 GMT'
 LM_ARCHLIST='Sat, 10 Jan 2026 11:12:13 GMT'
 LM_COLLLIST='Sun, 11 Jan 2026 12:13:14 GMT'
 
@@ -96,10 +101,14 @@ setup_fixtures()
     # ls.1 so Last-Modified assertions can tell them apart.
     TZ=UTC touch -t 202601071819.20 "${MANROOT}/NetBSD-9.x-BRANCH/build"
     TZ=UTC touch -t 202601051617.18 "${MANROOT}/NetBSD-9.x-BRANCH/man1/ls.1"
-    TZ=UTC touch -t 202601091021.22 "${MANROOT}/NetBSD-10.1/build"
     TZ=UTC touch -t 202601081920.21 "${MANROOT}/NetBSD-10.1/man1/ls.1"
     TZ=UTC touch -t 202601101112.13 "${MANROOT}/archlist"
     TZ=UTC touch -t 202601111213.14 "${MANROOT}/colllist"
+    # NetBSD-10.1 has no build file on purpose: frozen releases do
+    # not get one, only NetBSD-current and the branches do.
+    TZ=UTC touch -t 202601280910.11 "${MANROOT}/NetBSD-current/tmac/mdoc.local"
+    TZ=UTC touch -t 202601291011.12 "${MANROOT}/NetBSD-9.x-BRANCH/tmac/mdoc.local"
+    TZ=UTC touch -t 202601301112.13 "${MANROOT}/NetBSD-10.1/tmac/mdoc.local"
 }
 
 # Run the CGI with PATH_INFO="${1}". Optional request parameters come
