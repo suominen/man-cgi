@@ -20,6 +20,14 @@ checklist:
     surrogate-control: "max-age=86400, stale-while-revalidate=3600, stale-if-error=604800"
     surrogate-key: "all coll:NetBSD-current page:NetBSD-current:ls.1"
 
+# A collection name that is not one is keyed under the default
+# collection, so the junk name never becomes a purgeable key of
+# its own.
+- path: /cgi-bin/man-cgi?ls+1+..
+  code: 404
+  headers:
+    surrogate-key: "all notfound coll:NetBSD-current"
+
 # MI page under an arch URL now 301s to the arch-less canonical
 # URL, keyed as a redirect.
 - path: /i386/ls.1

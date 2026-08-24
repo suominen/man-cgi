@@ -1,0 +1,287 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Characterize the collection and architecture sanitizers: both
+# names are filtered to their own character set and then checked
+# for shape, on every entry path. A collection that is not one is
+# a 404; an architecture that is not one is dropped. The POST body
+# is the only input nginx will forward a raw control character in,
+# so its fields are scrubbed before the 303 quotes them into a
+# header. (The CGI itself will take one from QUERY_STRING as
+# happily; nginx rejects the request long before that.)
+#
+# 20260824  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# --- Collection: names that are not collection names -----------------
+
+# '..' survives the character filter and is a real directory, so
+# it satisfies the -d probe and would point MANPATH one level
+# above MANROOT. It is a 404, not a redirect to /../ls.1.
+CGI_QUERY='ls+1+..'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+assert_header "^Last-Modified: ${LM_MDOC}\$"
+
+# A collection of exactly -n: echo(1) consumed it as an option --
+# NetBSD sh's echo prints nothing at all for it -- so the value
+# came out empty and the request silently became the default
+# collection. What this pins is the shape check, which refuses -n
+# and the empty string alike; the printf half of the fix is only
+# observable through PATH_INFO, below.
+CGI_QUERY='ls+1+-n'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+
+# '.' is the other name that is a real directory: it resolves to
+# MANROOT itself rather than to its parent.
+CGI_QUERY='ls+1+.'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+
+# Nothing survives the character filter. The empty result used to
+# reach [ -d "${MANROOT}/" ], which succeeds, making MANPATH
+# MANROOT itself while the response still claimed the default
+# collection.
+CGI_QUERY='+1+@@@'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+
+# The home page takes the same route: no COMMAND, so the class
+# would otherwise be home, and the rejected name reached the
+# markup as a data-url attribute.
+CGI_QUERY='+1+..'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+assert_body_absent 'data-url="\.\."'
+
+# --- Collection: names that are collection names ---------------------
+
+# A real collection is untouched, and so is the release-to-branch
+# fallback that runs after the sanitizer.
+CGI_QUERY='ls+1+NetBSD-10.1'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man\.netbsd\.org/NetBSD-10\.1/ls\.1$'
+
+CGI_QUERY=
+
+# Backslashes are not escape sequences. Whether echo(1) expands
+# them is implementation-defined -- NetBSD sh leaves \t alone,
+# dash makes it a tab -- so what the old sanitizer produced
+# depended on the shell running the CGI. printf is the same
+# everywhere, and the name stays whole enough to fail on its own
+# merits instead of collapsing onto the real NetBSD-10.1.
+#
+# This has to arrive through PATH_INFO to reach the sanitizer at
+# all: the legacy query string is pre-processed by an echo of its
+# own further up, which expands the escape before COLL is ever
+# assigned, and field splitting then eats the tab. That is a
+# separate defect and not one this change touches.
+run_cgi '/NetBSD-10.1\tJUNK/ls.1'
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-10\.1tJUNK$'
+
+run_cgi /NetBSD-9.3/ls.1
+
+assert_exit 0
+assert_header '^Status: 302 Found$'
+assert_header '^Location: https://man\.netbsd\.org/NetBSD-9\.x-BRANCH/ls\.1$'
+
+# --- Architecture ----------------------------------------------------
+
+# A sectionless legacy query string puts everything after the dot
+# in ARCH, which reached the Location header unfiltered: '.' came
+# back as /./ls. A name that is not an architecture names nothing,
+# so it is a 404 rather than a guess at which page was meant.
+CGI_QUERY='ls+..'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_no_header ' arch:'
+
+# Architectures and machine classes are spelled in lowercase, so
+# an uppercase name is not one. (DEFAULT and NONE are the two
+# names that are exempt.)
+CGI_QUERY='ls+.I386'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+
+CGI_QUERY=
+
+# The URL component is an architecture source too, and it was as
+# unfiltered as the others: '..' became MACHINE, and the
+# Surrogate-Key guard passes dots, so arch:.. could become a cache
+# key.
+run_cgi /../ls.1
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+
+# Shape alone would accept this one -- it is lowercase and inside
+# the character set. archlist is what rejects it.
+run_cgi /9foo/ls.1
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+
+# Dropped whole rather than repaired: keeping the part that passes
+# the filter would serve the x86 page to a request that never
+# asked for x86, and reflect the invention back in the query form.
+run_cgi '/x86!/boot.8'
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_body_absent 'x86'
+
+# archlist is the union across every collection ($MANROOT/Makefile
+# finds the arch directories under all of them at once), so it
+# holds architectures that ship no pages of their own here. Those
+# are still real names: the request resolves to the
+# machine-independent page and canonicalizes to it, exactly as any
+# other arch alias does (ADR-0009). Membership is the test, not
+# whether the collection has a directory for it -- the fixture
+# tree has no sparc anywhere.
+run_cgi /sparc/ls.1
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man\.netbsd\.org/ls\.1$'
+
+# A real architecture and a real machine class are untouched.
+run_cgi /i386/apm.4
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:apm\.4 arch:i386$'
+
+run_cgi /x86/cpuctl.4
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:cpuctl\.4 arch:x86$'
+
+# --- POST: control characters in the body ----------------------------
+
+# The body is split on IFS plus & and +; CR is in none of those,
+# so a body line ending in one leaves a trailing CR on the last
+# field it parsed, which the 303 then quotes into the Location
+# header. Where that lands in the URL depends on the field, so
+# most of these fail on the stray character mid-pattern rather
+# than on the anchor; see the section case for the one that does
+# not.
+CGI_METHOD=POST
+
+CGI_BODY=$(printf 'command=ls&section=1&arch=DEFAULT&coll=NetBSD-10.1\r')
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/NetBSD-10\.1/ls\.1$'
+
+CGI_BODY=$(printf 'command=ls&section=ANY&coll=DEFAULT&arch=i386\r')
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/i386/ls$'
+
+# The only field whose value ends the URL, so the only one where a
+# trailing CR lands at the end of the header line -- the true
+# header-splitting shape, and the case the '$' anchors catch. In
+# the other three the CR lands mid-URL.
+CGI_BODY=$(printf 'command=ls&arch=DEFAULT&coll=DEFAULT&section=1\r')
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/ls\.1$'
+
+CGI_BODY=$(printf 'section=1&arch=DEFAULT&coll=DEFAULT&command=ls\r')
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/ls\.1$'
+
+# --- POST: names that are not names ----------------------------------
+
+# The POST response is a no-store redirect by construction
+# (ADR-0007), so a rejected name degrades to the default here
+# instead of 404ing: what matters is that it does not reach the
+# Location header.
+CGI_BODY='command=ls&section=1&arch=DEFAULT&coll=..'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/ls\.1$'
+
+CGI_BODY='command=ls&section=ANY&coll=DEFAULT&arch=..'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/ls$'
+
+# read -r: without it a trailing backslash splices the next body
+# line into the one being parsed, and the splice is then split on
+# & like any other body text -- so a second line injects whole
+# fields, not just characters. Here the appended coll= overrides
+# the one that looked complete, and the redirect goes to
+# NetBSD-10.1 instead of A.
+CGI_BODY=$(printf 'command=ls&section=1&arch=DEFAULT&coll=A\\\n&coll=NetBSD-10.1')
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/A/ls\.1$'
+
+# A real collection posted without a stray CR still resolves.
+CGI_BODY='command=ls&section=1&arch=DEFAULT&coll=NetBSD-10.1'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Location: https://man\.netbsd\.org/NetBSD-10\.1/ls\.1$'
+
+CGI_METHOD=
+CGI_BODY=
+
+test_done

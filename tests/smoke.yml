@@ -85,6 +85,34 @@ checklist:
   code: 301
   location: /ls.1
 
+# A collection name that is not one is a 404, not a redirect into
+# another collection. Query-string form only: the path parser takes
+# a collection only from an [A-Z]* component.
+- path: /cgi-bin/man-cgi?ls+1+..
+  code: 404
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+
+# An architecture that is not one names nothing, so it is a 404
+# rather than a guess at which page was meant.
+- path: /cgi-bin/man-cgi?ls+..
+  code: 404
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+
+# A real architecture that ships no pages of its own in the
+# collection is still a real architecture: archlist is the union
+# across every collection and membership is the test, not whether
+# this collection has a directory for it. Resolves to the
+# machine-independent page and canonicalizes to it (ADR-0009).
+# (pc532 is retired and has no directory in NetBSD-current; any
+# other archlist entry in that position does just as well.)
+- path: /pc532/ls.1
+  code: 301
+  location: /ls.1
+
 # A .0 release that never existed falls back to current.
 - path: /NetBSD-99.0/ls.1
   code: 302

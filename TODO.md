@@ -52,16 +52,16 @@ Open ideas and known defects not part of any scheduled effort.
   (ADR-0012) already computes the right section. No collection in
   the production tree ships `catN` pages today, and a wrong 301 is
   durable (ADR-0005), which is why ADR-0012 left this alone.
-- Feed the COLL sanitizer with `printf '%s'` instead of `echo`: a
-  collection of exactly `-n` is consumed as an echo option (verified
-  under dash: COLL comes out empty, so it silently becomes the
-  default collection), and echo's backslash-escape processing mangles
-  backslash-bearing values before tr sees them.
-- Reject dot-only collection names: `..` survives the sanitizer's
-  character set, satisfies the `-d "$MANROOT/$COLL"` check, and sets
-  MANPATH one level above MANROOT (bounded to one level — slashes
-  cannot survive the earlier IFS=/ split of PATH_INFO).
-- Sanitize COLL on the POST path before `redirect 303`: the redirect
-  embeds COLL straight from the raw POST body into the Location
-  header, and a trailing CR from a CRLF-terminated body line survives
-  the IFS split (CR is not in the split set) into the header value.
+- Keep the requested architecture across the machine-class
+  canonicalization. `/i386/est.4` 301s to `/x86/est.4` (ADR-0009),
+  and the query form prefers the URL's arch to the remembered one
+  (`want = data-url || recall(name) || fallback`), so the select
+  comes back as `x86` and the next submit stores `x86` over the
+  user's `i386`. Cross-reference links in the page carry the class
+  too, so browsing onward stays in `x86`. The machine-independent
+  case is fine and is what ADR-0009 relies on: the arch leaves the
+  URL entirely, no `data-url` is emitted, and ADR-0008's
+  localStorage keeps the selection. Only the class transition
+  overwrites it. A fix has to stay inside the form or the
+  remembered value — putting the port back in the URL would
+  recreate the per-arch cache aliases ADR-0009 exists to collapse.
