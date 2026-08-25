@@ -37,6 +37,7 @@ LM_ZIT1='Fri, 23 Jan 2026 14:15:16 GMT'
 LM_ZIT0='Sat, 24 Jan 2026 15:16:17 GMT'
 LM_ZIT3F='Sun, 25 Jan 2026 16:17:18 GMT'
 LM_ZIT9LUA='Mon, 26 Jan 2026 17:18:19 GMT'
+LM_ZOG0='Wed, 04 Feb 2026 19:20:21 GMT'
 LM_BOOT8_CATS='Tue, 27 Jan 2026 18:19:20 GMT'
 LM_BR_LS1='Mon, 05 Jan 2026 16:17:18 GMT'
 LM_BR_BUILD='Wed, 07 Jan 2026 18:19:20 GMT'
@@ -96,6 +97,10 @@ setup_fixtures()
     TZ=UTC touch -t 202601251617.18 "${MANROOT}/NetBSD-current/man3f/zit.3f"
     TZ=UTC touch -t 202601261718.19 "${MANROOT}/NetBSD-current/man9lua/zit.9lua"
     TZ=UTC touch -t 202601271819.20 "${MANROOT}/NetBSD-current/man8/cats/boot.8"
+    # zog exists only preformatted and only in section 8, so a
+    # sectionless request for it is a single match whose section
+    # is nowhere but the directory name.
+    TZ=UTC touch -t 202602041920.21 "${MANROOT}/NetBSD-current/cat8/zog.0"
     TZ=UTC touch -t 202601041516.17 "${MANROOT}/NetBSD-current/build"
     # The branch build file gets a stamp distinct from the branch
     # ls.1 so Last-Modified assertions can tell them apart.

@@ -207,15 +207,17 @@ assert_body_absent 'i386/mux(4)'
 # spurious two-entry menu, both entries identical.
 
 # One page, so no menu -- which is the whole point of collapsing
-# the two forms. It does not gain a section, because the section
-# inference still reads the file suffix and .0 is not a section;
-# that gap predates menus and is left alone here.
+# the two forms. The single match is the preformatted copy, whose
+# .0 suffix names no section; the section comes from the match
+# token instead (ADR-0016), so the request gains one like any
+# other single match.
 run_cgi /zap
 
 assert_exit 0
-assert_no_header '^Status:'
-assert_body_absent '<li>'
-assert_body_absent 'Several manual pages match'
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/zap.1$'
+assert_header '^Surrogate-Key: all redirect coll:NetBSD-current$'
+assert_no_header '^Last-Modified:'
 
 # The preformatted copy is what man(1) finds first, so it is the
 # validator, and the page carries no alternatives.
@@ -224,7 +226,43 @@ run_cgi /zap.1
 assert_exit 0
 assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_ZAP0}\$"
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:zap.1$'
 assert_body 'preformatted form'
+assert_body_absent 'Also available:'
+assert_body_absent '<li>'
+
+# A page that exists only preformatted, and in one section only,
+# is a single match with no source file to read a suffix from. It
+# redirects to its section URL all the same, so it caches under
+# the sectioned page key rather than at the sectionless URL. The
+# section is 8, not 1, so a fallback to the first section a search
+# would try could not pass for the directory being read.
+run_cgi /zog
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/zog.8$'
+assert_header '^Surrogate-Key: all redirect coll:NetBSD-current$'
+assert_no_header '^Last-Modified:'
+
+# Under an arch the same page is machine-independent, so the arch
+# drops (ADR-0009) and the section is gained in the same hop.
+run_cgi /i386/zog
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/zog.8$'
+
+# The sectioned URL never enters the inference; this only proves
+# the fixture is the page the redirects lead to, and that it
+# caches under the sectioned key.
+run_cgi /zog.8
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_ZOG0}\$"
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:zog.8$'
+assert_body 'section 8 preformatted only'
 assert_body_absent 'Also available:'
 assert_body_absent '<li>'
 

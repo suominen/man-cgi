@@ -1526,12 +1526,18 @@ case "${LASTMODFILE}" in
 	arch_changed=true
     fi
 
+    # Infer the section: a sectionless request that resolved to one
+    # page is sent to that page's sectioned URL. The section is the
+    # match token's (ADR-0016), read from the manN/catN directory,
+    # so a page found as catN/name.0 redirects like manN/name.N
+    # does; the .0 suffix names no section. Only the sections the
+    # URL parser accepts redirect; a page in mann or manl stays at
+    # its sectionless URL.
     case "${SECTION}" in
     "")
-	SECTION="${LASTMODFILE##*.}"
+	SECTION="$(printf '%s\n' "${LASTMODFILE}" | match_tokens)"
+	SECTION="${SECTION##*.}"
 	case "${SECTION}" in
-	"")
-	    ;;
 	[1-9]|3f|[39]lua)
 	    redirect 301
 	    ;;

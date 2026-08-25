@@ -34,15 +34,6 @@ Open ideas and known defects not part of any scheduled effort.
   post-cutover refill storm, roughly a third of uncached requests
   (including the QA vhost's) 502'd for hours while crawlers re-filled
   the caches.
-- Infer the section from the match token rather than the file
-  suffix, so a page that exists only preformatted (`catN/name.0`)
-  redirects to its section URL like a source page does. Today
-  `/name` serves it at the sectionless URL with a `page:<coll>:name`
-  key, so it caches separately from `/name.N`. `match_tokens`
-  (ADR-0012) already computes the right section. No collection in
-  the production tree ships `catN` pages today, and a wrong 301
-  outlives its fix by a day in browsers and nginx (ADR-0005,
-  ADR-0015), which is why ADR-0012 left this alone.
 - Keep the requested architecture across the machine-class
   canonicalization. `/i386/est.4` 301s to `/x86/est.4` (ADR-0009),
   and the query form prefers the URL's arch to the remembered one

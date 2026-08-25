@@ -18,7 +18,8 @@ here. Supersede landed records with new ones; never rewrite them.
 | [0009](0009-canonical-arch-redirects.md) | Canonical-arch redirects | amended by ADR-0015 |
 | [0010](0010-keep-the-shell-cgi.md) | Keep the shell CGI instead of rewriting | accepted |
 | [0011](0011-minlastmod-validator-floor.md) | MINLASTMOD floor folds script changes into Last-Modified | accepted |
-| [0012](0012-multi-match-menus.md) | Menus for multi-match lookups | accepted |
+| [0012](0012-multi-match-menus.md) | Menus for multi-match lookups | amended by ADR-0016 |
 | [0013](0013-collection-validator-from-mdoc-local.md) | Collection-level validators come from tmac/mdoc.local | accepted |
 | [0014](0014-import-the-rcs-history.md) | Import the RCS history of man-cgi as one linear git history | accepted |
 | [0015](0015-short-lived-redirects-and-deterministic-purges.md) | Short-lived redirects and deterministic purges | accepted |
+| [0016](0016-section-from-match-token.md) | Infer the section from the match token | accepted |

@@ -1,0 +1,9 @@
+ZOG(8)                  NetBSD Test Fixtures                  ZOG(8)
+
+NAME
+     zog - section 8 preformatted only (test fixture)
+
+DESCRIPTION
+     The zog fixture page exists only in preformatted form and in
+     no other section, so a sectionless request for it matches one
+     file whose section can only come from the cat8 directory.
