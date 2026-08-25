@@ -41,7 +41,8 @@ assert_exit 0
 assert_header '^Status: 404 Not Found$'
 assert_no_header '^Location:'
 assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
-assert_body 'value="" autofocus'
+assert_body 'value="" title="Press / to focus"'
+assert_body_absent 'autofocus'
 assert_body_absent 'lsnot'
 assert_body_absent 'site:'
 

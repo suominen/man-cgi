@@ -29,5 +29,8 @@ assert_header "^Last-Modified: ${LM_MDOC}$"
 assert_body 'The manual page was not found'
 assert_body 'duckduckgo.com'
 assert_body_absent 'rel="canonical"'
+# The form keeps the name but does not autofocus on a 404 either.
+assert_body 'value="nosuchcommand" title="Press / to focus">'
+assert_body_absent 'autofocus'
 
 test_done

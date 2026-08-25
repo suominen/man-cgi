@@ -83,6 +83,9 @@ assert_exit 0
 assert_header '^Status: 404 Not Found$'
 assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
 assert_body_absent 'data-url="\.\."'
+# The autofocus decision follows the class override too, not the
+# empty COMMAND alone.
+assert_body_absent 'autofocus'
 
 # --- Collection: names that are collection names ---------------------
 
@@ -219,7 +222,8 @@ assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
 assert_header "^Last-Modified: ${LM_MDOC}\$"
 assert_body '<title>NetBSD Manual Pages</title>'
 assert_body '<h1>NetBSD Manual Pages</h1>'
-assert_body 'value="" autofocus'
+assert_body 'value="" title="Press / to focus"'
+assert_body_absent 'autofocus'
 assert_body 'The manual page was not found'
 assert_body_absent '<b>zz'
 assert_body_absent 'class="intro"'

@@ -99,8 +99,8 @@ LASTMODFILE="$MANROOT/NetBSD-current/build"
 # chrome, error bodies. Signature and MANCGI_DATE changes do not
 # qualify.
 #
-# 2026-08-25 12:55:18 UTC
-MINLASTMOD=${MANCGI_MINLASTMOD:-1787662518}
+# 2026-08-25 18:37:11 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1787683031}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -659,7 +659,15 @@ list_matches()
 
 queryform()
 {
-    local archattr coll collattr safearch
+    local archattr coll collattr focusattr safearch
+
+    # The home page is the form, so autofocus there. Elsewhere it
+    # would steal the scroll keys from the reader; the inline
+    # script's / shortcut focuses the field instead.
+    case "${CLASS}" in
+    home)	focusattr=" autofocus";;
+    *)		focusattr=;;
+    esac
 
     cat <<END
 <div class="queryform">
@@ -667,7 +675,7 @@ queryform()
   <div>
     <label for="command">Command:&nbsp;&nbsp;&nbsp;&nbsp;</label>
     <input name="command" id="command" size="24" type="text"
-      value="$COMMAND" autofocus>
+      value="$COMMAND" title="Press / to focus"${focusattr}>
   </div>
   <div>
     <label for="section">Section:&nbsp;&nbsp;&nbsp;</label>
@@ -778,6 +786,15 @@ END
 # (no cookies: nothing varies at any cache tier). Preselection
 # order: URL-carried value (data-url), remembered value, default.
 # Without JavaScript the fallback options keep the form usable.
+#
+# The script also makes / focus the command field (and select its
+# text, so typing replaces the page's own name), as on GitHub and
+# MDN. It listens on keydown by key name rather than key code, and
+# does not exclude Shift: / is Shift-7 on Finnish and Swedish
+# layouts, and e.key is still '/'. The default action is cancelled
+# only when focus actually moves, so / types normally inside a
+# form control; key auto-repeat is ignored so a held / cannot type
+# over the freshly selected text.
 js_queryform()
 {
     cat <<'END'
@@ -828,6 +845,24 @@ js_queryform()
   }
 
   var arch;
+
+  document.addEventListener('keydown', function (e) {
+    var t = e.target, cmd;
+    if (e.key !== '/' || e.repeat || e.ctrlKey || e.metaKey || e.altKey ||
+        e.isComposing) {
+      return;
+    }
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' ||
+        t.tagName === 'SELECT' || t.isContentEditable)) {
+      return;
+    }
+    cmd = document.getElementById('command');
+    if (cmd) {
+      e.preventDefault();
+      cmd.focus();
+      cmd.select();
+    }
+  });
 
   if (!window.fetch) {
     return;

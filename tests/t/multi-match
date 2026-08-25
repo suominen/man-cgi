@@ -53,6 +53,10 @@ assert_body_absent '^<pre class="manpage">$'
 # The menu is its own canonical URL: it must not point at another
 # arch's menu, nor at the sectionless URL that redirects.
 assert_body 'rel="canonical" href="https://man.netbsd.org/i386/boot"'
+# A menu is read and scrolled like a page, so the command field
+# must not autofocus; it is pre-filled with the requested name.
+assert_body 'value="boot" title="Press / to focus">'
+assert_body_absent 'autofocus'
 
 # The other member of the x86 class behaves identically.
 run_cgi /amd64/boot
