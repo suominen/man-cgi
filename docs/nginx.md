@@ -37,10 +37,20 @@ This file records what the configuration does for caching and why.
 - `fastcgi_cache_key "$request_method$request_uri"` — legacy
   query-string URLs cache separately from path URLs; the CGI's 301
   canonicalization migrates that traffic.
-- `fastcgi_cache_use_stale ... updating` +
-  `fastcgi_cache_background_update on` — expired entries are served
-  stale while a background subrequest revalidates, so clients see
-  `X-Man-Cache: STALE` at most briefly after expiry.
+- `fastcgi_cache_use_stale ... updating` with
+  `fastcgi_cache_background_update off` (ADR-0015). The request
+  that finds an entry expired waits for the upstream refresh and
+  receives the fresh response; requests that arrive *while* that
+  refresh runs get the stale copy (`updating`).
+  With background update on, the triggering request was served
+  stale too — and a Fastly soft purge's refetch is usually exactly
+  that request, so a purge re-cached the old object for another
+  full Fastly TTL. The first requester after expiry now pays one
+  revalidation (a 304 round trip for pages, a full but cheap
+  refetch for redirects). `updating` stays: it is the herd
+  protection for expiries, which `fastcgi_cache_lock` does not
+  cover (that only serialises MISS fills). Measured in
+  `tests/nginx-lab/` (`drive-stale`).
 - `add_header X-Man-Cache $upstream_cache_status` — the nginx cache
   status, guarded behind `nginx_version >= 1.29.3`
   (add_header_inherit support in the patched build).

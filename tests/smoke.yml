@@ -145,7 +145,7 @@ checklist:
   code: 302
   location: /ls.1
   headers:
-    cache-control: "public, max-age=86400"
+    cache-control: "public, max-age=3600"
 
 # API list endpoints.
 - path: /api/v1/archlist

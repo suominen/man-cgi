@@ -28,8 +28,8 @@ by Surrogate-Key at any time).
 | release page | `public, max-age=86400` | 86400 | `max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800` |
 | home page | `public, max-age=7200` | 7200 | `max-age=86400, stale-while-revalidate=3600` |
 | 404 | `public, max-age=3600` | 3600 | `max-age=86400, stale-if-error=86400` |
-| 302 collection fallback | `public, max-age=86400` | 86400 | `max-age=604800` |
-| 301 canonicalization | `public, max-age=86400` | 2592000 | `max-age=2592000` |
+| 302 collection fallback | `public, max-age=3600` | 10800 | `max-age=86400` |
+| 301 canonicalization | `public, max-age=86400` | 86400 | `max-age=2592000` |
 | api lists (`/api/v1/*`) | `public, max-age=3600` | 3600 | `max-age=604800, stale-while-revalidate=3600` |
 | health check | `public, max-age=30` | 30 | `max-age=30` |
 | 303 (POST form) | `no-store` | — | — |

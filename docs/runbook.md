@@ -15,15 +15,18 @@ immediately (e.g. something that should never have been published).
 Mind the ordering: purged objects refill from **nginx**, not from
 the CGI. While nginx still holds a stale-but-valid entry (within
 its `X-Accel-Expires` TTL — see the table in `caching.md`), a
-Fastly purge just re-caches the same old object. Even past that
-TTL, the purge-triggered fetch can be the very request that kicks
-off nginx's background revalidation and still get handed the stale
-copy (`X-Man-Cache: STALE` on the refilled object is the tell). So
-after a change reaches the origin, don't count purges — verify:
-purge, compare `Last-Modified` at the edge against the origin's
-(the QA vhost shows the origin's), and repeat until they match; a
-couple of rounds is normal. (The nginx wipe procedure below is
-immune by construction: wipe first, then `manno-purge all`.)
+Fastly purge just re-caches the same old object. So after a change
+reaches the origin, wait out the nginx TTL of the class in
+question, then purge once and confirm at the edge: compare
+`Last-Modified` — or a redirect's status and `Location` — against
+the QA vhost, which shows the origin's. The purge-triggered fetch
+gets the refreshed response because nginx runs with
+`fastcgi_cache_background_update off` (`nginx.md`, ADR-0015); the
+one residual way to refill the old object is a fetch that lands
+while some other request's refresh is still in flight, which the
+refilled object shows as `X-Man-Cache: UPDATING` — purge again.
+(The nginx wipe procedure below is immune by construction: wipe
+first, then `manno-purge all`.)
 
 Configuration (on the purging host):
 
@@ -110,25 +113,47 @@ the other host while nginx is down, so wipe one host at a time.
   change and markup or header changes never reach them through
   expiry alone. (List changes stopped being a wipe trigger when
   the JS query form removed the embedded lists from page bodies.)
-- **A bad permanent redirect**: 301s are purgeable at Fastly (the
-  `redirect` key) but live 30 days in nginx's cache with no purge
-  mechanism — a wrong 301 needs `manno-purge redirect` *and* an
-  nginx wipe.
-- **A change that turns a cached 301 into something else.** Same
-  mechanism as the previous bullet, but easy to miss because the
-  redirect was never *wrong*. A `MINLASTMOD` bump does nothing
-  here: nginx does not revalidate cached redirects conditionally
-  at all — measured in `../tests/nginx-lab/`, it neither sends
-  `If-Modified-Since` upstream when a cached 301 expires nor
-  answers a client's conditional with 304, where the identical
-  setup does both for a 200. Redirects refresh only by expiring,
-  and permanent ones are held 30 days. Multi-match menus
-  (ADR-0012) are the worked example — every sectionless URL they
-  now answer, such as `/printf` and `/i386/apm`, was previously a
-  cached 301 — so that deploy needs `manno-purge redirect` and an
-  nginx wipe, not the bump.
 - After the wipe, follow with `manno-purge all` so Fastly
   revalidates against the fresh origin.
+
+Redirects are not a wipe trigger any more: see "Redirect changes"
+below.
+
+## New release procedure
+
+Until the release tree exists, `/NetBSD-N.M/...` 302s to
+`NetBSD-N.x-BRANCH` (or to NetBSD-current for an N.0 with no
+branch). Those 302s are keyed by the collection they *point at*,
+not the one requested, and are held 3 hours at nginx and a day at
+Fastly (ADR-0015).
+
+1. The release tree lands in `$MANROOT/NetBSD-N.M/`.
+2. Wait 3 hours (the 302's nginx TTL).
+3. `manno-purge redirect` (the `coll:` key of the collection the
+   302s pointed at covers them too).
+4. Confirm `/NetBSD-N.M/ls.1` answers 200 at the edge.
+
+That makes the release reachable by URL; listing it is the
+colllist change below.
+
+## Redirect changes
+
+nginx does not revalidate cached redirects conditionally at all —
+measured in `../tests/nginx-lab/`, it neither sends
+`If-Modified-Since` upstream when a cached 301 expires nor answers
+a client's conditional with 304, where the identical setup does
+both for a 200. So a `MINLASTMOD` bump never reaches them; they
+refresh only by expiring — a day for 301s, 3 hours for 302s. When
+a deploy makes any URL stop redirecting, or redirect somewhere
+else (multi-match menus, ADR-0012, are the worked example: every
+sectionless URL they answer, such as `/printf` and `/i386/apm`,
+was previously a cached 301), or when a 301 turns out to be wrong:
+
+1. Deploy (or fix).
+2. Wait a day (the 301's nginx TTL).
+3. `manno-purge redirect`.
+4. Confirm at the edge: status and `Location` against the QA
+   vhost.
 
 ## Collection rebuild procedure
 
@@ -165,8 +190,9 @@ otherwise answers 503 (not cached by Fastly; 30s at nginx).
 ## Verifying cache behavior
 
 - `X-Man-Cache` (from nginx, baked into stored objects): MISS, HIT,
-  STALE (served stale while a background revalidation runs),
-  REVALIDATED, EXPIRED.
+  REVALIDATED, EXPIRED, UPDATING (served stale because another
+  request's refresh was in flight), STALE (served stale because
+  the upstream failed: the `use_stale` list minus `updating`).
 - `X-Cache` / `X-Served-By` / `Age` (from Fastly): note that with
   shielding two hops append values, and a stored object replays the
   fill-time values of earlier hops.

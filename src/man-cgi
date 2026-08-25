@@ -860,17 +860,26 @@ emit_cache_headers()
 	surrogate='max-age=86400, stale-if-error=86400'
 	;;
     redirect-found)
-	# 24 hours; a week at Fastly
-	expsecs=86400
-	accel=86400
-	surrogate='max-age=604800'
+	# 1 hour for browsers (the tier that cannot be purged), 3
+	# hours at nginx, a day at Fastly: this is the "not yet a
+	# release" redirect, and it has to stop within hours of the
+	# release tree landing (ADR-0015). It is also the cheapest
+	# response the script makes, emitted before man -w, so a
+	# refetch costs less than a 404 revalidation.
+	expsecs=3600
+	accel=10800
+	surrogate='max-age=86400'
 	;;
     redirect-permanent)
-	# 24 hours for browsers; 30 days at nginx and Fastly (301
+	# 24 hours for browsers and nginx; 30 days at Fastly, where
+	# the redirect key purges. nginx never revalidates a cached
+	# redirect, so its expiry is a full refetch -- cheap, at most
+	# one man -w -- and a day bounds how long a redirect that
+	# should no longer exist keeps being served (ADR-0015). 301
 	# is in Fastly's default-cacheable status set; 308 was not,
-	# which is why these redirects are 301s).
+	# which is why these redirects are 301s (ADR-0005).
 	expsecs=86400
-	accel=2592000
+	accel=86400
 	surrogate='max-age=2592000'
 	;;
     *)
@@ -1348,7 +1357,8 @@ esac
 
 # A name that is not a collection, an architecture, a page name or
 # a section cannot be canonicalized: there is no page to point at,
-# and a 301 is durable (ADR-0005). Only the legacy query string and
+# and a 301 outlives its fix by a day in browsers and nginx
+# (ADR-0005, ADR-0015). Only the legacy query string and
 # the POST body can produce a bad collection -- the PATH_INFO
 # parser takes one only from an [A-Z]* component, which always
 # survives both the character set and the shape check -- and only

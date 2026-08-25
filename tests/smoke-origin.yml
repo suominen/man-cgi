@@ -80,6 +80,14 @@ checklist:
     surrogate-control: "max-age=2592000"
     surrogate-key: "all redirect coll:NetBSD-current"
 
+# A .0 release that never existed 302s to current; the short
+# Fastly hold (ADR-0015) is visible only here, Fastly strips it.
+- path: /NetBSD-99.0/ls.1
+  code: 302
+  headers:
+    surrogate-control: "max-age=86400"
+    surrogate-key: "all redirect coll:NetBSD-current"
+
 - path: /.well-known/health
   headers:
     surrogate-control: "max-age=30"

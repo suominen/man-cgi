@@ -11,17 +11,27 @@ before touching production configuration.
 - `nginx-base.conf` — unprivileged nginx (127.0.0.1:8481) with
   `fastcgi_cache` and `fastcgi_cache_revalidate on`; the
   `#CLEAR_IMS#` marker is where the `drive` script injects
-  conditional-clearing params for the second variant.
+  conditional-clearing params for the second variant, and
+  `#USE_STALE#` where `drive-stale` injects production's
+  `use_stale`/`background_update` pair.
 - `drive` — runs both variants through six scenarios and prints
   client-visible status/cache-state plus what the backend saw.
 - `drive-redirect` — reruns the conditional scenarios with the
   backend answering 301 instead of 200 (`LAB_STATUS`), to compare
   how nginx treats cached redirects against cached pages.
+- `drive-stale` — runs the expiry scenario with
+  `fastcgi_cache_use_stale ... updating` and
+  `fastcgi_cache_background_update` on and off, for a 200 and a
+  301 backend, to see which request receives the refreshed
+  response.
 
 Run it on the NetBSD test host:
 
     rsync -a tests/nginx-lab/ kimmo@equinoxe:nginx-lab/
     ssh kimmo@equinoxe sh nginx-lab/drive
+
+The other drivers run the same way (`sh nginx-lab/drive-redirect`,
+`sh nginx-lab/drive-stale`).
 
 ## Results (2026-08-09, nginx 1.30.4 on NetBSD 11.0)
 
@@ -82,8 +92,42 @@ Conclusions:
 2. So a `Last-Modified` on a redirect would be inert at nginx, and
    `MINLASTMOD` (ADR-0011) cannot reach redirects. They refresh
    only by expiring or by a cache wipe, which is why a change that
-   stops a URL redirecting needs the wipe (see `../../docs/runbook.md`).
+   stops a URL redirecting has to wait out the redirect's nginx
+   TTL (see `../../docs/runbook.md`).
 3. The flip side is that expiry is always a *full* refetch, so a
    redirect can never be pinned stale by a 304 the way a page can.
    Shortening `X-Accel-Expires` for the redirect classes is the only
-   lever on how long the wait is.
+   lever on how long the wait is (ADR-0015 did).
+
+## Stale hand-off under background update (2026-08-25, nginx 1.30.4)
+
+`drive-stale` adds production's `fastcgi_cache_use_stale ...
+updating` at the `#USE_STALE#` marker and runs the expiry scenario
+with `fastcgi_cache_background_update` on and off, for a 200 and a
+301 backend. The 301's `Location` carries the backend serial, so
+the old and the refreshed object are told apart.
+
+| Scenario | on, 200 | off, 200 | on, 301 | off, 301 |
+|----------|---------|----------|---------|----------|
+| cold GET | 200 MISS | 200 MISS | 301 MISS `/target-1` | 301 MISS `/target-1` |
+| expired GET (triggers the refresh) | 200 **STALE** | 200 **REVALIDATED** | 301 **STALE** `/target-1` | 301 **EXPIRED** `/target-2` |
+| next GET | 200 HIT | 200 HIT | 301 HIT `/target-2` | 301 HIT `/target-2` |
+
+The backend saw the same two requests in every run — the cold fill
+and one refresh, with `If-Modified-Since` (answered 304) for the
+200 and without for the 301 — so the setting changes only *who*
+receives the refreshed response, not how often the origin is asked.
+
+Conclusions:
+
+1. With background update on, the request that finds the entry
+   expired is answered from the stale copy and the refresh runs
+   behind it. A Fastly soft purge's refetch is usually exactly that
+   request, so a purge re-cached the old object for another Fastly
+   TTL — the "repeat until they match" the runbook used to
+   prescribe.
+2. With it off, the triggering request waits for the refresh and
+   receives the fresh response. The `updating` parameter still
+   hands the stale copy to requests arriving while a refresh is in
+   progress (not exercised here: the lab is single-client).
+   ADR-0015 turns it off in production.

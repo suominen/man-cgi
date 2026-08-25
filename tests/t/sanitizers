@@ -232,7 +232,7 @@ assert_header '^Status: 404 Not Found$'
 assert_body_absent 'a"b'
 
 # The legacy query string answered this with a 301 to /<b>zz, held
-# for 30 days in nginx's cache; there is no page to point at.
+# for a day in nginx's cache; there is no page to point at.
 CGI_QUERY='<b>zz'
 run_cgi ''
 

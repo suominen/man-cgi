@@ -40,8 +40,9 @@ Open ideas and known defects not part of any scheduled effort.
   `/name` serves it at the sectionless URL with a `page:<coll>:name`
   key, so it caches separately from `/name.N`. `match_tokens`
   (ADR-0012) already computes the right section. No collection in
-  the production tree ships `catN` pages today, and a wrong 301 is
-  durable (ADR-0005), which is why ADR-0012 left this alone.
+  the production tree ships `catN` pages today, and a wrong 301
+  outlives its fix by a day in browsers and nginx (ADR-0005,
+  ADR-0015), which is why ADR-0012 left this alone.
 - Keep the requested architecture across the machine-class
   canonicalization. `/i386/est.4` 301s to `/x86/est.4` (ADR-0009),
   and the query form prefers the URL's arch to the remembered one

@@ -1,0 +1,143 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# When a cached entry expires under fastcgi_cache_use_stale
+# updating, which request gets the fresh response: the one that
+# triggers the refresh, or only the ones after it? Runs the expiry
+# scenario with fastcgi_cache_background_update on and off, for a
+# 200 and for a 301 backend. See README.md.
+#
+# 20260825  Kimmo Suominen
+#
+
+set -eu
+
+# Wider than the house PATH: nginx lives in /usr/pkg/sbin on NetBSD.
+PATH=/bin:/usr/bin:/usr/pkg/bin:/usr/pkg/sbin
+export PATH
+
+CDPATH=
+
+PROG="${0##*/}"
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+LAB=$(cd "$(dirname "${0}")" && pwd)
+cd "${LAB}"
+
+# The ports also appear in nginx-base.conf (8481) and
+# fcgi-backend.py (9481); keep the three files in sync.
+URL=http://127.0.0.1:8481/s
+
+command -v nginx > /dev/null ||
+die 'nginx is required'
+
+BACKEND_PID=
+
+cleanup()
+{
+    if [ -n "${BACKEND_PID}" ]
+    then
+	kill "${BACKEND_PID}" 2> /dev/null || true
+    fi
+    if [ -f logs/nginx.pid ]
+    then
+	kill "$(cat logs/nginx.pid)" 2> /dev/null || true
+    fi
+}
+
+trap cleanup EXIT
+# Signal traps must exit explicitly: POSIX resumes execution after a
+# non-EXIT trap action. The exit runs the EXIT trap.
+trap 'exit 1' INT TERM HUP
+
+show()
+{
+    local label
+    label="${1}"
+    shift
+
+    printf '  %-36s ' "${label}"
+    curl -sS -o /dev/null -D - "${@}" "${URL}" |
+    awk '
+	/^HTTP\//			{ status = $2 }
+	tolower($0) ~ /^location:/	{ location = $2 }
+	tolower($0) ~ /^x-lab-cache:/	{ state = $2 }
+	END {
+	    printf "%s  %-13s %s\n", status, state, location
+	}
+    ' | tr -d '\r'
+}
+
+# One config per background_update setting, built from the base
+# config's #USE_STALE# marker. The use_stale list is production's
+# minus http_429, which the lab has no rate limit to produce.
+make_conf()
+{
+    local setting
+    setting="${1}"
+
+    awk -v setting="${setting}" '
+	/#USE_STALE#/ {
+	    print "            fastcgi_cache_use_stale" \
+		" error timeout invalid_header updating;"
+	    print "            fastcgi_cache_background_update " \
+		setting ";"
+	    next
+	}
+	{ print }
+    ' nginx-base.conf > "nginx-stale-${setting}.conf"
+}
+
+variant()
+{
+    local setting status
+    setting="${1}"
+    status="${2}"
+
+    echo "background_update=${setting} LAB_STATUS=${status}"
+
+    cleanup
+    rm -rf cache logs tmp requests.log
+    mkdir -p cache logs tmp
+
+    LAB_STATUS="${status}" python3 fcgi-backend.py &
+    BACKEND_PID=${!}
+    sleep 1
+    kill -0 "${BACKEND_PID}" 2> /dev/null ||
+    die 'backend failed to start (stale process on port 9481?)'
+
+    nginx -p "${LAB}" -c "nginx-stale-${setting}.conf"
+    sleep 1
+
+    show 'cold GET'
+    echo '  ... waiting out max-age=2'
+    sleep 3
+    show 'expired GET (triggers the refresh)'
+    # Long enough for a background refresh to land, short enough
+    # that the refreshed entry (max-age=2) is still valid: without
+    # this margin the "on" variant would show HIT with the old
+    # target and read as "no refresh happened".
+    sleep 1
+    show 'next GET'
+
+    echo '  backend saw:'
+    sed -e 's/^/    /' requests.log
+
+    cleanup
+    BACKEND_PID=
+    echo
+}
+
+make_conf on
+make_conf off
+
+for status in 200 301
+do
+    variant on "${status}"
+    variant off "${status}"
+done

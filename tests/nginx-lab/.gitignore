@@ -3,4 +3,6 @@ logs/
 tmp/
 nginx-plain.conf
 nginx-clear.conf
+nginx-stale-on.conf
+nginx-stale-off.conf
 requests.log
