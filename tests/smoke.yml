@@ -112,6 +112,23 @@ checklist:
     cache-control: "public, max-age=3600"
     last-modified: present
 
+# A name with a * in it is a 404 whatever fcgiwrap's working
+# directory holds: the request words are no longer pathname-expanded
+# before the sanitizer sees them (man-cgi 1.113, set -f). A smoke
+# check cannot plant a decoy file on the server, so this pins only
+# the outcome; the decoy-based proof is tests/t/globbing.
+- path: /ls*
+  code: 404
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+
+- path: /cgi-bin/man-cgi?ls*+1
+  code: 404
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+
 # A real architecture that ships no pages of its own in the
 # collection is still a real architecture: archlist is the union
 # across every collection and membership is the test, not whether

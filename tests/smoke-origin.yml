@@ -28,6 +28,13 @@ checklist:
   headers:
     surrogate-key: "all notfound coll:NetBSD-current"
 
+# A name with a * in it is not pathname-expanded into some other
+# name (man-cgi 1.113, set -f); it is a 404 keyed like any other.
+- path: /ls*
+  code: 404
+  headers:
+    surrogate-key: "all notfound coll:NetBSD-current"
+
 # MI page under an arch URL now 301s to the arch-less canonical
 # URL, keyed as a redirect.
 - path: /i386/ls.1
