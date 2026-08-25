@@ -45,6 +45,11 @@
 #   QUERY_STRING=/.well-known/health
 #
 
+# Request values are word-split unquoted (the set -- splits below)
+# and would be pathname-expanded against the filesystem before the
+# sanitizers see them. Nothing in this script globs.
+set -f
+
 MANCGI_DATE=2026-08-25
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
