@@ -57,6 +57,29 @@ checklist:
     last-modified: present
   revalidate: true
 
+# Collection index (ADR-0017): the home page scoped to a release,
+# and the slash-less form canonicalizing to it. (Same retirement
+# caveat as the release page above.)
+- path: /NetBSD-10.1/
+  type: text/html
+  headers:
+    cache-control: "public, max-age=7200"
+    last-modified: present
+  revalidate: true
+
+- path: /NetBSD-10.1
+  code: 301
+  location: /NetBSD-10.1/
+  headers:
+    cache-control: "public, max-age=86400"
+
+# An architecture with no page name goes to the collection's index.
+- path: /i386/
+  code: 301
+  location: /
+  headers:
+    cache-control: "public, max-age=86400"
+
 # Branch-collection page. (Dies when the 10 branch EOLs - update.)
 - path: /NetBSD-10.x-BRANCH/ls.1
   type: text/html

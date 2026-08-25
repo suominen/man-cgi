@@ -47,7 +47,7 @@ page at manage.fastly.com (also in its URL).
 | `page:<coll>:<cmd>` | The sectionless form: one command's multi-match menu (ADR-0012). Purge it alongside the `.<sect>` keys when a name gains or loses a page in another section or arch. |
 | `form` | `archlist` or `colllist` changed. Since the JS query form (ADR-0008) only the three `/api/v1` list objects carry it; pages no longer embed the lists. |
 | `api` | The three `/api/v1` list objects (archlist, colllist, sectlist), also individually keyed by name; their 404s carry `api notfound`. |
-| `home` | The home page needs refreshing. |
+| `home` | The home page, or a collection's index (`/<coll>/`, ADR-0017), needs refreshing. |
 | `notfound` | Mass-refresh of 404s. |
 | `menu` | Mass-refresh of multi-match menus, e.g. after changing how they render. |
 | `redirect` | Redirect logic changed, or a collection appeared/disappeared. |
@@ -160,9 +160,9 @@ was previously a cached 301), or when a 301 turns out to be wrong:
 1. The build lands in `$MANROOT/<collection>/` (NetBSD-current: the
    daily cron pull. Its `tmac/mdoc.local` carries the upstream
    build's timestamp and is the Last-Modified for that
-   collection's 404s and multi-match menus; the `build` file's own
-   mtime is the pull time, and NetBSD-current's is the home page's
-   validator).
+   collection's 404s, multi-match menus and index; the `build`
+   file's own mtime is the pull time, and NetBSD-current's is the
+   home page's validator).
 2. `manno-purge coll:<collection>` (soft).
 3. Nothing else: nginx entries revalidate as they expire (at most
    1 h for current/branch, 24 h for releases), and pages whose

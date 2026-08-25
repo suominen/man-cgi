@@ -1,0 +1,301 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Collection index URLs (ADR-0017): /<coll>/ is the home page
+# scoped to one collection, /<coll> canonicalizes to it, an
+# archlist name with no page name redirects to the index of its
+# collection, and a trailing slash on a page URL is an alias that
+# collapses.
+#
+# 20260825  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# --- /<coll>/ ---------------------------------------------------------
+
+# The index of a release collection: the home page with every link
+# scoped to the collection and the form preselecting it, validated
+# by the collection's tmac/mdoc.local (a frozen release has no
+# build file, ADR-0013). NetBSD-10.1 also covers a name whose
+# minor would otherwise split off as a section suffix.
+run_cgi /NetBSD-10.1/
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Content-Type: text/html; charset=windows-1252$'
+assert_header "^Last-Modified: ${LM_REL_MDOC}\$"
+assert_header '^Cache-Control: public, max-age=7200$'
+assert_header '^X-Accel-Expires: 7200$'
+assert_header '^Surrogate-Control: max-age=86400, stale-while-revalidate=3600$'
+assert_header '^Surrogate-Key: all home coll:NetBSD-10.1$'
+assert_body '<title>NetBSD Manual Pages</title>'
+assert_body 'href="/NetBSD-10.1/afterboot.8"'
+assert_body 'href="/NetBSD-10.1/intro.1"'
+assert_body '<select name="coll" id="coll" data-url="NetBSD-10.1">'
+assert_body_absent 'The manual page was not found'
+assert_body_absent 'rel="canonical"'
+
+# A branch collection has a build file too; the validator is still
+# the collection stamp, not the pull time.
+run_cgi /NetBSD-9.x-BRANCH/
+
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BR_MDOC}\$"
+assert_header '^Surrogate-Key: all home coll:NetBSD-9.x-BRANCH$'
+assert_body 'href="/NetBSD-9.x-BRANCH/intro.8"'
+
+# The index revalidates on its validator like the home page does.
+CGI_IMS="${LM_REL_MDOC}"
+run_cgi /NetBSD-10.1/
+CGI_IMS=
+
+assert_header '^Status: 304 Not Modified$'
+assert_header '^Surrogate-Key: all home coll:NetBSD-10.1$'
+assert_no_body
+
+# The slash-less form canonicalizes with a permanent redirect.
+run_cgi /NetBSD-10.1
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-10.1/$'
+assert_header '^Cache-Control: public, max-age=86400$'
+assert_header '^X-Accel-Expires: 86400$'
+assert_header '^Surrogate-Control: max-age=2592000$'
+assert_no_header '^Last-Modified:'
+
+# The index of the default collection is /, not an alias of it.
+run_cgi /NetBSD-current/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/$'
+
+run_cgi /NetBSD-current
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/$'
+
+# The collection fallbacks fire first, so it is one hop: a release
+# that has moved on to its branch, and a .0 release not yet built
+# (current is the default collection, so its index is /).
+run_cgi /NetBSD-9.3/
+
+assert_header '^Status: 302 Found$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-9.x-BRANCH/$'
+assert_header '^Cache-Control: public, max-age=3600$'
+
+run_cgi /NetBSD-9.3
+
+assert_header '^Status: 302 Found$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-9.x-BRANCH/$'
+
+run_cgi /NetBSD-12.0/
+
+assert_header '^Status: 302 Found$'
+assert_header '^Location: https://man.netbsd.org/$'
+
+# A collection that is not one names nothing: a 404 under the
+# requested collection's key, never a 301 to a 404, and no home
+# page for a tree that does not exist. It has no validator either:
+# the collection's stamp is the validator of its index, and there
+# is no collection to have one.
+run_cgi /NetBSD-8.5/
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_no_header '^Last-Modified:'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-8.5$'
+assert_body 'The collection was not found'
+assert_body_absent 'afterboot.8'
+
+run_cgi /NetBSD-8.5
+
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+
+# A collection name with a character outside the set is dropped
+# whole, as an arch or a page name is, not repaired into the index
+# of a collection the client did not ask for; the 404 is keyed
+# under the default collection, so the junk never becomes a key.
+run_cgi '/NetBSD-10.1*/'
+
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+assert_body 'The collection was not found'
+assert_body_absent 'afterboot.8'
+
+# A doubled slash is an empty component: an alias of the index.
+run_cgi /NetBSD-10.1//
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-10.1/$'
+
+run_cgi //
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/$'
+
+# --- an arch with no page name ----------------------------------------
+
+# An archlist name alone is an arch, not a page. The index carries
+# no arch (ADR-0009: the form remembers it), so the request
+# redirects to the collection's index, with or without the slash.
+run_cgi /i386/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/$'
+
+run_cgi /i386
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/$'
+
+run_cgi /NetBSD-10.1/i386/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-10.1/$'
+
+run_cgi /NetBSD-10.1/i386
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-10.1/$'
+
+# A machine class is in archlist too.
+run_cgi /x86/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/$'
+
+# Nothing but arch names, however many: the last is still not a
+# page name, so the request goes to the index rather than
+# collapsing into a 301 to a 404. An arch that is not one in front
+# still names nothing.
+run_cgi /NetBSD-10.1/i386/x86/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-10.1/$'
+
+run_cgi /amd64/i386
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/$'
+
+run_cgi /lsnot/i386/
+
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+
+# A name outside archlist is a page name, as before: the decoy is
+# neither an arch nor a page, so it is a plain 404, not a redirect
+# to the index.
+run_cgi /lsnot
+
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+
+# --- a page name that starts with an uppercase letter -----------------
+
+# A lone component is a collection only when it is shaped like one,
+# NAME-REL with a numeric release or current: a page name can start
+# with an uppercase letter too (Mail(1), X(7), the X11 API), and
+# asked for alone it has no collection in front of it.
+run_cgi /Mail.1
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:Mail.1$'
+
+run_cgi /Mail
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/Mail.1$'
+
+run_cgi /Mail.1/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/Mail.1$'
+
+# --- a trailing slash on a page URL -----------------------------------
+
+# The slash is meaningful now, so /ls.1/ is an alias of /ls.1 and
+# collapses the way an extra path component does.
+run_cgi /ls.1/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/ls.1$'
+
+run_cgi /NetBSD-10.1/ls.1/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-10.1/ls.1$'
+
+run_cgi /i386/apm.4/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/i386/apm.4$'
+
+# A name that exists nowhere collapses first and 404s at the
+# canonical URL, as with extra path components; the decoy proves
+# the slash alone does not make a name an arch.
+run_cgi /lsnot/
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/lsnot$'
+
+# --- the other entry forms --------------------------------------------
+
+# The legacy query string with an empty name and a collection is
+# that collection's index; with nothing but a section it is /.
+CGI_QUERY='++NetBSD-10.1'
+run_cgi ''
+CGI_QUERY=
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-10.1/$'
+
+CGI_QUERY='+1+'
+run_cgi ''
+CGI_QUERY=
+
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man.netbsd.org/$'
+
+# A collection that is not one is rejected on this form too, after
+# the redirect has been asked for and before it is sent.
+CGI_QUERY='++NetBSD-8.5'
+run_cgi ''
+CGI_QUERY=
+
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+
+# The POST form with an empty name goes to the chosen collection's
+# index.
+CGI_METHOD=POST
+CGI_BODY='command=&section=ANY&arch=DEFAULT&coll=NetBSD-10.1'
+run_cgi ''
+CGI_METHOD=
+CGI_BODY=
+
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man.netbsd.org/NetBSD-10.1/$'
+
+# The root is still the home page, validated by the default
+# collection's build file (t/home-page covers it in full).
+run_cgi /
+
+assert_no_header '^Status:'
+assert_header "^Last-Modified: ${LM_BUILD}\$"
+
+test_done

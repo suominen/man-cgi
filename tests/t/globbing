@@ -69,7 +69,7 @@ run_cgi ''
 
 assert_exit 0
 assert_header '^Status: 303 See Other$'
-assert_header '^Location: https://man\.netbsd\.org/cgi-bin/man-cgi?+1+$'
+assert_header '^Location: https://man\.netbsd\.org/$'
 assert_body_absent 'lsnot'
 
 CGI_METHOD=

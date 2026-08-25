@@ -101,8 +101,9 @@ CGI_QUERY=
 # them is implementation-defined -- NetBSD sh leaves \t alone,
 # dash makes it a tab -- so what the old sanitizer produced
 # depended on the shell running the CGI. printf is the same
-# everywhere, and the name stays whole enough to fail on its own
-# merits instead of collapsing onto the real NetBSD-10.1.
+# everywhere, and the name is judged whole -- and rejected, to the
+# default collection -- instead of collapsing onto the real
+# NetBSD-10.1.
 #
 # This has to arrive through PATH_INFO to reach the sanitizer at
 # all: the legacy query string is pre-processed by an echo of its
@@ -113,7 +114,7 @@ run_cgi '/NetBSD-10.1\tJUNK/ls.1'
 
 assert_exit 0
 assert_header '^Status: 404 Not Found$'
-assert_header '^Surrogate-Key: all notfound coll:NetBSD-10\.1tJUNK$'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
 
 run_cgi /NetBSD-9.3/ls.1
 
@@ -362,14 +363,14 @@ assert_header '^Status: 303 See Other$'
 assert_header '^Location: https://man\.netbsd\.org/ls$'
 
 # A name that is not one degrades the same way: the 303 goes to the
-# query form with no name in it, and the redirect body -- the one
+# home page, with no name in it, and the redirect body -- the one
 # piece of HTML this arm emits -- quotes a URL without the junk.
 CGI_BODY='command=<b>zz&section=1&arch=DEFAULT&coll=DEFAULT'
 run_cgi ''
 
 assert_exit 0
 assert_header '^Status: 303 See Other$'
-assert_header '^Location: https://man\.netbsd\.org/cgi-bin/man-cgi?+1+$'
+assert_header '^Location: https://man\.netbsd\.org/$'
 assert_body_absent '<b>zz'
 
 # The field is the one entry form still carrying an arch prefix
@@ -389,7 +390,7 @@ run_cgi ''
 
 assert_exit 0
 assert_header '^Status: 303 See Other$'
-assert_header '^Location: https://man\.netbsd\.org/cgi-bin/man-cgi?+1+$'
+assert_header '^Location: https://man\.netbsd\.org/$'
 assert_body_absent '<b>zz'
 
 # The section is judged on this arm too, and a rejected one degrades
@@ -424,13 +425,14 @@ assert_body_absent '<b>'
 # & like any other body text -- so a second line injects whole
 # fields, not just characters. Here the appended coll= overrides
 # the one that looked complete, and the redirect goes to
-# NetBSD-10.1 instead of A.
+# NetBSD-10.1 instead of where A\ leads: rejected whole for the
+# backslash, so to the default collection.
 CGI_BODY=$(printf 'command=ls&section=1&arch=DEFAULT&coll=A\\\n&coll=NetBSD-10.1')
 run_cgi ''
 
 assert_exit 0
 assert_header '^Status: 303 See Other$'
-assert_header '^Location: https://man\.netbsd\.org/A/ls\.1$'
+assert_header '^Location: https://man\.netbsd\.org/ls\.1$'
 
 # A real collection posted without a stray CR still resolves.
 CGI_BODY='command=ls&section=1&arch=DEFAULT&coll=NetBSD-10.1'

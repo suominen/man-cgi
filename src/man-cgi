@@ -99,8 +99,8 @@ LASTMODFILE="$MANROOT/NetBSD-current/build"
 # chrome, error bodies. Signature and MANCGI_DATE changes do not
 # qualify.
 #
-# 2026-08-24 18:56:24 UTC
-MINLASTMOD=${MANCGI_MINLASTMOD:-1787597784}
+# 2026-08-25 12:55:18 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1787662518}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -174,7 +174,9 @@ canonical_url()
 
     case "${COMMAND}" in
     "")
-	echo "${REQUEST_SCHEME:-http}://${SERVER_NAME}${port}${SCRIPT_NAME}?+${section}${arch:+.$arch}+${coll}"
+	# The index of a collection (ADR-0017): it carries no arch and
+	# no section, and the default collection's index is /.
+	echo "${REQUEST_SCHEME:-http}://${SERVER_NAME}${port}${coll:+/$coll}/"
 	;;
     *)
 	# XXX: We should probably have some configurable prefix, too.
@@ -187,33 +189,62 @@ canonical_url()
 # attributes and MANPATH, so it is filtered once here, before any of
 # them.
 #
-# What survives the character filter still has to look like a collection
-# name, which is what refuses the three that otherwise get through: ''
-# (nothing survived, so MANPATH would become MANROOT itself), '.' and
-# '..' (real directories, so they satisfy the -d probe below and would
-# point MANPATH at MANROOT and its parent).
+# Dropped whole rather than repaired, as sanitize_arch does: the part
+# that passes the filter would name a collection the client never
+# asked for, and since ADR-0017 that is enough to serve its index.
+# What passes still has to look like a collection name, which is
+# what refuses '.' and '..': real directories, so they satisfy the
+# -d probe below and would point MANPATH at MANROOT and its parent.
+# A rejected value becomes DEFAULT, so the 404 is keyed under the
+# default collection and the junk never becomes a key of its own.
 #
 # The PATH_INFO parser already takes a leading component as the
 # collection only when it starts with an uppercase letter; this applies
 # the same rule to the query-string and POST forms.
 sanitize_coll()
 {
+    local clean
+
     case "${COLL}" in
     DEFAULT|'')
 	return
 	;;
     esac
 
-    COLL=$(printf '%s' "${COLL}" | tr -cd 'A-Za-z0-9.-')
+    clean=$(printf '%s' "${COLL}" | tr -cd 'A-Za-z0-9.-')
+
+    if [ "${clean}" != "${COLL}" ]
+    then
+	BADCOLL=true
+    fi
 
     case "${COLL}" in
     [A-Z]*)
 	;;
     *)
 	BADCOLL=true
-	COLL=DEFAULT
 	;;
     esac
+
+    if ${BADCOLL:-false}
+    then
+	COLL=DEFAULT
+    fi
+}
+
+# True when the name is in ${MANROOT}/archlist. False when the list
+# is unreadable; sanitize_arch falls back to a shape rule then, and
+# the path parser treats the name as a page name.
+in_archlist()
+{
+    case "${1}" in
+    '')
+	return 1
+	;;
+    esac
+
+    [ -r "${MANROOT}/archlist" ] &&
+    grep -q -x -F -e "${1}" "${MANROOT}/archlist"
 }
 
 # ARCH reaches the same places and reached them unfiltered. Unlike
@@ -260,7 +291,7 @@ sanitize_arch()
 	BADARCH=true
     elif [ -r "${MANROOT}/archlist" ]
     then
-	grep -q -x -F -e "${ARCH}" "${MANROOT}/archlist" ||
+	in_archlist "${ARCH}" ||
 	BADARCH=true
     else
 	case "${ARCH}" in
@@ -1073,6 +1104,15 @@ case "$PATH_INFO" in
 	api_notfound
 	;;
     '')
+	# An empty name with a query string is the legacy form of a
+	# collection's index (ADR-0017); the bare URL is the home page.
+	case "${QS:-}" in
+	'')
+	    ;;
+	*)
+	    need_redirect=true
+	    ;;
+	esac
 	;;
     *)
 	need_redirect=true
@@ -1090,18 +1130,19 @@ case "$PATH_INFO" in
     COLL=DEFAULT
     ARCH=DEFAULT
 
+    # A leading component that starts with an uppercase letter is
+    # the collection. Alone, only when it is shaped like one,
+    # NAME-REL with a numeric release or current: a page name can
+    # start with an uppercase letter too -- Mail(1), X(7), the X11
+    # API -- and asked for alone it has no collection in front of
+    # it. No page in any served collection has the collection
+    # shape (ADR-0017).
     case ${#} in
     1)
-	COMMAND="${1}"
-	;;
-    2)
-	COMMAND="${2}"
 	case "${1}" in
-	[A-Z]*)
+	[A-Z]*-[0-9]*|[A-Z]*-current)
 	    COLL="${1}"
-	    ;;
-	*)
-	    ARCH="${1}"
+	    shift
 	    ;;
 	esac
 	;;
@@ -1112,13 +1153,92 @@ case "$PATH_INFO" in
 	    shift
 	    ;;
 	esac
-	while [ ${#} -gt 2 ]
-	do
-	    need_redirect=true
-	    shift
-	done
+	;;
+    esac
+
+    # Extra components collapse from the front: the last two are
+    # the arch and the name.
+    while [ ${#} -gt 2 ]
+    do
+	need_redirect=true
+	shift
+    done
+
+    # Of two components, the first is the arch.
+    case ${#} in
+    2)
 	ARCH="${1}"
-	COMMAND="${2}"
+	shift
+	;;
+    esac
+
+    # What is left is the name, or nothing: the collection's index.
+    # A name in archlist is an arch, not a page -- archlist is the
+    # set sanitize_arch validates against, so the names the form
+    # offers and the names a URL treats as an arch are one set --
+    # and a page named like an arch has to be asked for with its
+    # section (ADR-0017). Behind an arch it is still not a page
+    # name, and the arch in front is the one judged.
+    case "${1}" in
+    '')
+	COMMAND=
+	# An empty component, a doubled slash, is an alias.
+	case ${#} in
+	0)
+	    ;;
+	*)
+	    need_redirect=true
+	    ;;
+	esac
+	;;
+    *)
+	if in_archlist "${1}"
+	then
+	    case "${ARCH}" in
+	    DEFAULT)
+		ARCH="${1}"
+		;;
+	    esac
+	    COMMAND=
+	else
+	    COMMAND="${1}"
+	fi
+	;;
+    esac
+
+    # The trailing slash is invisible to the split above, so it is
+    # judged here: an index ends in one and a page does not
+    # (ADR-0017). An index carries no arch, and the default
+    # collection's index is / -- which the first arm serves, so a
+    # DEFAULT collection here is never canonical.
+    case "${COMMAND}" in
+    '')
+	case "${PATH_INFO}" in
+	*/)
+	    ;;
+	*)
+	    need_redirect=true
+	    ;;
+	esac
+	case "${ARCH}" in
+	DEFAULT)
+	    ;;
+	*)
+	    need_redirect=true
+	    ;;
+	esac
+	case "${COLL}" in
+	DEFAULT|"${DEFAULT_COLLECTION}")
+	    need_redirect=true
+	    ;;
+	esac
+	;;
+    *)
+	case "${PATH_INFO}" in
+	*/)
+	    need_redirect=true
+	    ;;
+	esac
 	;;
     esac
     ;;
@@ -1339,6 +1459,15 @@ DEFAULT|"")
 	    fi
 	    ;;
 	esac
+
+	# No such collection and no name: there is no index to serve
+	# and nothing to canonicalize (ADR-0017). With a name, man -w
+	# answers the same 404 by itself.
+	case "${COMMAND}" in
+	'')
+	    BADCOLL=true
+	    ;;
+	esac
     fi
     export MANPATH
     MANPATH="${MANROOT}/${COLL}"
@@ -1359,10 +1488,12 @@ esac
 # a section cannot be canonicalized: there is no page to point at,
 # and a 301 outlives its fix by a day in browsers and nginx
 # (ADR-0005, ADR-0015). Only the legacy query string and
-# the POST body can produce a bad collection -- the PATH_INFO
+# the POST body can produce a malformed collection -- the PATH_INFO
 # parser takes one only from an [A-Z]* component, which always
-# survives both the character set and the shape check -- and only
-# the legacy query string a bad section, but any entry form can
+# survives both the character set and the shape check -- though
+# every form can name one that does not exist, which is rejected
+# above when there is no page name to look up. Only the legacy
+# query string can produce a bad section, but any entry form can
 # produce a bad architecture or page name.
 if rejected
 then
@@ -1408,6 +1539,16 @@ NL='
 
 case "${COMMAND}" in
 '')
+    # A collection's index is a collection-level response and takes
+    # the collection's validator (ADR-0013); the home page keeps the
+    # default collection's build file.
+    case "${COLL}" in
+    '')
+	;;
+    *)
+	LASTMODFILE="${COLLSTAMP}"
+	;;
+    esac
     ;;
 *)
     case "${SECTION}" in
@@ -1832,10 +1973,17 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	    2>/dev/null
 	echo "</pre>"
     else
-	# A rejected name is empty, and there is nothing to search for.
+	# A rejected name is empty, and there is nothing to search for;
+	# with no name asked for at all, it is the collection that is
+	# missing (ADR-0017).
 	case "${COMMAND}" in
 	'')
-	    echo '<p>The manual page was not found.</p>'
+	    if ${BADCOLL:-false}
+	    then
+		echo '<p>The collection was not found.</p>'
+	    else
+		echo '<p>The manual page was not found.</p>'
+	    fi
 	    ;;
 	*)
 	    cat <<END

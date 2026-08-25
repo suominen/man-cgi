@@ -59,6 +59,13 @@ checklist:
     surrogate-control: "max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800"
     surrogate-key: "all coll:NetBSD-10.1 page:NetBSD-10.1:ls.1"
 
+# A release's index (ADR-0017) keys like the home page, under the
+# release.
+- path: /NetBSD-10.1/
+  headers:
+    surrogate-control: "max-age=86400, stale-while-revalidate=3600"
+    surrogate-key: "all home coll:NetBSD-10.1"
+
 # API list objects keep the form key (the lists live here now).
 - path: /api/v1/archlist
   type: text/plain

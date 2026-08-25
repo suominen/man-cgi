@@ -23,3 +23,4 @@ here. Supersede landed records with new ones; never rewrite them.
 | [0014](0014-import-the-rcs-history.md) | Import the RCS history of man-cgi as one linear git history | accepted |
 | [0015](0015-short-lived-redirects-and-deterministic-purges.md) | Short-lived redirects and deterministic purges | accepted |
 | [0016](0016-section-from-match-token.md) | Infer the section from the match token | accepted |
+| [0017](0017-collection-index-urls.md) | Collection index URLs | accepted |
