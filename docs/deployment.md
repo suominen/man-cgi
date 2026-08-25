@@ -8,10 +8,10 @@ workflow:
 
 1. Work on a feature branch in its own worktree, like everything
    else in the repository; keep the diff reviewable.
-2. Tests first (TDD): the suite in `tests/` runs on the NetBSD test
-   host via `tests/run-remote` (the script needs NetBSD stat(1),
-   date(1), man(1); see `tests/run-remote -h` for the environment
-   knobs). All tests green before the branch is reviewed.
+2. Tests first (TDD): `make test` runs the suite in `tests/` on the
+   NetBSD test host via `tests/run-remote` (the script needs NetBSD
+   stat(1), date(1), man(1); the Makefile names the host and the
+   ssh identity). All tests green before the branch is reviewed.
 3. Merge to `main` by fast-forward only, so the reviewed commit is
    the one that lands.
 4. When a change alters *rendered output* (markup, headers — not
@@ -23,11 +23,13 @@ workflow:
    in the page signature, which makes deployed-version checks easy.
 6. `make dist-qa` installs the script on the QA vhost
    (man.oxygene.qa.nxrns.org — uncached, no rate limits, serves the
-   production man tree); smoke-test the response classes there.
+   production man tree); `make smoke-qa` checks the response
+   classes there, Surrogate headers included.
 7. `make dist-prod` installs it into the man-www site on oxygene;
    sync to lcm with `/root/bin/site-rsync man-www` (as root). lcm
    also runs that sync from cron at 06:53 and 18:53, so a manual
    run is only needed when the deploy must reach lcm immediately.
+   `make smoke-prod` checks the edge.
 8. If the change altered rendered output and `MINLASTMOD` was
    bumped, caches converge on their own: every validator moved, so
    nginx entries pick up the new output as they expire. Wipe the
