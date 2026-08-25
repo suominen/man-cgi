@@ -55,3 +55,26 @@ Open ideas and known defects not part of any scheduled effort.
   overwrites it. A fix has to stay inside the form or the
   remembered value — putting the port back in the URL would
   recreate the per-arch cache aliases ADR-0009 exists to collapse.
+- Consider bringing back the apropos functionality (perhaps an
+  `/apropos/*` namespace) using `apropos -l` "legacy" output (also
+  reachable by setting `export APROPOS=-l` in the environment and
+  then using `man -k` like before). The HTMLizer should be able to
+  handle the legacy output just fine. Concern: cache growth due to
+  garbage; maybe this could be kept in check with e.g.
+  `sanitize_command`.
+- Emit canonical cross-reference links when the page's own reference
+  already names an arch. boot(8) refers to its siblings as
+  `x86/dosboot(8)`, and the HTMLizer's cross-reference `sed` prefixes
+  `/${COLL}/${ARCH}/` to whatever it matched, so
+  `/NetBSD-11.0/x86/boot.8` links to `/NetBSD-11.0/x86/x86/dosboot.8`.
+  The path parser papers over this: with more than two segments after
+  the collection it shifts the extra ones away, keeps the last as the
+  arch, and 301s to `/NetBSD-11.0/x86/dosboot.8`. So the links work,
+  but every one costs a redirect hop, and the doubled URL is an extra
+  cache key and crawler target. Fix at link-generation time instead:
+  when the matched name contains a `/`, treat the part before it as
+  the arch and don't prepend `${ARCH}` again. Whether that embedded
+  arch should also go through the machine-class canonicalization
+  (`i386/foo(4)` → `x86`, ADR-0009) is a separate question — the
+  301 handles that today, and doing it in `sed` would need the class
+  table at HTMLize time.
