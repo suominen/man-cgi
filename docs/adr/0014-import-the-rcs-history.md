@@ -74,6 +74,10 @@ encodes:
 - The old history is kept reachable under the tag
   `pre-rcs-import` (tip `3468b5d`), so a rerun of the import, and
   `tools/rcs-import/rcs-import-verify`, can compare against it.
+  The tag stays in the local repository and is deliberately not
+  pushed: a clone gets one history with one root. The `,v` file
+  and the replacement messages in `tools/rcs-import/` are what
+  make the import auditable from a clone.
 
 ### Consequences
 
