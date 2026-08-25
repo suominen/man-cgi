@@ -21,13 +21,13 @@ workflow:
 5. Bump `MANCGI_DATE` (its own commit) when observable output
    changed; it is visible in `X-Powered-By` on the health check and
    in the page signature, which makes deployed-version checks easy.
-6. Copy to the QA vhost (man.oxygene.qa.nxrns.org — uncached, no
-   rate limits, serves the production man tree) and smoke-test the
-   response classes there.
-7. Deploy into the man-www site on oxygene; sync to lcm with
-   `/root/bin/site-rsync man-www` (as root). lcm also runs that
-   sync from cron at 06:53 and 18:53, so a manual run is only
-   needed when the deploy must reach lcm immediately.
+6. `make dist-qa` installs the script on the QA vhost
+   (man.oxygene.qa.nxrns.org — uncached, no rate limits, serves the
+   production man tree); smoke-test the response classes there.
+7. `make dist-prod` installs it into the man-www site on oxygene;
+   sync to lcm with `/root/bin/site-rsync man-www` (as root). lcm
+   also runs that sync from cron at 06:53 and 18:53, so a manual
+   run is only needed when the deploy must reach lcm immediately.
 8. If the change altered rendered output and `MINLASTMOD` was
    bumped, caches converge on their own: every validator moved, so
    nginx entries pick up the new output as they expire. Wipe the
