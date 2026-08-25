@@ -1,14 +1,16 @@
 #!/bin/sh
 # @(#)$KimmoSuominen$
 #
-# Characterize the collection and architecture sanitizers: both
-# names are filtered to their own character set and then checked
-# for shape, on every entry path. A collection that is not one is
-# a 404; an architecture that is not one is dropped. The POST body
-# is the only input nginx will forward a raw control character in,
-# so its fields are scrubbed before the 303 quotes them into a
-# header. (The CGI itself will take one from QUERY_STRING as
-# happily; nginx rejects the request long before that.)
+# Characterize the sanitizers: collection, architecture, name and
+# section are each filtered to their own character set, and the
+# first two then checked for shape, on every entry path. A value
+# that fails is dropped whole -- a collection, name or section that
+# is not one is a 404; an architecture that is not one is a 404 as
+# well. The POST body is the only input nginx will forward a raw
+# control character in, so its fields are scrubbed before the 303
+# quotes them into a header. (The CGI itself will take one from
+# QUERY_STRING as happily; nginx rejects the request long before
+# that.)
 #
 # 20260824  Kimmo Suominen
 #
@@ -198,6 +200,104 @@ assert_exit 0
 assert_no_header '^Status:'
 assert_header '^Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:cpuctl\.4 arch:x86$'
 
+# --- Name ------------------------------------------------------------
+
+# The name reaches <title>, <h1>, the query form's value attribute
+# and the 404 page's search links, and reached them raw: this
+# request came back with <h1 class="manpage"><b>zz. A name that is
+# not one names nothing, so it is dropped whole and the request is
+# a 404 whose chrome shows no name at all -- and whose body is the
+# not-found text rather than the intro table an empty name used to
+# select.
+run_cgi '/<b>zz'
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+assert_header "^Last-Modified: ${LM_MDOC}\$"
+assert_body '<title>NetBSD Manual Pages</title>'
+assert_body '<h1>NetBSD Manual Pages</h1>'
+assert_body 'value="" autofocus'
+assert_body 'The manual page was not found'
+assert_body_absent '<b>zz'
+assert_body_absent 'class="intro"'
+assert_body_absent 'site:'
+
+# The form's value attribute is the one double-quoted sink.
+run_cgi '/a"b'
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_body_absent 'a"b'
+
+# The legacy query string answered this with a 301 to /<b>zz, held
+# for 30 days in nginx's cache; there is no page to point at.
+CGI_QUERY='<b>zz'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_body_absent '<b>zz'
+
+CGI_QUERY=
+
+# The set is what the served trees use: [A-Za-z0-9_.-] plus + and
+# [ in the base system (c++, g++, the [.1 alias of test), @ and :
+# in pkgsrc. A page named with them is served under its name.
+run_cgi '/c++.1'
+
+assert_exit 0
+assert_no_header '^Status:'
+assert_body '<title>c++(1) - NetBSD Manual Pages</title>'
+assert_body 'value="c++"'
+
+# No fixture: [ is a glob character to man(1), and whether it finds
+# such a page is man's business. What this pins is that the name
+# survives the filter to reach the chrome.
+run_cgi '/[.1'
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_body '<tt>site:man.netbsd.org \[</tt>'
+
+# --- Section ---------------------------------------------------------
+
+# Only the legacy query string can put arbitrary text here, and it
+# reaches the title as ls(<b>) whenever the request renders rather
+# than redirects -- a bad collection is one way to make it render.
+# The section is dropped whole, like the name: with it gone the
+# request would otherwise be a sectionless ls, which is a 301 to
+# a page the client did not ask for.
+CGI_QUERY='ls+<b>'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_body '<title>ls - NetBSD Manual Pages</title>'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+assert_body_absent 'ls(<b>)'
+
+CGI_QUERY='ls+<b>+..'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_body_absent 'ls(<b>)'
+
+# The SECTION.ARCH split comes first, so the dot never reaches the
+# section check and the arch half is judged by sanitize_arch.
+CGI_QUERY='ls+1.i386'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 301 Moved Permanently$'
+assert_header '^Location: https://man\.netbsd\.org/i386/ls\.1$'
+
+CGI_QUERY=
+
 # --- POST: control characters in the body ----------------------------
 
 # The body is split on IFS plus & and +; CR is in none of those,
@@ -260,6 +360,64 @@ run_cgi ''
 assert_exit 0
 assert_header '^Status: 303 See Other$'
 assert_header '^Location: https://man\.netbsd\.org/ls$'
+
+# A name that is not one degrades the same way: the 303 goes to the
+# query form with no name in it, and the redirect body -- the one
+# piece of HTML this arm emits -- quotes a URL without the junk.
+CGI_BODY='command=<b>zz&section=1&arch=DEFAULT&coll=DEFAULT'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/cgi-bin/man-cgi?+1+$'
+assert_body_absent '<b>zz'
+
+# The field is the one entry form still carrying an arch prefix
+# when the name is judged, and the separator has to survive for
+# the 303 to point anywhere.
+CGI_BODY='command=i386%2Fls.1&section=ANY&arch=DEFAULT&coll=DEFAULT'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/i386/ls\.1$'
+
+# What a browser posts for <b>zz. % is outside the set, so the
+# encoded form is rejected the same way the raw one is.
+CGI_BODY='command=%3Cb%3Ezz&section=1&arch=DEFAULT&coll=DEFAULT'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/cgi-bin/man-cgi?+1+$'
+assert_body_absent '<b>zz'
+
+# The section is judged on this arm too, and a rejected one degrades
+# to the form's own default, ANY, rather than being repaired to 1b:
+# the same "not a page the client asked for" rule as everywhere
+# else, and the same degrade-to-default as the other fields here.
+CGI_BODY='command=ls&section=1<b>&arch=DEFAULT&coll=DEFAULT'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/ls$'
+assert_no_header '<b>'
+assert_body_absent '<b>'
+
+# A POST inherits whatever the legacy query string parsed before
+# the body was read, so a body without a section field leaves the
+# query string's section in place; it is judged all the same.
+CGI_QUERY='x+<b>'
+CGI_BODY='command=ls'
+run_cgi ''
+CGI_QUERY=
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/ls$'
+assert_no_header '<b>'
+assert_body_absent '<b>'
 
 # read -r: without it a trailing backslash splices the next body
 # line into the one being parsed, and the splice is then split on

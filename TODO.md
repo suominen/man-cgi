@@ -34,16 +34,6 @@ Open ideas and known defects not part of any scheduled effort.
   post-cutover refill storm, roughly a third of uncached requests
   (including the QA vhost's) 502'd for hours while crawlers re-filled
   the caches.
-- HTML-escape `COMMAND` before it reaches page chrome (`<title>`,
-  `<h1>`, the multi-match menu's lead sentence, the 404 page's
-  search links). It is taken from `PATH_INFO` and emitted raw:
-  `GET /<b>zz` against production returns
-  `<h1 class="manpage"><b>zz`. Percent-encoded input is *not*
-  decoded before it reaches the CGI (`/%3Cb%3Ezz` comes back
-  literal), so reaching it needs a client that sends a raw `<` in
-  the path rather than a browser following a link — narrow, but
-  the markup is genuinely attacker-controlled. Escaping changes
-  rendered output, so it needs a MINLASTMOD bump (ADR-0011).
 - Infer the section from the match token rather than the file
   suffix, so a page that exists only preformatted (`catN/name.0`)
   redirects to its section URL like a source page does. Today

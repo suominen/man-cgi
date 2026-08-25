@@ -102,6 +102,16 @@ checklist:
     cache-control: "public, max-age=3600"
     last-modified: present
 
+# A name that is not one is a 404. ct-check (urllib) sends the < raw,
+# as the report that found <b>zz in the <h1> was made, so this pins
+# that such a request reaches the CGI and gets a cached 404; the
+# chrome itself is a body matter, checked by the test suite.
+- path: /<b>zz
+  code: 404
+  headers:
+    cache-control: "public, max-age=3600"
+    last-modified: present
+
 # A real architecture that ships no pages of its own in the
 # collection is still a real architecture: archlist is the union
 # across every collection and membership is the test, not whether
