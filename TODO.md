@@ -34,6 +34,21 @@ Open ideas and known defects not part of any scheduled effort.
   post-cutover refill storm, roughly a third of uncached requests
   (including the QA vhost's) 502'd for hours while crawlers re-filled
   the caches.
+- `set -f` around the unquoted `set --` splits in `../sh/man-cgi`:
+  the PATH_INFO and query-string splits (`set -- ${PATH_INFO}`,
+  `set -- ${QS}`), the POST body's `set -- $a`, and the
+  word-splitting `set -- $COMMAND` / `$SECTION` / `$COLL` are all
+  subject to pathname expansion, so `/ls*` globs fcgiwrap's working
+  directory and, given a match, `COMMAND` becomes that file name --
+  a repair by glob that `sanitize_command` cannot see, since the
+  `*` is gone before it runs. With no match the `*` reaches the
+  sanitizer and the request is a 404, so this is a defect only
+  where the working directory has matching names, but it is
+  reachable through nginx (`*` is a legal path character). `set -f`
+  before the first split (and `set +f` is never needed: the script
+  does no globbing of its own) closes it; the fixture-based suite
+  cannot show the difference without a matching file in the test
+  cwd, so the test needs a deliberate one.
 - Infer the section from the match token rather than the file
   suffix, so a page that exists only preformatted (`catN/name.0`)
   redirects to its section URL like a source page does. Today
