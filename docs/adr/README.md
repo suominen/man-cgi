@@ -20,3 +20,4 @@ here. Supersede landed records with new ones; never rewrite them.
 | [0011](0011-minlastmod-validator-floor.md) | MINLASTMOD floor folds script changes into Last-Modified | accepted |
 | [0012](0012-multi-match-menus.md) | Menus for multi-match lookups | accepted |
 | [0013](0013-collection-validator-from-mdoc-local.md) | Collection-level validators come from tmac/mdoc.local | accepted |
+| [0014](0014-import-the-rcs-history.md) | Import the RCS history of man-cgi as one linear git history | accepted |

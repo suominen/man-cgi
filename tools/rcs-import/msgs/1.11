@@ -1,0 +1,4 @@
+Handle multicharacter sections and add X11R6, 3lua, and 9lua
+
+- Handle multicharacter sections (e.g. intro(9lua)).
+- Add X11R6, 3lua, and 9lua.

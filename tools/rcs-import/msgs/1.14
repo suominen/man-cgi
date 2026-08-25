@@ -1,0 +1,4 @@
+Revert UTF-8 back to ISO-8859-1
+
+Otherwise options (e.g. "-1" etc. for ls(1)) don't display
+correctly.

@@ -66,10 +66,10 @@ command -v rsync > /dev/null ||
 die 'rsync is required'
 
 TESTS_DIR=$(cd "$(dirname "${0}")" && pwd)
-SH_DIR=$(cd "${TESTS_DIR}/../../sh" && pwd)
+SRC_DIR=$(cd "${TESTS_DIR}/../src" && pwd)
 
-[ -f "${SH_DIR}/man-cgi" ] ||
-die "No CGI script at ${SH_DIR}/man-cgi"
+[ -f "${SRC_DIR}/man-cgi" ] ||
+die "No CGI script at ${SRC_DIR}/man-cgi"
 [ -f "${IDENTITY}" ] ||
 die "No ssh identity at ${IDENTITY}"
 
@@ -79,11 +79,11 @@ SSH="ssh -i ${IDENTITY} -o BatchMode=yes -o IdentitiesOnly=yes"
 RSYNC_RSH="${SSH}"
 export RSYNC_RSH
 
-# The remote repo/tests + sh layout mirrors the local checkout so
-# that lib.sh's default MANCGI path (tests/../../sh/man-cgi)
+# The remote repo/tests + repo/src layout mirrors the local checkout
+# so that lib.sh's default MANCGI path (tests/../src/man-cgi)
 # resolves on the remote as well.
-${SSH} "${REMOTE}" "mkdir -p '${DEST}/repo/tests' '${DEST}/sh'"
+${SSH} "${REMOTE}" "mkdir -p '${DEST}/repo/tests' '${DEST}/repo/src'"
 rsync -a --delete "${TESTS_DIR}/" "${REMOTE}:${DEST}/repo/tests/"
-rsync -a --delete "${SH_DIR}/man-cgi" "${REMOTE}:${DEST}/sh/"
+rsync -a --delete "${SRC_DIR}/man-cgi" "${REMOTE}:${DEST}/repo/src/"
 
 exec ${SSH} "${REMOTE}" "sh '${DEST}/repo/tests/run-tests'" "${@}"

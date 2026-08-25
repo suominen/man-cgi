@@ -2,21 +2,23 @@
 
 ## The CGI script
 
-The live script is RCS-tracked in `../sh/` (sibling of this
-checkout, outside git). Development workflow:
+The live script is `src/man-cgi` in this repository (its RCS
+history was imported in August 2026, ADR-0014). Development
+workflow:
 
-1. `co -l man-cgi`, edit, keep `rcsdiff -u` reviewable.
+1. Work on a feature branch in its own worktree, like everything
+   else in the repository; keep the diff reviewable.
 2. Tests first (TDD): the suite in `tests/` runs on the NetBSD test
    host via `tests/run-remote` (the script needs NetBSD stat(1),
    date(1), man(1); see `tests/run-remote -h` for the environment
-   knobs). All tests green before check-in.
-3. `ci -u` (not `-l`) so the checked-in file is unlocked and
-   read-only between edits.
+   knobs). All tests green before the branch is reviewed.
+3. Merge to `main` by fast-forward only, so the reviewed commit is
+   the one that lands.
 4. When a change alters *rendered output* (markup, headers — not
-   the signature), bump `MINLASTMOD` to the checkin time in the
-   same revision: it floors every `Last-Modified`, so cached
+   the signature), bump `MINLASTMOD` to the commit time in the
+   same commit: it floors every `Last-Modified`, so cached
    objects revalidate to the new output as they expire (ADR-0011).
-5. Bump `MANCGI_DATE` (its own revision) when observable output
+5. Bump `MANCGI_DATE` (its own commit) when observable output
    changed; it is visible in `X-Powered-By` on the health check and
    in the page signature, which makes deployed-version checks easy.
 6. Copy to the QA vhost (man.oxygene.qa.nxrns.org — uncached, no

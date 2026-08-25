@@ -1,0 +1,6055 @@
+head	1.113;
+access;
+symbols;
+locks; strict;
+comment	@# @;
+
+
+1.113
+date	2026.08.25.06.40.33;	author kim;	state Exp;
+branches;
+next	1.112;
+
+1.112
+date	2026.08.25.06.00.36;	author kim;	state Exp;
+branches;
+next	1.111;
+
+1.111
+date	2026.08.24.22.38.46;	author kim;	state Exp;
+branches;
+next	1.110;
+
+1.110
+date	2026.08.24.22.16.09;	author kim;	state Exp;
+branches;
+next	1.109;
+
+1.109
+date	2026.08.24.19.06.50;	author kim;	state Exp;
+branches;
+next	1.108;
+
+1.108
+date	2026.08.24.18.30.34;	author kim;	state Exp;
+branches;
+next	1.107;
+
+1.107
+date	2026.08.24.18.10.35;	author kim;	state Exp;
+branches;
+next	1.106;
+
+1.106
+date	2026.08.11.10.22.20;	author kim;	state Exp;
+branches;
+next	1.105;
+
+1.105
+date	2026.08.11.10.14.08;	author kim;	state Exp;
+branches;
+next	1.104;
+
+1.104
+date	2026.08.09.16.03.15;	author kim;	state Exp;
+branches;
+next	1.103;
+
+1.103
+date	2026.08.09.13.58.07;	author kim;	state Exp;
+branches;
+next	1.102;
+
+1.102
+date	2026.08.09.13.20.32;	author kim;	state Exp;
+branches;
+next	1.101;
+
+1.101
+date	2026.08.09.12.49.44;	author kim;	state Exp;
+branches;
+next	1.100;
+
+1.100
+date	2026.08.09.08.29.30;	author kim;	state Exp;
+branches;
+next	1.99;
+
+1.99
+date	2026.08.09.08.29.21;	author kim;	state Exp;
+branches;
+next	1.98;
+
+1.98
+date	2026.08.09.07.45.03;	author kim;	state Exp;
+branches;
+next	1.97;
+
+1.97
+date	2026.08.09.07.17.28;	author kim;	state Exp;
+branches;
+next	1.96;
+
+1.96
+date	2026.08.09.06.55.24;	author kim;	state Exp;
+branches;
+next	1.95;
+
+1.95
+date	2026.08.09.01.02.34;	author kim;	state Exp;
+branches;
+next	1.94;
+
+1.94
+date	2026.04.06.08.15.25;	author kim;	state Exp;
+branches;
+next	1.93;
+
+1.93
+date	2026.04.06.08.11.20;	author kim;	state Exp;
+branches;
+next	1.92;
+
+1.92
+date	2026.04.06.08.03.17;	author kim;	state Exp;
+branches;
+next	1.91;
+
+1.91
+date	2026.04.05.07.11.54;	author kim;	state Exp;
+branches;
+next	1.90;
+
+1.90
+date	2025.09.07.22.11.15;	author kim;	state Exp;
+branches;
+next	1.89;
+
+1.89
+date	2025.09.07.07.02.21;	author kim;	state Exp;
+branches;
+next	1.88;
+
+1.88
+date	2025.09.06.20.29.11;	author kim;	state Exp;
+branches;
+next	1.87;
+
+1.87
+date	2024.08.26.17.41.48;	author kim;	state Exp;
+branches;
+next	1.86;
+
+1.86
+date	2024.08.25.02.29.41;	author kim;	state Exp;
+branches;
+next	1.85;
+
+1.85
+date	2024.08.24.19.17.47;	author kim;	state Exp;
+branches;
+next	1.84;
+
+1.84
+date	2024.08.24.16.57.11;	author kim;	state Exp;
+branches;
+next	1.83;
+
+1.83
+date	2024.08.24.16.53.50;	author kim;	state Exp;
+branches;
+next	1.82;
+
+1.82
+date	2024.03.20.20.26.24;	author kim;	state Exp;
+branches;
+next	1.81;
+
+1.81
+date	2024.03.18.16.21.29;	author kim;	state Exp;
+branches;
+next	1.80;
+
+1.80
+date	2024.03.18.07.45.22;	author kim;	state Exp;
+branches;
+next	1.79;
+
+1.79
+date	2024.03.18.06.03.34;	author kim;	state Exp;
+branches;
+next	1.78;
+
+1.78
+date	2022.12.17.12.21.01;	author kim;	state Exp;
+branches;
+next	1.77;
+
+1.77
+date	2021.12.16.10.10.18;	author kim;	state Exp;
+branches;
+next	1.76;
+
+1.76
+date	2021.06.01.22.19.50;	author kim;	state Exp;
+branches;
+next	1.75;
+
+1.75
+date	2021.06.01.20.45.23;	author kim;	state Exp;
+branches;
+next	1.74;
+
+1.74
+date	2021.03.02.08.58.31;	author kim;	state Exp;
+branches;
+next	1.73;
+
+1.73
+date	2021.03.02.08.55.31;	author kim;	state Exp;
+branches;
+next	1.72;
+
+1.72
+date	2020.09.29.06.43.01;	author kim;	state Exp;
+branches;
+next	1.71;
+
+1.71
+date	2020.09.24.09.37.12;	author kim;	state Exp;
+branches;
+next	1.70;
+
+1.70
+date	2020.09.24.09.32.22;	author kim;	state Exp;
+branches;
+next	1.69;
+
+1.69
+date	2020.09.24.09.28.47;	author kim;	state Exp;
+branches;
+next	1.68;
+
+1.68
+date	2020.09.24.09.24.36;	author kim;	state Exp;
+branches;
+next	1.67;
+
+1.67
+date	2020.09.24.09.09.47;	author kim;	state Exp;
+branches;
+next	1.66;
+
+1.66
+date	2020.09.23.20.04.36;	author kim;	state Exp;
+branches;
+next	1.65;
+
+1.65
+date	2020.09.22.09.14.25;	author kim;	state Exp;
+branches;
+next	1.64;
+
+1.64
+date	2020.09.20.18.39.38;	author kim;	state Exp;
+branches;
+next	1.63;
+
+1.63
+date	2020.09.20.16.55.27;	author kim;	state Exp;
+branches;
+next	1.62;
+
+1.62
+date	2020.09.20.16.22.05;	author kim;	state Exp;
+branches;
+next	1.61;
+
+1.61
+date	2020.09.12.11.26.56;	author kim;	state Exp;
+branches;
+next	1.60;
+
+1.60
+date	2020.09.12.09.51.28;	author kim;	state Exp;
+branches;
+next	1.59;
+
+1.59
+date	2020.09.12.09.47.13;	author kim;	state Exp;
+branches;
+next	1.58;
+
+1.58
+date	2020.09.12.08.50.57;	author kim;	state Exp;
+branches;
+next	1.57;
+
+1.57
+date	2020.09.12.08.29.25;	author kim;	state Exp;
+branches;
+next	1.56;
+
+1.56
+date	2020.09.12.08.09.51;	author kim;	state Exp;
+branches;
+next	1.55;
+
+1.55
+date	2020.09.08.19.17.03;	author kim;	state Exp;
+branches;
+next	1.54;
+
+1.54
+date	2020.09.07.20.18.08;	author kim;	state Exp;
+branches;
+next	1.53;
+
+1.53
+date	2020.09.05.16.05.46;	author kim;	state Exp;
+branches;
+next	1.52;
+
+1.52
+date	2020.09.05.15.52.20;	author kim;	state Exp;
+branches;
+next	1.51;
+
+1.51
+date	2020.09.02.13.52.58;	author kim;	state Exp;
+branches;
+next	1.50;
+
+1.50
+date	2020.09.02.13.23.48;	author kim;	state Exp;
+branches;
+next	1.49;
+
+1.49
+date	2020.09.02.13.22.13;	author kim;	state Exp;
+branches;
+next	1.48;
+
+1.48
+date	2020.09.02.09.17.37;	author kim;	state Exp;
+branches;
+next	1.47;
+
+1.47
+date	2020.09.02.09.06.35;	author kim;	state Exp;
+branches;
+next	1.46;
+
+1.46
+date	2020.09.01.20.23.27;	author kim;	state Exp;
+branches;
+next	1.45;
+
+1.45
+date	2020.09.01.19.01.23;	author kim;	state Exp;
+branches;
+next	1.44;
+
+1.44
+date	2020.09.01.18.54.05;	author kim;	state Exp;
+branches;
+next	1.43;
+
+1.43
+date	2020.09.01.18.47.44;	author kim;	state Exp;
+branches;
+next	1.42;
+
+1.42
+date	2020.09.01.17.01.52;	author kim;	state Exp;
+branches;
+next	1.41;
+
+1.41
+date	2020.09.01.13.16.35;	author kim;	state Exp;
+branches;
+next	1.40;
+
+1.40
+date	2020.08.17.07.14.20;	author kim;	state Exp;
+branches;
+next	1.39;
+
+1.39
+date	2020.08.17.07.00.13;	author kim;	state Exp;
+branches;
+next	1.38;
+
+1.38
+date	2020.08.09.18.04.47;	author kim;	state Exp;
+branches;
+next	1.37;
+
+1.37
+date	2020.08.09.17.52.33;	author kim;	state Exp;
+branches;
+next	1.36;
+
+1.36
+date	2020.08.09.17.45.31;	author kim;	state Exp;
+branches;
+next	1.35;
+
+1.35
+date	2020.08.08.15.55.54;	author kim;	state Exp;
+branches;
+next	1.34;
+
+1.34
+date	2020.04.17.11.00.24;	author kim;	state Exp;
+branches;
+next	1.33;
+
+1.33
+date	2020.04.17.10.41.49;	author kim;	state Exp;
+branches;
+next	1.32;
+
+1.32
+date	2020.02.29.07.43.31;	author kim;	state Exp;
+branches;
+next	1.31;
+
+1.31
+date	2020.01.31.07.53.02;	author kim;	state Exp;
+branches;
+next	1.30;
+
+1.30
+date	2020.01.06.04.11.32;	author kim;	state Exp;
+branches;
+next	1.29;
+
+1.29
+date	2020.01.06.03.54.24;	author kim;	state Exp;
+branches;
+next	1.28;
+
+1.28
+date	2020.01.06.03.14.47;	author kim;	state Exp;
+branches;
+next	1.27;
+
+1.27
+date	2020.01.06.02.49.09;	author kim;	state Exp;
+branches;
+next	1.26;
+
+1.26
+date	2019.12.14.05.48.44;	author kim;	state Exp;
+branches;
+next	1.25;
+
+1.25
+date	2019.12.14.05.40.58;	author kim;	state Exp;
+branches;
+next	1.24;
+
+1.24
+date	2019.11.06.13.18.34;	author kim;	state Exp;
+branches;
+next	1.23;
+
+1.23
+date	2019.11.06.12.19.32;	author kim;	state Exp;
+branches;
+next	1.22;
+
+1.22
+date	2019.11.06.12.12.59;	author kim;	state Exp;
+branches;
+next	1.21;
+
+1.21
+date	2019.11.06.12.06.52;	author kim;	state Exp;
+branches;
+next	1.20;
+
+1.20
+date	2019.11.06.11.25.35;	author kim;	state Exp;
+branches;
+next	1.19;
+
+1.19
+date	2019.11.06.09.58.45;	author kim;	state Exp;
+branches;
+next	1.18;
+
+1.18
+date	2019.11.06.09.48.27;	author kim;	state Exp;
+branches;
+next	1.17;
+
+1.17
+date	2018.08.22.08.11.04;	author kim;	state Exp;
+branches;
+next	1.16;
+
+1.16
+date	2017.04.15.19.33.21;	author kim;	state Exp;
+branches;
+next	1.15;
+
+1.15
+date	2017.04.15.19.03.44;	author kim;	state Exp;
+branches;
+next	1.14;
+
+1.14
+date	2017.04.15.15.25.45;	author kim;	state Exp;
+branches;
+next	1.13;
+
+1.13
+date	2017.04.15.15.10.38;	author kim;	state Exp;
+branches;
+next	1.12;
+
+1.12
+date	2017.04.15.12.57.05;	author kim;	state Exp;
+branches;
+next	1.11;
+
+1.11
+date	2017.04.15.12.46.45;	author kim;	state Exp;
+branches;
+next	1.10;
+
+1.10
+date	2014.10.26.08.56.13;	author kim;	state Exp;
+branches;
+next	1.9;
+
+1.9
+date	2013.09.07.23.26.47;	author kim;	state Exp;
+branches;
+next	1.8;
+
+1.8
+date	2013.09.07.23.00.34;	author kim;	state Exp;
+branches;
+next	1.7;
+
+1.7
+date	2013.09.07.21.20.18;	author kim;	state Exp;
+branches;
+next	1.6;
+
+1.6
+date	2013.09.07.21.07.33;	author kim;	state Exp;
+branches;
+next	1.5;
+
+1.5
+date	2013.04.20.23.16.25;	author kim;	state Exp;
+branches;
+next	1.4;
+
+1.4
+date	2013.04.20.20.16.25;	author kim;	state Exp;
+branches;
+next	1.3;
+
+1.3
+date	2013.04.04.08.42.12;	author kim;	state Exp;
+branches;
+next	1.2;
+
+1.2
+date	2013.03.31.20.59.56;	author kim;	state Exp;
+branches;
+next	1.1;
+
+1.1
+date	2013.03.31.19.57.13;	author kim;	state Exp;
+branches;
+next	;
+
+
+desc
+@man-cgi
+@
+
+
+1.113
+log
+@Disable pathname expansion: the unquoted set -- splits globbed the
+request words against the filesystem before the sanitizers ran,
+so /ls* with a matching file in fcgiwrap's cwd became a
+request for ls. One script-wide set -f, no set +f -- nothing in
+the script globs. Test: tests/t/globbing.
+@
+text
+@#!/bin/sh
+#
+# Convert output of man to HTML
+#
+# (c) 1994 Panagiotis J. Christias <christia@@theseas.ntua.gr>
+#	http://users.softlab.ntua.gr/~christia/man-cgi.html
+#
+# Modifications for NetBSD:
+# (c) 1997-2025 Kimmo Suominen <kimmo@@suominen.com>
+#	https://kimmo.suominen.com/
+#
+# Usage:
+#
+#   PATH_INFO=/[COLLECTION/][ARCH/]COMMAND[.SECTION]
+#
+# Examples:
+#
+#   /boot.8
+#   /boot
+#   /i386/boot.8
+#   /i386/boot
+#   /NetBSD-9.0/boot.8
+#   /NetBSD-9.0/boot
+#   /NetBSD-9.0/i386/boot.8
+#   /NetBSD-9.0/i386/boot
+#
+# Legacy usage:
+#
+#   QUERY_STRING=COMMAND[+[SECTION][.ARCH][+COLLECTION]]
+#
+# Examples:
+#
+#   boot+8
+#   boot
+#   boot+8.i386
+#   boot+.i386
+#   boot+8+NetBSD-9.0
+#   boot++NetBSD-9.0
+#   boot+8.i386+NetBSD-9.0
+#   boot+.i386+NetBSD-9.0
+#
+# Health check:
+#
+#   PATH_INFO=/.well-known/health
+#   QUERY_STRING=/.well-known/health
+#
+
+# Request values are word-split unquoted (the set -- splits below)
+# and would be pathname-expanded against the filesystem before the
+# sanitizers see them. Nothing in this script globs.
+set -f
+
+MANCGI_DATE=2026-08-25
+
+### CONFIGURATION SECTION : change the following variables to fit your needs ###
+
+# The HTTPD server may not pass the enviroment variables to the script.
+# You should add your system path here :
+#
+# Outside a gateway context (e.g. the test harness) MANCGI_PATH,
+# MANCGI_MANROOT, and MANCGI_MINLASTMOD may override the fixed
+# values.
+case "${GATEWAY_INTERFACE:-}" in
+'')
+    ;;
+*)
+    unset MANCGI_PATH MANCGI_MANROOT MANCGI_MINLASTMOD
+    ;;
+esac
+export PATH
+PATH=${MANCGI_PATH:-/usr/local/bin:/bin:/usr/bin}
+
+# The same for the man path here :
+#export MANPATH
+#MANPATH=/usr/local/man:/usr/local/X/man:/usr/share/man:/usr/local/gnu/man
+
+# Character set ISO-8859-1
+export LC_CTYPE
+LC_CTYPE=en_US.ISO8859-1
+CHARSET=windows-1252
+
+# OS details
+OSARCH=$(uname -m)
+OSNAME=$(uname -s)
+OSREL=$(uname -r)
+
+# Man page collections
+MANROOT=${MANCGI_MANROOT:-/p/netbsd/man/man}
+
+# Last modified is NetBSD-current build retrieval date
+LASTMODFILE="$MANROOT/NetBSD-current/build"
+
+# Floor for Last-Modified on rendered output (seconds since the epoch,
+# UTC): every validator is max(file mtime, MINLASTMOD).
+#
+# Bump to the checkin time (date +%s) whenever a script change alters
+# rendered output: the sed HTMLizer, the section list, query-form
+# defaults (ANY/NONE/DEFAULT), cache headers, canonical URLs, page
+# chrome, error bodies. Signature and MANCGI_DATE changes do not
+# qualify.
+#
+# 2026-08-24 18:56:24 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1787597784}
+
+### END OF CONFIGURATION SECTION ###############################################
+
+healthcheck()
+{
+    local code text
+
+    test -d "${MANROOT}" &&
+    test -f "${LASTMODFILE}" &&
+    { code=200; text=OK; } ||
+    { code=503; text='Service Unavailable'; }
+
+    echo "Status: ${code} ${text}"
+    echo "X-Powered-By: man-cgi (${MANCGI_DATE})"
+    echo 'Content-Type: text/plain'
+
+    emit_cache_headers health
+
+    # End of headers
+    echo ''
+    echo "${text}"
+
+    exit 0
+}
+
+canonical_url()
+{
+    local arch coll port section
+
+    case "${REQUEST_SCHEME:-http}" in
+    https)
+	case "${SERVER_PORT:-443}" in
+	443)	port=;;
+	*)	port=":${SERVER_PORT}";;
+	esac
+	;;
+    *)
+	case "${SERVER_PORT:-80}" in
+	80)	port=;;
+	*)	port=":${SERVER_PORT}";;
+	esac
+	;;
+    esac
+
+    case "${COLL}" in
+    DEFAULT|"${DEFAULT_COLLECTION}"|"")
+	coll=
+	;;
+    *)
+	coll="${COLL}"
+	;;
+    esac
+
+    case "${ARCH}" in
+    DEFAULT|"${DEFAULT_ARCH}"|"")
+	arch=
+	;;
+    *)
+	arch="${ARCH}"
+	;;
+    esac
+
+    case "$SECTION" in
+    ANY|"")
+	section=
+	;;
+    *)
+	section="${SECTION}"
+	;;
+    esac
+
+    case "${COMMAND}" in
+    "")
+	echo "${REQUEST_SCHEME:-http}://${SERVER_NAME}${port}${SCRIPT_NAME}?+${section}${arch:+.$arch}+${coll}"
+	;;
+    *)
+	# XXX: We should probably have some configurable prefix, too.
+	echo "${REQUEST_SCHEME:-http}://${SERVER_NAME}${port}${coll:+/$coll}${arch:+/$arch}/${COMMAND}${section:+.$section}"
+	;;
+    esac
+}
+
+# COLL reaches Location and canonical URLs, Surrogate-Key tokens, HTML
+# attributes and MANPATH, so it is filtered once here, before any of
+# them.
+#
+# What survives the character filter still has to look like a collection
+# name, which is what refuses the three that otherwise get through: ''
+# (nothing survived, so MANPATH would become MANROOT itself), '.' and
+# '..' (real directories, so they satisfy the -d probe below and would
+# point MANPATH at MANROOT and its parent).
+#
+# The PATH_INFO parser already takes a leading component as the
+# collection only when it starts with an uppercase letter; this applies
+# the same rule to the query-string and POST forms.
+sanitize_coll()
+{
+    case "${COLL}" in
+    DEFAULT|'')
+	return
+	;;
+    esac
+
+    COLL=$(printf '%s' "${COLL}" | tr -cd 'A-Za-z0-9.-')
+
+    case "${COLL}" in
+    [A-Z]*)
+	;;
+    *)
+	BADCOLL=true
+	COLL=DEFAULT
+	;;
+    esac
+}
+
+# ARCH reaches the same places and reached them unfiltered. Unlike
+# a collection it has no single filesystem test: an architecture is
+# a directory under some manN/catN, so asking the tree means a glob
+# per section -- and the tree answers the wrong question anyway.
+# Those directories hold only the pages that differ by
+# architecture; ls(1) exists on a port whether or not the port has
+# a directory here, so a collection shipping no pc532-specific page
+# does not make /pc532/ls.1 meaningless.
+#
+# archlist is the right list. $MANROOT/Makefile builds it by
+# finding those directories across every collection at once, so it
+# names every architecture that has ever existed rather than the
+# ones one collection ships, and it is exactly what list_archs()
+# offers the query form. Validating against it means the names the
+# form can produce and the names a URL will accept are one set.
+#
+# Unreadable, fall back to the shape rule rather than answer 404
+# for every architecture on the site. Note this makes archlist
+# load-bearing for serving and not just for the form: an arch that
+# a rebuild adds is unusable in a URL until make(1) runs here.
+#
+# Dropped whole rather than repaired: keeping the part that passes
+# the filter would invent a name the client never asked for. The
+# value becomes DEFAULT so that it degrades correctly whether or
+# not DEFAULT_ARCH is set, and BADARCH makes the request a 404 --
+# an architecture that is not one names nothing, the same as a
+# collection that is not one.
+sanitize_arch()
+{
+    local clean
+
+    case "${ARCH}" in
+    DEFAULT|NONE|'')
+	return
+	;;
+    esac
+
+    clean=$(printf '%s' "${ARCH}" | tr -cd '.A-Za-z0-9_-')
+
+    if [ "${clean}" != "${ARCH}" ]
+    then
+	BADARCH=true
+    elif [ -r "${MANROOT}/archlist" ]
+    then
+	grep -q -x -F -e "${ARCH}" "${MANROOT}/archlist" ||
+	BADARCH=true
+    else
+	case "${ARCH}" in
+	[a-z]*)
+	    ;;
+	*)
+	    BADARCH=true
+	    ;;
+	esac
+    fi
+
+    if ${BADARCH:-false}
+    then
+	ARCH=DEFAULT
+    fi
+}
+
+# A page name reaches <title>, <h1>, the query form's value
+# attribute, the menu lead, the 404 page's search links and every
+# redirect body, and reached them raw. The set is what the served
+# trees actually use: base and X11 names are [A-Za-z0-9_.-] plus
+# + (c++, g++) and [ (the [.1 alias of test); pkgsrc adds @@ (date@@)
+# and : (perl modules). ] pairs with [, and the POST parser already
+# decodes both. / is not a name character: every entry form splits
+# an arch prefix off before this runs, except the POST body, where
+# the value is still [arch/]name[.section] and the 303 needs the
+# separator to survive.
+#
+# Dropped whole rather than repaired, as sanitize_arch does: the
+# part that passes the filter would be a name the client never
+# asked for, and a page it did not ask for could be served under
+# it. The value becomes empty so that no sink can reflect it, and
+# BADCOMMAND makes the request a 404.
+sanitize_command()
+{
+    local clean
+
+    case "${COMMAND}" in
+    '')
+	return
+	;;
+    esac
+
+    clean=$(printf '%s' "${COMMAND}" | tr -cd 'A-Za-z0-9_.+@@:[]/-')
+
+    if [ "${clean}" != "${COMMAND}" ]
+    then
+	BADCOMMAND=true
+	COMMAND=
+    fi
+}
+
+# Only the legacy query string and the command line can put
+# arbitrary text here: the PATH_INFO parser takes a section only
+# from a name suffix that matches the section patterns, and the
+# POST arm filters the value to the arch set before its 303
+# because the field also carries .ARCH. Runs after the
+# SECTION.ARCH split and the ANY mapping, so what it sees is the
+# section alone. The set, [0-9a-z], covers the section names (1-9,
+# 3f, 3lua, 9lua, n, l); a well-formed section that is not one is
+# left to man(1), which answers not found. Dropped whole for the
+# same reason as the name: with the section gone the request
+# would be a sectionless lookup, which is a 301 to a page the
+# client did not ask for.
+sanitize_section()
+{
+    local clean
+
+    case "${SECTION}" in
+    '')
+	return
+	;;
+    esac
+
+    clean=$(printf '%s' "${SECTION}" | tr -cd '0-9a-z')
+
+    if [ "${clean}" != "${SECTION}" ]
+    then
+	BADSECTION=true
+	SECTION=
+    fi
+}
+
+# True when any sanitizer rejected its value: the request names
+# no page, whatever the rest of it says.
+rejected()
+{
+    ${BADCOLL:-false} || ${BADARCH:-false} ||
+    ${BADCOMMAND:-false} || ${BADSECTION:-false}
+}
+
+rel_canonical_url()
+{
+    # Assumptions:
+    # - Also serving over https, so advertise it as canonical
+    # - Only using non-standard ports for development, so
+    #   they are not seen by search engines
+
+    local arch
+    arch="$(echo "${ARCH}" | sed -e 's/,/\\,/g')"
+    canonical_url \
+    | sed -e "
+	s/^http:/https:/
+	s,:[1-9][0-9]*/,/,
+	${ARCH:+s,/${arch}/,/${CANONICAL_ARCH:-${arch}}/,}
+	s,/NONE/,/,
+    "
+}
+
+list_archs()
+{
+    case "${DEFAULT_ARCH}" in
+    "")
+	echo DEFAULT
+	;;
+    esac
+    echo NONE
+    cat "${MANROOT}/archlist"
+}
+
+list_collections()
+{
+    case "${DEFAULT_COLLECTION}" in
+    "")
+	echo DEFAULT
+	;;
+    esac
+    cat "${MANROOT}/colllist"
+}
+
+# One shared section list: the /api/v1/sectlist endpoint, the query
+# form, and the intro table all use it. ANY is form-only.
+list_sections()
+{
+    cat <<END
+ANY Search in All Sections
+1 General Commands
+2 System Calls
+3 C Library Functions
+3f Fortran Library Functions
+3lua Lua Modules
+4 Special Files and Hardware Support
+5 File Formats
+6 Games and Demos
+7 Miscellaneous Information Pages
+8 System Maintenance Commands
+9 Kernel Internals
+9lua Lua Kernel Bindings
+END
+}
+
+# Serve one of the /api/v1 list endpoints: newline-delimited
+# text/plain, revalidatable via Last-Modified (the list file's
+# mtime clamped to MINLASTMOD; MINLASTMOD alone for the embedded
+# sectlist).
+api_list()
+{
+    local file lastmod
+
+    # Not inherited from the environment: empty means no validator.
+    lastmod=
+
+    APILIST="${1}"
+
+    case "${APILIST}" in
+    archlist|colllist)
+	file="${MANROOT}/${APILIST}"
+	st_mtime=
+	if [ -f "${file}" ]
+	then
+	    eval $(stat -s "${file}")
+	fi
+	;;
+    *)
+	# The embedded sectlist has no backing file; MINLASTMOD
+	# tracks output-affecting script changes.
+	st_mtime="${MINLASTMOD}"
+	;;
+    esac
+
+    # NB: archlist/colllist bodies also depend on DEFAULT_ARCH
+    # and DEFAULT_COLLECTION (a DEFAULT line is synthesized when
+    # unset), which the clamped file-mtime validator does not
+    # cover: after changing those params, bump MINLASTMOD, touch
+    # the list files, or purge the api key.
+    if [ -n "${st_mtime}" ]
+    then
+	if [ "${st_mtime}" -lt "${MINLASTMOD}" ]
+	then
+	    st_mtime="${MINLASTMOD}"
+	fi
+	lastmod=$(date -u -r "${st_mtime}" '+%a, %d %b %Y %H:%M:%S GMT')
+    fi
+
+    case "${REQUEST_METHOD:-GET}" in
+    GET|HEAD)
+	if [ -n "${lastmod:-}" ] &&
+	[ "${HTTP_IF_MODIFIED_SINCE:-}" = "${lastmod}" ]
+	then
+	    echo 'Status: 304 Not Modified'
+	    echo "Last-Modified: ${lastmod}"
+	    emit_cache_headers api
+
+	    # End of headers; a 304 carries no body
+	    echo ''
+	    exit 0
+	fi
+	;;
+    esac
+
+    echo 'Content-Type: text/plain'
+    if [ -n "${lastmod:-}" ]
+    then
+	echo "Last-Modified: ${lastmod}"
+    fi
+    emit_cache_headers api
+
+    # End of headers
+    echo ''
+
+    case "${REQUEST_METHOD:-GET}" in
+    HEAD)
+	;;
+    *)
+	case "${APILIST}" in
+	archlist)
+	    list_archs
+	    ;;
+	colllist)
+	    list_collections
+	    ;;
+	sectlist)
+	    list_sections
+	    ;;
+	esac
+	;;
+    esac
+
+    exit 0
+}
+
+# Unknown /api paths must not fall through to page parsing (they
+# would be canonicalized into man-page redirects).
+api_notfound()
+{
+    echo 'Status: 404 Not Found'
+    echo 'Content-Type: text/plain'
+    emit_cache_headers api-notfound
+
+    # End of headers
+    echo ''
+
+    case "${REQUEST_METHOD:-GET}" in
+    HEAD)
+	;;
+    *)
+	echo 'Not found'
+	;;
+    esac
+
+    exit 0
+}
+
+introtable()
+{
+    cat <<END
+<table class="intro">
+<tr>
+<td class="page"><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}afterboot.8"
+    >afterboot(8)</a></td>
+<td>things to check after the first complete boot</a></td>
+</tr>
+<tr>
+<td class="page"><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}X.7"
+    >X(7)</a></td>
+<td>a portable, network-transparent window system</a></td>
+</tr>
+<tr><td class="spacer" colspan="2">&nbsp;</td></tr>
+END
+
+    # Sections from the shared list; ANY is form-only and there is
+    # no intro.3f page.
+    list_sections |
+    while read -r s d
+    do
+	case "$s" in
+	ANY|3f)
+	    ;;
+	*)
+	    cat <<END
+<tr>
+<td class="section">$s</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.$s"
+    >$d</a></td>
+</tr>
+END
+	    ;;
+	esac
+    done
+
+    echo '</table>'
+}
+
+# Reduce man -w output (one path per line, in man(1) search order)
+# to one token per manual page: [<arch>/]<name>.<section>.
+#
+# The section comes from the manN/catN directory rather than from
+# the file suffix, so a preformatted page (catN/name.0) and its
+# source (manN/name.N) collapse to the same token; man(1) lists
+# both, and they are one page. The arch, when there is one, is the
+# subdirectory between them. Reading the path from its tail keeps
+# this right in the no-DEFAULT_COLLECTION configuration the
+# CANONICAL_ARCH derivation's XXX warns about.
+match_tokens()
+{
+    local arch base dir name path sect
+
+    while read -r path
+    do
+	base="${path##*/}"
+	name="${base%.*}"
+	dir="${path%/*}"
+	sect="${dir##*/}"
+	arch=
+	# The section directories are manN and catN for the sections
+	# list_sections() carries, plus the n and l directories
+	# man.conf's _subdir names. Spelled out rather than globbed:
+	# man[0-9]* would also take man10, and cat* would take cats,
+	# which is an architecture.
+	case "${sect}" in
+	man[1-9]|man3f|man[39]lua|man[ln]|cat[1-9]|cat3f|cat[39]lua|cat[ln])
+	    ;;
+	*)
+	    # An arch or machine-class subdirectory: the section
+	    # directory is its parent.
+	    arch="${sect}"
+	    dir="${dir%/*}"
+	    sect="${dir##*/}"
+	    ;;
+	esac
+	sect="${sect#man}"
+	sect="${sect#cat}"
+	printf '%s\n' "${arch:+$arch/}${name}.${sect}"
+    done \
+    | awk '!seen[$0]++'
+}
+
+# Render match tokens as linked list entries. Sections n and l are
+# not in list_sections(); mann/manl are recognised above only so
+# those directories are not mistaken for arches, and a link to one
+# would not route through this script's URL parser. No collection
+# served here has such directories.
+list_matches()
+{
+    local name sect token
+
+    while read -r token
+    do
+	name="${token%.*}"
+	sect="${token##*.}"
+	printf '%s\n' \
+	    "<li><a href=\"/${COLL:+$COLL/}${name}.${sect}\">${name}($sect)</a></li>"
+    done
+}
+
+queryform()
+{
+    local archattr coll collattr safearch
+
+    cat <<END
+<div class="queryform">
+<form method=post action="$SCRIPT_NAME">
+  <div>
+    <label for="command">Command:&nbsp;&nbsp;&nbsp;&nbsp;</label>
+    <input name="command" id="command" size="24" type="text"
+      value="$COMMAND" autofocus>
+  </div>
+  <div>
+    <label for="section">Section:&nbsp;&nbsp;&nbsp;</label>
+    <select name="section" id="section">
+END
+
+    list_sections |
+    while read -r s d
+    do
+	case "$s" in
+	"$SECTION")
+	    echo "      <option value=\"$s\" selected>$s - $d</option>"
+	    ;;
+	*)
+	    echo "      <option value=\"$s\">$s - $d</option>"
+	    ;;
+	esac
+    done
+
+    # ARCH is a raw URL path segment; reflect it into HTML only
+    # when it is a plain arch token (same guard as the arch
+    # Surrogate-Key), never as arbitrary bytes.
+    case "${ARCH}" in
+    ''|*[!-.A-Za-z0-9_]*)	safearch=;;
+    *)			safearch="${ARCH}";;
+    esac
+    case "${safearch}" in
+    '')	archattr=;;
+    *)	archattr=" data-url=\"${safearch}\"";;
+    esac
+
+    cat <<END
+    </select>
+  </div>
+  <div>
+    <label for="arch">Arch:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+    <select name="arch" id="arch"${archattr}>
+END
+
+    # Fallback options only: the inline script loads the full list
+    # from /api/v1/archlist, so cached pages do not embed it.
+    case "${DEFAULT_ARCH}" in
+    '')
+	echo "      <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+	;;
+    esac
+    echo '      <option value="NONE">NONE</option>'
+    case "${safearch}" in
+    '')
+	;;
+    *)
+	echo "      <option value=\"$safearch\" selected>$safearch</option>"
+	;;
+    esac
+    case "${COLL}" in
+    '')	collattr=;;
+    *)	collattr=" data-url=\"${COLL}\"";;
+    esac
+
+    cat <<END
+    </select>
+  </div>
+  <div>
+    <label for="coll">Collection:</label>
+    <select name="coll" id="coll"${collattr}>
+END
+
+    # Fallback option: the resolved collection; the full list comes
+    # from /api/v1/colllist.
+    coll="${COLL:-${DEFAULT_COLLECTION:-DEFAULT}}"
+    case "${coll}" in
+    DEFAULT)
+	echo "      <option value=\"DEFAULT\" selected>DEFAULT ($OSNAME-$OSREL)</option>"
+	;;
+    *)
+	echo "      <option value=\"$coll\" selected>$coll</option>"
+	;;
+    esac
+
+    cat <<END
+    </select>
+  </div>
+  <div>
+    <label for="submit"><span>&gt;&gt;&gt;</span></label>
+    <input id="submit" type="submit" value="Show">
+  </div>
+END
+
+    case "${DEFAULT_COLLECTION}" in
+    "")
+	cat <<END
+  <p>Use the DEFAULT collection to view manual pages
+  for third-party software.</p>
+END
+	;;
+    esac
+
+    cat <<END
+</form>
+</div>
+END
+
+    js_queryform
+}
+
+# Emit the inline script that populates the arch and collection
+# selects from /api/v1 and remembers the choices in localStorage
+# (no cookies: nothing varies at any cache tier). Preselection
+# order: URL-carried value (data-url), remembered value, default.
+# Without JavaScript the fallback options keep the form usable.
+js_queryform()
+{
+    cat <<'END'
+<script>
+(function () {
+  function remember(key, value) {
+    try {
+      localStorage.setItem('man-cgi.' + key, value);
+    } catch (e) {}
+  }
+
+  function recall(key) {
+    try {
+      return localStorage.getItem('man-cgi.' + key);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function fill(name, fallback) {
+    var sel = document.getElementById(name);
+    if (!sel) {
+      return;
+    }
+    fetch('/api/v1/' + name + 'list').then(function (r) {
+      if (!r.ok) {
+        throw new Error(r.status);
+      }
+      return r.text();
+    }).then(function (text) {
+      var names = text.split('\n');
+      var want = sel.getAttribute('data-url') || recall(name) || fallback;
+      var i, opt;
+      sel.options.length = 0;
+      for (i = 0; i < names.length; i++) {
+        if (!names[i]) {
+          continue;
+        }
+        opt = document.createElement('option');
+        opt.value = names[i];
+        opt.textContent = names[i];
+        if (names[i] === want) {
+          opt.selected = true;
+        }
+        sel.appendChild(opt);
+      }
+    }).catch(function (e) {});
+  }
+
+  var arch;
+
+  if (!window.fetch) {
+    return;
+  }
+  fill('arch', 'NONE');
+  fill('coll', '');
+  arch = document.getElementById('arch');
+  if (arch && arch.form) {
+    arch.form.addEventListener('submit', function () {
+      var coll = document.getElementById('coll');
+      remember('arch', arch.value);
+      if (coll) {
+        remember('coll', coll.value);
+      }
+    });
+  }
+})();
+</script>
+END
+}
+
+# Emit the caching headers for a response of the given content
+# class: health, home, redirect-found, redirect-permanent, page,
+# or notfound.
+emit_cache_headers()
+{
+    local accel class coll expdate expires expsecs keys surrogate
+    class="${1}"
+
+    coll="${COLL:-${DEFAULT_COLLECTION:-DEFAULT}}"
+
+    # Each cache tier gets its own lifetime: Cache-Control reaches
+    # browsers (and is the fallback for the other tiers),
+    # X-Accel-Expires is consumed by nginx, Surrogate-Control by
+    # Fastly. Browsers cache briefly (they cannot be purged), nginx
+    # briefly (expiry costs only a 304 revalidation), Fastly long
+    # (purgeable by Surrogate-Key).
+    case "${class}" in
+    api)
+	# 1 hour; a week at Fastly
+	expsecs=3600
+	accel=3600
+	surrogate='max-age=604800, stale-while-revalidate=3600'
+	;;
+    health)
+	# 30 seconds everywhere
+	expsecs=30
+	accel=30
+	surrogate='max-age=30'
+	;;
+    home)
+	# 2 hours; a day at Fastly
+	expsecs=7200
+	accel=7200
+	surrogate='max-age=86400, stale-while-revalidate=3600'
+	;;
+    notfound|api-notfound)
+	# 1 hour; a day at Fastly (a rebuild can add the page)
+	expsecs=3600
+	accel=3600
+	surrogate='max-age=86400, stale-if-error=86400'
+	;;
+    redirect-found)
+	# 24 hours; a week at Fastly
+	expsecs=86400
+	accel=86400
+	surrogate='max-age=604800'
+	;;
+    redirect-permanent)
+	# 24 hours for browsers; 30 days at nginx and Fastly (301
+	# is in Fastly's default-cacheable status set; 308 was not,
+	# which is why these redirects are 301s).
+	expsecs=86400
+	accel=2592000
+	surrogate='max-age=2592000'
+	;;
+    *)
+	# page: the resolved collection decides
+	case "${coll}" in
+	*-current|*-BRANCH)
+	    # Rebuilt frequently: 1 hour for browsers and nginx,
+	    # a day at Fastly
+	    expsecs=3600
+	    accel=3600
+	    surrogate='max-age=86400, stale-while-revalidate=3600'
+	    surrogate="${surrogate}, stale-if-error=604800"
+	    ;;
+	*)
+	    # Frozen release: a day for browsers and nginx,
+	    # 90 days at Fastly
+	    expsecs=86400
+	    accel=86400
+	    surrogate='max-age=7776000, stale-while-revalidate=86400'
+	    surrogate="${surrogate}, stale-if-error=604800"
+	    ;;
+	esac
+	;;
+    esac
+
+    # Surrogate-Key tokens for purging at Fastly. The page key is
+    # arch-free so all arch aliases of a machine-independent page
+    # purge together; arch keys carry the requested arch (guarded
+    # against unsafe characters: PATH_INFO is user input) and the
+    # canonical arch when it differs (e.g. the x86 machine class).
+    case "${class}" in
+    api)
+	keys="all api form ${APILIST}"
+	;;
+    api-notfound)
+	keys='all api notfound'
+	;;
+    health)
+	keys='all'
+	;;
+    home)
+	keys="all home coll:${coll}"
+	;;
+    notfound)
+	keys="all notfound coll:${coll}"
+	;;
+    menu)
+	# The page key is sectionless: a menu is about the name,
+	# not about any one section of it.
+	keys="all menu coll:${coll} page:${coll}:${COMMAND}"
+	case "${ARCH}" in
+	''|*[!-.A-Za-z0-9_]*)
+	    ;;
+	*)
+	    keys="${keys} arch:${ARCH}"
+	    ;;
+	esac
+	;;
+    redirect-found|redirect-permanent)
+	keys="all redirect coll:${coll}"
+	;;
+    *)
+	# page
+	keys="all coll:${coll}"
+	keys="${keys} page:${coll}:${COMMAND}${SECTION:+.${SECTION}}"
+	case "${ARCH}" in
+	''|*[!-.A-Za-z0-9_]*)
+	    ;;
+	*)
+	    keys="${keys} arch:${ARCH}"
+	    ;;
+	esac
+	case "${CANONICAL_ARCH:-NONE}" in
+	NONE|"${ARCH}")
+	    ;;
+	*)
+	    keys="${keys} arch:${CANONICAL_ARCH}"
+	    ;;
+	esac
+	;;
+    esac
+
+    expdate=$(($(date '+%s') + expsecs))
+    expires=$(date -u -r "${expdate}" '+%a, %d %b %Y %H:%M:%S GMT')
+
+    echo "Expires: ${expires}"
+    echo "Cache-Control: public, max-age=${expsecs}"
+    echo "X-Accel-Expires: ${accel}"
+    echo "Surrogate-Control: ${surrogate}"
+    echo "Surrogate-Key: ${keys}"
+}
+
+redirect()
+{
+    local class
+    ME="$(canonical_url)"
+    case "${1}" in
+    303)
+	# POST (form query)
+	echo 'Status: 303 See Other'
+	;;
+    301)
+	class=redirect-permanent
+	echo 'Status: 301 Moved Permanently'
+	;;
+    *)
+	# Collection not found
+	class=redirect-found
+	echo 'Status: 302 Found'
+	;;
+    esac
+    echo "Location: $ME"
+    echo "Content-Type: text/html; charset=$CHARSET"
+    case "$REQUEST_METHOD" in
+    POST)
+	echo 'Cache-Control: no-store'
+	;;
+    *)
+	emit_cache_headers "${class}"
+	;;
+    esac
+
+    # End of headers
+    cat <<END
+
+<html><body>
+
+<!-- -------------------------------------------------------------------- -->
+
+<p>Goto: <a
+href="$ME"
+>$ME</a></p>
+
+<!-- -------------------------------------------------------------------- -->
+
+END
+    signature
+    echo '</body></html>'
+    exit 0
+}
+
+signature()
+{
+    cat <<END
+<p class="powered">Powered by man-cgi (${MANCGI_DATE}).
+Maintained for <a href="${REQUEST_SCHEME:-http}://www.netbsd.org/">NetBSD</a>
+by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>.
+Based on <a href="http://users.softlab.ntua.gr/~christia/man-cgi.html"
+>man-cgi</a> by <a href="http://users.softlab.ntua.gr/~christia/"
+>Panagiotis Christias</a>.</p>
+END
+}
+
+case "$PATH_INFO" in
+/.well-known/health)
+    healthcheck
+    ;;
+/api/v1/archlist|/api/v1/colllist|/api/v1/sectlist)
+    api_list "${PATH_INFO##*/}"
+    ;;
+/api/*)
+    api_notfound
+    ;;
+''|/)
+    if [ $# -lt 2 ]
+    then
+	QS="$(
+	    echo "${1:-${QUERY_STRING:-}}" \
+	    | sed \
+		-e 's/%20/+/g' \
+		-e 's/%2B/+/gi' \
+		-e 's/=$//' \
+		;
+	)"
+	OIFS="$IFS"
+	IFS="${OIFS}+"
+	set -- ${QS}
+	IFS="${OIFS}"
+    fi
+
+    COMMAND="${1}"
+    SECTION="${2:-ANY}"
+    COLL="${3:-DEFAULT}"
+    ARCH=DEFAULT
+
+    case "${COMMAND}" in
+    /.well-known/health)
+	healthcheck
+	;;
+    /api/*)
+	api_notfound
+	;;
+    '')
+	;;
+    *)
+	need_redirect=true
+	;;
+    esac
+    ;;
+*)
+    OIFS="$IFS"
+    IFS="${OIFS}/"
+    set -- ${PATH_INFO}
+    IFS="${OIFS}"
+    shift
+
+    SECTION=ANY
+    COLL=DEFAULT
+    ARCH=DEFAULT
+
+    case ${#} in
+    1)
+	COMMAND="${1}"
+	;;
+    2)
+	COMMAND="${2}"
+	case "${1}" in
+	[A-Z]*)
+	    COLL="${1}"
+	    ;;
+	*)
+	    ARCH="${1}"
+	    ;;
+	esac
+	;;
+    *)
+	case "${1}" in
+	[A-Z]*)
+	    COLL="${1}"
+	    shift
+	    ;;
+	esac
+	while [ ${#} -gt 2 ]
+	do
+	    need_redirect=true
+	    shift
+	done
+	ARCH="${1}"
+	COMMAND="${2}"
+	;;
+    esac
+    ;;
+esac
+
+#case "$PATH_INFO" in
+#/apropos)
+#    MANPARAM="-k"
+#    echo 'X-Robots-Tag: noindex'
+#    ;;
+#esac
+
+set -- $COMMAND
+COMMAND="$1"
+set -- $SECTION
+SECTION="$1"
+set -- $COLL
+COLL="$1"
+
+# Not inherited from the environment: these are the sanitizers'
+# verdicts on this request, and an inherited value would decide a
+# response class.
+BADCOLL=
+BADARCH=
+BADCOMMAND=
+BADSECTION=
+
+case "$REQUEST_METHOD" in
+POST)
+    read -r a
+    OIFS="$IFS"
+    IFS="${OIFS}&+"
+    set -- $a
+    IFS="${OIFS}"
+
+    for i
+    do
+	# Every value is scrubbed of control characters as it is
+	# taken, before the sanitizers below judge it. A body line's
+	# own terminator arrives as part of the last field it parsed
+	# (the split set has no CR), and that is framing rather than
+	# anything the client chose: sanitize_arch drops a value it
+	# would have to change, so leaving the CR in would throw away
+	# a perfectly good architecture. The field names are matched
+	# before the scrub, so a mangled name stays mangled.
+	case "$i" in
+	arch=*)
+	    ARCH="$(printf '%s' "${i#arch=}" | tr -d '\000-\037\177')"
+	    ;;
+	coll=*)
+	    COLL="$(printf '%s' "${i#coll=}" | tr -d '\000-\037\177')"
+	    ;;
+	command=*)
+	    # Scrubbed here and judged by sanitize_command below: the
+	    # scrub is about the header's line structure, the judgement
+	    # about what a name may hold.
+	    COMMAND="$(
+		printf '%s' "${i#command=}" \
+		| sed \
+		    -e 's,%2F,/,gi' \
+		    -e 's,%2B,+,gi' \
+		    -e 's,%5B,[,gi' \
+		    -e 's,%5D,],gi' \
+		| tr -d '\000-\037\177'
+	    )"
+	    ;;
+	section=*)
+	    SECTION="$(printf '%s' "${i#section=}" | tr -d '\000-\037\177')"
+	    ;;
+	esac
+    done
+
+    # The section is judged here rather than by sanitize_section:
+    # it still holds the form's ANY, and the SECTION.ARCH split
+    # below has not happened yet, so the set is the arch one. Not
+    # only the body's field -- a body without one leaves whatever
+    # the legacy query string parsed above. A rejected section
+    # degrades to ANY, the form's own default, rather than being
+    # repaired: the same rule as every other value on this arm.
+    case "${SECTION}" in
+    *[!-.A-Za-z0-9_]*)
+	SECTION=ANY
+	;;
+    esac
+
+    # Scrubbed but not yet judged, and the 303 quotes all four
+    # into a header and its body.
+    #
+    # The body is the only one of the three entry forms that can
+    # hold a raw control character in practice -- nginx passes
+    # PATH_INFO and QUERY_STRING undecoded and rejects a request
+    # line carrying one -- so the control-character scrub lives
+    # here rather than on the shared path below. That is a
+    # property of the front end, not of this script: decode
+    # PATH_INFO at the front end and the other two need the same
+    # treatment. The section was judged just above; the name's
+    # sanitizer runs here as it does on the shared path.
+    sanitize_coll
+    sanitize_arch
+    sanitize_command
+
+    redirect 303
+    ;;
+esac
+
+# Early enough that the DEFAULT_COLLECTION mapping below sees a
+# name that is either a collection name or DEFAULT, never the
+# remains of one.
+sanitize_coll
+
+case "$SECTION" in
+.*)
+    ARCH="${SECTION#.}"
+    SECTION=
+    ;;
+*.*)
+    ARCH="${SECTION##*.}"
+    SECTION="${SECTION%%.*}"
+    ;;
+esac
+
+case "$SECTION" in
+ANY)
+    SECTION=
+    ;;
+esac
+
+# After the SECTION.ARCH split above and before the suffix split
+# below, whose section has already matched the section patterns.
+sanitize_section
+
+case "$COMMAND" in
+*.[1-9]|*.3f|*.[39]lua)
+    SECTION="${COMMAND##*.}"
+    COMMAND="${COMMAND%.*}"
+    ;;
+esac
+
+case "$COMMAND" in
+*/*)
+    ARCH="${COMMAND%/*}"
+    COMMAND="${COMMAND##*/}"
+    ;;
+esac
+
+# After every path that can set it: the URL component and the
+# legacy query string's SECTION.ARCH field. (The arch-prefixed
+# COMMAND just above is reachable from the command line and from a
+# literal / in the query string -- PATH_INFO is split on / before
+# it gets here, QUERY_STRING is not %2F-decoded, and the POST arm
+# returns at its 303.) The name is
+# judged at the same point, once every split has taken its share.
+sanitize_arch
+sanitize_command
+
+case "${DEFAULT_ARCH}" in
+"")
+    ;;
+*)
+    case "${ARCH}" in
+    DEFAULT|"")
+	ARCH="${DEFAULT_ARCH}"
+	;;
+    esac
+    ;;
+esac
+
+case "$ARCH" in
+DEFAULT|"")
+    ARCH=
+    ;;
+*)
+    export MACHINE
+    MACHINE="$ARCH"
+    ;;
+esac
+
+case "${ARCH}" in
+"${DEFAULT_ARCH}")
+    ARCH=
+    ;;
+esac
+
+case "${DEFAULT_COLLECTION}" in
+"")
+    ;;
+*)
+    case "${COLL}" in
+    DEFAULT|"")
+	COLL="${DEFAULT_COLLECTION}"
+	;;
+    esac
+    ;;
+esac
+
+case "${COLL}" in
+DEFAULT|"")
+    COLL=
+    ;;
+*)
+    if [ ! -d "${MANROOT}/${COLL}" ]
+    then
+	NCOLL="${COLL%.*}.x-BRANCH"
+	if [ -d "${MANROOT}/${NCOLL}" ]
+	then
+	    COLL="${NCOLL}"
+	    redirect 302
+	fi
+
+	MINOR="${COLL##*.}"
+	case "${MINOR}" in
+	0)
+	    NCOLL="${COLL%%-*}-current"
+	    if [ -d "${MANROOT}/${NCOLL}" ]
+	    then
+		COLL="${NCOLL}"
+		redirect 302
+	    fi
+	    ;;
+	esac
+    fi
+    export MANPATH
+    MANPATH="${MANROOT}/${COLL}"
+    export GROFF_TMAC_PATH
+    GROFF_TMAC_PATH="${MANPATH}/tmac"
+    CNAME="${COLL%%-*}"
+    CREL="${COLL#*-}"
+    ;;
+esac
+
+case "${COLL}" in
+"${DEFAULT_COLLECTION}")
+    COLL=
+    ;;
+esac
+
+# A name that is not a collection, an architecture, a page name or
+# a section cannot be canonicalized: there is no page to point at,
+# and a 301 is durable (ADR-0005). Only the legacy query string and
+# the POST body can produce a bad collection -- the PATH_INFO
+# parser takes one only from an [A-Z]* component, which always
+# survives both the character set and the shape check -- and only
+# the legacy query string a bad section, but any entry form can
+# produce a bad architecture or page name.
+if rejected
+then
+    need_redirect=
+fi
+
+if ${need_redirect:-false}
+then
+    redirect 301
+fi
+
+# man -w can resolve one name to several files: an arch or
+# machine-class page shadowing a machine-independent one, the same
+# name existing in several sections, or a preformatted page listed
+# beside its source. MATCHES holds one token per distinct page in
+# man(1) search order, MATCHES_REST every one but the page that
+# would be rendered (ADR-0012).
+#
+# Not inherited from the environment: MENU is run as a command, and
+# CANONICAL_ARCH is read by rel_canonical_url() on the menu path,
+# which is the one response class that emits a canonical link
+# without having derived it.
+MATCHES=
+MATCHES_REST=
+MENU=
+CANONICAL_ARCH=
+
+# Responses that describe the collection rather than one page --
+# 404s and multi-match menus -- are validated by its
+# tmac/mdoc.local. That file carries the upstream build's timestamp,
+# the same one every page in the tree gets, so it moves exactly when
+# the collection's contents move; build moves on every pull, new
+# content or not. It is also present in every collection, where
+# build exists only for NetBSD-current and the branches, so frozen
+# releases stop going out with no validator at all.
+COLLSTAMP="${MANROOT}/${COLL:-${DEFAULT_COLLECTION:-}}/tmac/mdoc.local"
+
+# A literal newline, for testing whether man -w returned more than
+# one path. Command substitution strips trailing newlines, so this
+# cannot be written with printf.
+NL='
+'
+
+case "${COMMAND}" in
+'')
+    ;;
+*)
+    case "${SECTION}" in
+    '')
+	case "${MANPARAM}" in
+	'')
+	    LASTMODFILE=$(
+		man -C "$MANROOT/man.conf" -w -- "$COMMAND" 2>/dev/null
+	    )
+	    notfound=$?
+	    ;;
+	esac
+	;;
+    *)
+	LASTMODFILE=$(
+	    man -C "$MANROOT/man.conf" -w -- "$SECTION" "$COMMAND" 2>/dev/null
+	)
+	notfound=$?
+	;;
+    esac
+
+    if [ ${notfound:-0} -ne 0 ]
+    then
+	# Let 404s revalidate against the collection's own date
+	LASTMODFILE="${COLLSTAMP}"
+    else
+	# Only a multi-line result is worth tokenising: one match is
+	# already the page that will be rendered, and the MANPARAM
+	# path leaves LASTMODFILE at its non-page default.
+	case "${LASTMODFILE}" in
+	*"${NL}"*)
+	    MATCHES=$(printf '%s\n' "${LASTMODFILE}" | match_tokens)
+	    MATCHES_REST=$(printf '%s\n' "${MATCHES}" | sed -e 1d)
+	    ;;
+	esac
+    fi
+    ;;
+esac
+
+# Whatever man(1) just said, a request whose collection,
+# architecture, name or section did not survive validation has no
+# page. (A well-formed name for a collection that merely does not
+# exist is a different thing, and so is an architecture that is
+# real but ships no pages of its own in this collection; both are
+# left alone.) Every rejected value was reset first, so the
+# response still gets a validator and cache keys that can be
+# purged, but the lookup's result is not this request's answer.
+if rejected
+then
+    notfound=1
+    LASTMODFILE="${COLLSTAMP}"
+    MATCHES=
+    MATCHES_REST=
+fi
+
+# The page that gets rendered is the first path man(1) would find.
+LASTMODFILE="$(printf '%s\n' "${LASTMODFILE}" | sed -e 1q)"
+
+# A request that names no section and matches several pages gets a
+# menu instead of a guess. Sectioned URLs keep the canonical-arch
+# redirect (ADR-0009): an arch URL searches the arch directory, its
+# machine class and the machine-independent directory, so it too
+# can match several files, and a menu there would only lead back to
+# itself. Pointing LASTMODFILE at the collection stamp both gives
+# the menu its validator and skips the canonicalization block below.
+case "${SECTION}" in
+'')
+    case "${MATCHES_REST}" in
+    ?*)
+	MENU=true
+	LASTMODFILE="${COLLSTAMP}"
+	;;
+    esac
+    ;;
+esac
+
+case "${LASTMODFILE}" in
+*/build|*/tmac/mdoc.local)
+    # Not a manual page: the home page's default, or the collection
+    # stamp a 404 or a menu was given. Nothing to canonicalize.
+    ;;
+*)
+    # XXX: This breaks when # DEFAULT_COLLECTION is not set
+    # and the DEFAULT collection is used for system pages.
+
+    CANONICAL_ARCH="${LASTMODFILE##${MANROOT}/}"
+    CANONICAL_ARCH="${CANONICAL_ARCH#*/}"
+    CANONICAL_ARCH="${CANONICAL_ARCH#*/}"
+    case "${CANONICAL_ARCH}" in
+    */*/*)
+	# Too many!
+	CANONICAL_ARCH=NONE
+	;;
+    */*)
+	CANONICAL_ARCH="${CANONICAL_ARCH%/*}"
+	;;
+    *)
+	CANONICAL_ARCH=NONE
+	;;
+    esac
+
+    # Canonicalize the architecture: send each page to the URL
+    # matching where man(1) resolved it. Machine-independent
+    # pages (CANONICAL_ARCH=NONE) drop the arch; machine-
+    # dependent pages keep or gain the resolved subdirectory's
+    # arch. Setting ARCH before the section-inference redirect
+    # folds both into a single hop.
+    case "${CANONICAL_ARCH}" in
+    NONE)	canarch=;;
+    *)		canarch="${CANONICAL_ARCH}";;
+    esac
+    arch_changed=
+    if [ "${ARCH}" != "${canarch}" ]
+    then
+	ARCH="${canarch}"
+	arch_changed=true
+    fi
+
+    case "${SECTION}" in
+    "")
+	SECTION="${LASTMODFILE##*.}"
+	case "${SECTION}" in
+	"")
+	    ;;
+	[1-9]|3f|[39]lua)
+	    redirect 301
+	    ;;
+	*)
+	    SECTION=
+	    ;;
+	esac
+	;;
+    esac
+
+    if ${arch_changed:-false}
+    then
+	redirect 301
+    fi
+    ;;
+esac
+
+if [ -f "$LASTMODFILE" ]
+then
+    eval $(stat -s "$LASTMODFILE")
+    if [ "$st_mtime" -lt "$MINLASTMOD" ]
+    then
+	st_mtime="$MINLASTMOD"
+    fi
+    LASTMOD=$(date -u -r "$st_mtime" '+%a, %d %b %Y %H:%M:%S GMT')
+fi
+
+case "${COMMAND}" in
+'')
+    CLASS=home
+    ;;
+*)
+    if [ ${notfound:-0} -ne 0 ]
+    then
+	CLASS=notfound
+    elif ${MENU:-false}
+    then
+	CLASS=menu
+    else
+	CLASS=page
+    fi
+    ;;
+esac
+
+# Not conditional on COMMAND: a bad name with no command -- and a
+# rejected name is no command by now -- would otherwise be classed
+# as the home page and answered 200.
+if rejected
+then
+    CLASS=notfound
+fi
+
+# Fast 304 path: nginx cache revalidation echoes our own
+# Last-Modified back, so an exact string match is a complete test;
+# any mismatch falls through to a full response.
+case "${REQUEST_METHOD:-GET}" in
+GET|HEAD)
+    if [ -n "${LASTMOD:-}" ] &&
+    [ "${HTTP_IF_MODIFIED_SINCE:-}" = "${LASTMOD}" ]
+    then
+	echo 'Status: 304 Not Modified'
+	echo "Last-Modified: ${LASTMOD}"
+	emit_cache_headers "${CLASS}"
+
+	# End of headers; a 304 carries no body
+	echo ''
+	exit 0
+    fi
+    ;;
+esac
+
+case "${CLASS}" in
+notfound)
+    echo 'Status: 404 Not Found'
+    ;;
+esac
+
+echo "Content-Type: text/html; charset=$CHARSET"
+
+if [ -n "${LASTMOD:-}" ]
+then
+    echo "Last-Modified: ${LASTMOD}"
+fi
+
+emit_cache_headers "${CLASS}"
+
+case "${REQUEST_METHOD:-GET}" in
+HEAD)
+    # End of headers; no body for a HEAD request
+    echo ''
+    exit 0
+    ;;
+esac
+
+# End of headers
+cat <<END
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=$CHARSET">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0" />
+<style type="text/css">
+<!--
+body {
+  color: #000000;
+  font-family: sans-serif;
+  font-size: 12pt;
+  line-height: 1.2;
+  margin: 2ex 2em;
+}
+body, .queryform { background-color: #ffffff; }
+@@media screen {
+  body, .queryform { background-color: #f0f0f0; }
+}
+a:link, .intro a:visited { color: #0000f0; }
+a:visited { color: #6000c0; }
+@@media screen and (prefers-color-scheme: dark) {
+  body { color: #c0c0c0; }
+  body, .queryform { background-color: #000000; }
+  a:link, .intro a:visited { color: #90c0f0; }
+  a:visited { color: #c060c0; }
+}
+h1 { margin-bottom: 0.5ex; }
+table, th, td { border-collapse: collapse; padding-bottom: 0.5ex; }
+table { margin-top: 1.5ex; }
+.intro th, .intro td { padding-right: 1em; }
+.intro td.page { text-align: right; }
+.intro td.section { padding-left: 3.3em; }
+.spacer { font-size: 6pt; }
+.powered { font-size: 10pt; font-style: italic; }
+.queryform { position: sticky; top: 0px; }
+.queryform { padding-top: 1ex; padding-bottom: 1ex; }
+form { display: flex; flex-wrap: wrap; gap: 3px; }
+label, input { display: flex; flex-direction: column; }
+input { padding-right: 5px; }
+label {
+  text-align: left;
+  text-transform: uppercase;
+  font-weight: normal;
+  font-size: 8pt;
+  padding-bottom: 3px;
+  padding-left: 0.65em;
+}
+label[for="command"] { padding-left: 0.15em; }
+label[for="submit"] span { display: none; }
+label[for="submit"]:after { content: '\00a0'; }
+pre, tt, ul.matches { font-family: monospace; }
+pre { white-space: pre-wrap; }
+/* Two blank lines (2 x line-height) where the list of other
+   matches runs straight into the manual page. A menu has no
+   page after it and needs none. */
+ul.matches + pre.manpage { margin-top: 2.4em; }
+@@media screen and (max-width: 800px) {
+  body { margin: 0 0.5em; }
+  .queryform { position: static; }
+}
+@@media print {
+  body { font-size: 10pt; margin: 0; }
+  h1.manpage, .queryform { display: none; }
+  a:link, a:visited, .intro a:visited { color: #000000; }
+}
+-->
+</style>
+END
+
+cat <<END
+<link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
+<title>${COMMAND:+$COMMAND${SECTION:+($SECTION)} - }${CNAME:-$OSNAME} Manual Pages</title>
+END
+
+if [ ${notfound:-0} -eq 0 ] && [ -z "${MANPARAM}" ] && [ ! -z "${COMMAND}" ]
+then
+    cat <<END
+<link rel="canonical" href="$(rel_canonical_url)">
+END
+fi
+
+cat <<END
+</head>
+<body>
+<h1${COMMAND:+ class="manpage"}>${COMMAND:+$COMMAND${SECTION:+($SECTION)}
+  - }${CNAME:-$OSNAME} Manual Pages</h1>
+END
+
+queryform
+
+# Single-byte placeholders that stash literal < and > from the man
+# output while the HTMLizer inserts its own tags; they turn into
+# &lt;/&gt; at the end. SOH and STX never occur in man output, and
+# generating them with printf keeps the script itself pure ASCII.
+LT=$(printf '\001')
+GT=$(printf '\002')
+
+# Keyed on the response class rather than on the name: a rejected
+# name is empty by now, and a 404 must not carry the home page.
+if [ "${CLASS}" = home ]
+then
+    case "${DEFAULT_COLLECTION}" in
+    "")
+	cat <<END
+<p><b>${CNAME:-$OSNAME} ${CREL:-$OSREL} (${MACHINE:-$OSARCH})</b></p>
+END
+	;;
+    esac
+    introtable
+else
+    if ${MENU:-false}
+    then
+	cat <<END
+<p>Several manual pages match <b>$COMMAND</b>:</p>
+<ul class="matches">
+END
+	printf '%s\n' "${MATCHES}" | list_matches
+	echo '</ul>'
+    elif [ ${notfound:-0} -eq 0 ]
+    then
+	if [ -n "${MATCHES_REST}" ]
+	then
+	    cat <<END
+<p>Also available:</p>
+<ul class="matches">
+END
+	    printf '%s\n' "${MATCHES_REST}" | list_matches
+	    echo '</ul>'
+	fi
+	echo '<pre class="manpage">'
+	case "$SECTION" in
+	"")
+	    if [ "$MANPARAM" = "" ]
+	    then
+		man -C "$MANROOT/man.conf" -- "$COMMAND" 2>/dev/null
+	    else
+		man -C "$MANROOT/man.conf" $MANPARAM -- "$COMMAND" 2>&1
+	    fi
+	    ;;
+	*)
+	    man -C "$MANROOT/man.conf" -- "$SECTION" "$COMMAND" 2>/dev/null
+	    ;;
+	esac | \
+	sed \
+	    -e '1n' \
+	    -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+	    -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+	    -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+	    -e '/- *$/N
+{
+s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
+\2/
+}' \
+	    -e "s/</${LT}/g" \
+	    -e "s/>/${GT}/g" \
+   \
+	    -e '/^[A-Z]/s/.//g' \
+	    -e 's/^[A-Z][-+() ,A-Z_\/]*$/<br \/><b class="section"><a id="&" href="#&">&<\/a><\/b><br \/>/' \
+   \
+	    -e 's/_\(.\)/<i>\1<\/i>/g' \
+	    -e 's/.\(.\)/<b>\1<\/b>/g' \
+   \
+	    -e 's#<i>\(.\)</i<b>\1</b>#<b>\1</b>#g' \
+	    -e 's#</b><b>.##g' \
+	    -e 's#</b>.<b>##g' \
+	    -e 's#.##g' \
+	    -e 's#_</i<b><</b>i>##g'  \
+   \
+	    -e 's#</i>\( *\)<i>#\1#g' \
+	    -e 's#</b>\( *\)<b>#\1#g' \
+   \
+	    -e 's#</b><i>\(.\)</i><b>#\1#g' \
+   \
+	    -e 's/^  \([A-Z][ ,0-9A-z_]*\)$/  <b>\1<\/b>/' \
+	    -e 's/^   \([A-Z][ ,0-9A-z_]*\)$/   <b>\1<\/b>/' \
+   \
+	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_/]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"/${COLL:+$COLL/}${ARCH:+$ARCH/}\3.\5\">\1</a>#g" \
+   \
+	    -e 's/\&/\&amp;/g' \
+	    -e "s/${LT}/\&lt;/g" \
+	    -e "s/${GT}/\&gt;/g" \
+	    -e "s#^\(\([0-9A-z_][-0-9A-z_/]*\) *(\([1-9][A-z_]*\))\)#<a href=\"/${COLL:+$COLL/}${ARCH:+$ARCH/}\2.\3\">\1</a>#" \
+	    2>/dev/null
+	echo "</pre>"
+    else
+	# A rejected name is empty, and there is nothing to search for.
+	case "${COMMAND}" in
+	'')
+	    echo '<p>The manual page was not found.</p>'
+	    ;;
+	*)
+	    cat <<END
+<p>The manual page was not found. Try searching instead:</p>
+<table>
+  <tr><td>Bing:&nbsp;</td><td><a
+    href="https://bing.com/search?q=site%3A$SERVER_NAME%20$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+  <tr><td>DuckDuckGo:&nbsp;</td><td><a
+    href="https://duckduckgo.com/?q=site%3A$SERVER_NAME%20$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+  <tr><td>Google:&nbsp;</td><td><a
+    href="https://google.com/search?q=site%3A$SERVER_NAME%20$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+  <tr><td>Qwant:&nbsp;</td><td><a
+    href="https://qwant.com/?q=site%3A$SERVER_NAME%20$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+  <tr><td>Yahoo:&nbsp;</td><td><a
+    href="https://search.yahoo.com/search?p=site%3A$SERVER_NAME%20$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+  <tr><td>Yandex:&nbsp;</td><td><a
+    href="https://yandex.com/search/?text=site%3A$SERVER_NAME%20$COMMAND"
+    ><tt>site:$SERVER_NAME $COMMAND</tt></a>
+  </td></tr>
+</table>
+END
+	    ;;
+	esac
+
+# <a href="$SCRIPT_NAME/apropos?$COMMAND$SECTION$ARCH$COLL">Try
+# apropos</a> or select a different architecture.</p>
+# END
+
+    fi
+fi
+
+signature
+
+cat <<END
+</body>
+</html>
+END
+
+exit 0
+@
+
+
+1.112
+log
+@Validate page names and sections and 404 the rest
+
+COMMAND and the legacy query string's SECTION reached <title>,
+<h1>, the form's value attribute, the 404 search links and the
+redirect bodies raw (GET /<b>zz rendered <h1 class="manpage"><b>zz).
+New sanitize_command and sanitize_section filter each to its
+character set -- the name's is what the served trees use,
+[A-Za-z0-9_.+@@:[]-] plus / for the POST arm's [arch/]name field;
+the section's is [0-9a-z] -- and drop the value whole when
+anything was filtered, so the request is a 404 and no sink can
+reflect it. rejected() gathers the four verdicts. The body branch
+is keyed on CLASS rather than on an empty COMMAND, so a 404 never
+carries the intro table, and the search-link table is emitted only
+when a name remains; a well-formed missing name's 404 is unchanged.
+
+The POST arm judges the section after the body loop, whatever its
+source (the field, or the query string a body without one leaves
+in place), and a rejected one degrades to ANY instead of being
+repaired.
+
+No MINLASTMOD bump: the sanitizers are a no-op for every real name.
+@
+text
+@d48 5
+@
+
+
+1.111
+log
+@Bump MANCGI_DATE (deploying to production)
+@
+text
+@d276 74
+d1132 2
+d1161 3
+a1163 4
+	    # A page name can hold characters no other field does, so
+	    # this one keeps its character set and is only scrubbed.
+	    # Reflecting it into page chrome is a separate matter; here
+	    # it only has to stay out of the header's line structure.
+d1175 1
+a1175 8
+	    # The form's own values are ANY and the section names, and
+	    # the split below also accepts SECTION.ARCH and .ARCH, so
+	    # the set is the arch one, which subsumes the scrub. No
+	    # shape rule: a leading dot is how an arch-only section
+	    # arrives.
+	    SECTION="$(
+		printf '%s' "${i#section=}" | tr -cd '.A-Za-z0-9_-'
+	    )"
+d1180 13
+d1194 1
+a1194 1
+    # into a header.
+d1199 1
+a1199 1
+    # line carrying one -- so COMMAND and SECTION are filtered
+d1203 2
+a1204 1
+    # treatment.
+d1207 1
+d1235 4
+d1255 5
+a1259 3
+# COMMAND just above is reachable only from the command line --
+# PATH_INFO is split on / before it gets here, QUERY_STRING is not
+# %2F-decoded, and the POST arm returns at its 303.)
+d1261 1
+d1344 9
+a1352 8
+# A name that is not a collection or not an architecture cannot be
+# canonicalized: there is no page to point at, and a 301 is
+# durable (ADR-0005). Only the legacy query string and the POST
+# body can produce a bad collection -- the PATH_INFO parser takes
+# one only from an [A-Z]* component, which always survives both
+# the character set and the shape check -- but any entry form can
+# produce a bad architecture.
+if ${BADCOLL:-false} || ${BADARCH:-false}
+d1435 9
+a1443 9
+# Whatever man(1) just said, a request whose collection or
+# architecture did not survive validation has no page. (A
+# well-formed name for a collection that merely does not exist is a
+# different thing, and so is an architecture that is real but ships
+# no pages of its own in this collection; both are left alone.)
+# Both names were reset to the default first, so the response still
+# gets a validator and cache keys that can be purged, but the
+# lookup's result is not this request's answer.
+if ${BADCOLL:-false} || ${BADARCH:-false}
+d1564 4
+a1567 3
+# Not conditional on COMMAND: a bad name with no command would
+# otherwise be classed as the home page and answered 200.
+if ${BADCOLL:-false} || ${BADARCH:-false}
+d1714 3
+a1716 1
+if [ -z "$COMMAND" ]
+d1814 7
+a1820 1
+	cat <<END
+d1849 2
+@
+
+
+1.110
+log
+@Validate collection and architecture names and 404 the rest
+@
+text
+@d48 1
+a48 1
+MANCGI_DATE=2026-08-11
+@
+
+
+1.109
+log
+@Validate collection-level responses with tmac/mdoc.local (ADR-0013)
+@
+text
+@d88 9
+a96 7
+# Floor for Last-Modified on rendered output (seconds since the
+# epoch, UTC): every validator is max(file mtime, MINLASTMOD).
+# Bump to the checkin time (date +%s) whenever a script change
+# alters rendered output: the sed HTMLizer, the section list,
+# query-form defaults (ANY/NONE/DEFAULT), cache headers, canonical
+# URLs, page chrome, error bodies. Signature and MANCGI_DATE
+# changes do not qualify.
+d181 95
+d1053 6
+d1061 1
+a1061 1
+    read a
+d1069 8
+d1079 1
+a1079 1
+	    ARCH="${i#arch=}"
+d1082 1
+a1082 1
+	    COLL="${i#coll=}"
+d1085 4
+d1090 1
+a1090 1
+		echo "$i" \
+a1091 1
+		    -e 's/command=//' \
+d1096 1
+a1096 1
+		    ;
+d1100 8
+a1107 1
+	    SECTION="${i#section=}"
+d1112 14
+d1130 5
+d1166 7
+a1217 1
+    COLL=$(echo "$COLL" | tr -cd 'A-Za-z0-9.-')
+d1254 12
+d1344 16
+d1416 1
+a1416 1
+    arch_changed=false
+d1439 1
+a1439 1
+    if ${arch_changed}
+d1472 7
+@
+
+
+1.108
+log
+@Give the rendered page a class and space it off from the match list
+@
+text
+@d95 2
+a96 2
+# 2026-08-24 18:21:35 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1787595695}
+d1129 10
+d1170 2
+a1171 2
+	# Let 404s revalidate against the collection build date
+	LASTMODFILE="${MANROOT}/${COLL:-${DEFAULT_COLLECTION:-}}/build"
+d1194 2
+a1195 3
+# itself. Pointing LASTMODFILE at the collection's build file both
+# gives the menu its validator and skips the canonicalization block
+# below.
+d1201 1
+a1201 1
+	LASTMODFILE="${MANROOT}/${COLL:-${DEFAULT_COLLECTION:-}}/build"
+d1208 3
+a1210 1
+*/build)
+@
+
+
+1.107
+log
+@Render a menu when man -w matches several pages
+@
+text
+@d95 2
+a96 2
+# 2026-08-24 09:02:01 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1787562121}
+d1385 4
+d1460 1
+a1460 1
+	echo "<pre>"
+@
+
+
+1.106
+log
+@Bump MANCGI_DATE (deploying to production)
+@
+text
+@d95 2
+a96 2
+# 2026-08-11 09:53:26 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1786442006}
+d391 62
+d744 12
+d1113 22
+d1162 10
+d1176 21
+a1196 1
+LASTMODFILE="$(echo "$LASTMODFILE" | sed -e 1q)"
+d1279 3
+d1383 1
+a1383 1
+pre, tt { font-family: monospace; }
+d1437 9
+a1445 1
+    if [ ${notfound:-0} -eq 0 ]
+d1447 9
+@
+
+
+1.105
+log
+@Add a MINLASTMOD floor to every Last-Modified validator
+
+Rendered responses now emit max(file mtime, MINLASTMOD); the
+embedded sectlist uses the floor alone instead of stat'ing the
+script. Bump MINLASTMOD to the checkin time whenever a change
+alters rendered output (not the signature) so cached objects
+revalidate to fresh content instead of needing nginx wipes.
+Testable via MANCGI_MINLASTMOD outside a gateway context.
+@
+text
+@d48 1
+a48 1
+MANCGI_DATE=2026-08-09
+@
+
+
+1.104
+log
+@Make the COLL tr set portable and the HTMLizer placeholders ASCII
+@
+text
+@d55 3
+a57 2
+# Outside a gateway context (e.g. the test harness) MANCGI_PATH and
+# MANCGI_MANROOT may override the fixed values.
+d62 1
+a62 1
+    unset MANCGI_PATH MANCGI_MANROOT
+d88 10
+d241 2
+a242 1
+# mtime; the script's own for the embedded sectlist).
+d247 3
+d255 5
+d262 3
+a264 1
+	file="${0}"
+d270 4
+a273 4
+    # unset), which the file-mtime validator does not cover:
+    # after changing those params, touch the list files or purge
+    # the api key.
+    if [ -f "${file}" ]
+d275 4
+a278 1
+	eval $(stat -s "${file}")
+d1138 4
+@
+
+
+1.103
+log
+@Redirect each page to its canonical architecture URL
+@
+text
+@d972 1
+a972 1
+    COLL=$(echo "$COLL" | tr -c -d '[-.A-Za-z0-9]')
+d1261 7
+d1317 2
+a1318 2
+	    -e 's/</«/g' \
+	    -e 's/>/»/g' \
+d1343 2
+a1344 2
+	    -e 's/«/\&lt;/g' \
+	    -e 's/»/\&gt;/g' \
+@
+
+
+1.102
+log
+@Drive the query form from /api/v1 and remember choices in localStorage
+@
+text
+@d368 1
+a368 1
+    local coll safearch
+d403 4
+d413 1
+a413 1
+    <select name="arch" id="arch"${safearch:+ data-url="$safearch"}>
+d431 4
+d441 1
+a441 1
+    <select name="coll" id="coll"${COLL:+ data-url="$COLL"}>
+d1070 17
+d1102 5
+@
+
+
+1.101
+log
+@Add /api/v1 list endpoints and share one section list
+@
+text
+@d368 2
+d396 8
+d409 1
+a409 1
+    <select name="arch" id="arch">
+d412 15
+a426 14
+    for i in $(list_archs)
+    do
+	case "$i" in
+	DEFAULT)
+	    echo "      <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+	    ;;
+	"${ARCH}")
+	    echo "      <option value=\"$i\" selected>$i</option>"
+	    ;;
+	*)
+	    echo "      <option value=\"$i\">$i</option>"
+	    ;;
+	esac
+    done
+d433 1
+a433 1
+    <select name="coll" id="coll">
+d436 11
+a446 14
+    for i in $(list_collections)
+    do
+	case "$i" in
+	DEFAULT)
+	    echo "      <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
+	    ;;
+	"$COLL")
+	    echo "      <option value=\"$i\" selected>$i</option>"
+	    ;;
+	*)
+	    echo "      <option value=\"$i\">$i</option>"
+	    ;;
+	esac
+    done
+d470 78
+d644 1
+a644 1
+	keys="all home form coll:${coll}"
+d647 1
+a647 1
+	keys="all notfound form coll:${coll}"
+d654 1
+a654 1
+	keys="all form coll:${coll}"
+@
+
+
+1.100
+log
+@Bump MANCGI_DATE for caching changes
+@
+text
+@d207 119
+d341 12
+d354 3
+a356 45
+<td class="section">1</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.1"
+    >GENERAL COMMANDS</a></td>
+</tr>
+<tr>
+<td class="section">2</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.2"
+    >SYSTEM CALLS AND ERROR NUMBERS</a></td>
+</tr>
+<tr>
+<td class="section">3</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.3"
+    >SYSTEM LIBRARIES</a></td>
+</tr>
+<tr>
+<!-- nothing there
+<td class="section">3f</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.3f"
+    >FORTRAN LIBRARIES</a></td>
+</tr>
+-->
+<tr>
+<td class="section">3lua</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.3lua"
+    >LUA MODULES</a></td>
+</tr>
+<tr>
+<td class="section">4</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.4"
+    >DEVICES AND DEVICE DRIVERS</a></td>
+</tr>
+<tr>
+<td class="section">5</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.5"
+    >FILE FORMATS</a></td>
+</tr>
+<tr>
+<td class="section">6</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.6"
+    >GAMES</a></td>
+</tr>
+<tr>
+<td class="section">7</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.7"
+    >MISCELLANEOUS INFORMATION PAGES</a></td>
+a357 16
+<tr>
+<td class="section">8</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.8"
+    >SYSTEM MAINTENANCE PROCEDURES AND COMMANDS</a></td>
+</tr>
+<tr>
+<td class="section">9</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.9"
+    >KERNEL INTERNALS</a></td>
+</tr>
+<tr>
+<td class="section">9lua</td>
+<td><a href="/${COLL:+$COLL/}${ARCH:+$ARCH/}intro.9lua"
+    >LUA KERNEL BINDINGS</a></td>
+</tr>
+</table>
+d359 5
+d381 2
+a382 16
+    # XXX: Create a seclist and use that?
+    for i in \
+	'ANY Search in All Sections' \
+	'1 General Commands' \
+	'2 System Calls' \
+	'3 C Library Functions' \
+	'3f Fortran Library Functions' \
+	'3lua Lua Modules' \
+	'4 Special Files and Hardware Support' \
+	'5 File Formats' \
+	'6 Games and Demos' \
+	'7 Miscellaneous Information Pages' \
+	'8 System Maintenance Commands' \
+	'9 Kernel Internals' \
+	'9lua Lua Kernel Bindings' \
+	;
+a383 3
+	set -- ${i}
+	s="${1}"
+	shift
+d386 1
+a386 1
+	    echo "      <option value=\"$s\" selected>$s - $@@</option>"
+d389 1
+a389 1
+	    echo "      <option value=\"$s\">$s - $@@</option>"
+d481 6
+d499 1
+a499 1
+    notfound)
+d548 6
+d662 6
+d693 3
+@
+
+
+1.99
+log
+@Add fast 304 handling, HEAD support, revalidatable 404s, and 301 redirects
+@
+text
+@d48 1
+a48 1
+MANCGI_DATE=2026-04-06
+@
+
+
+1.98
+log
+@Layer cache TTLs per tier and fix 90-day TTL on the default collection
+@
+text
+@d445 3
+a447 3
+	# 24 hours for browsers; 30 days at nginx. Fastly does not
+	# cache 308s by default, so its tier passes them to nginx;
+	# Surrogate-Control is emitted for symmetry and future VCL.
+d533 1
+a533 1
+    308)
+d535 1
+a535 1
+	echo 'Status: 308 Permanent Redirect'
+d547 1
+d835 1
+a835 1
+    redirect 308
+d863 2
+a864 1
+	echo 'Status: 404 Not Found'
+d901 1
+a901 1
+	    redirect 308
+a911 2
+echo "Content-Type: text/html; charset=$CHARSET"
+
+a915 4
+    if [ -n "$LASTMOD" ]
+    then
+	echo "Last-Modified: $LASTMOD"
+    fi
+d920 1
+a920 1
+    emit_cache_headers home
+d925 1
+a925 1
+	emit_cache_headers notfound
+d927 1
+a927 1
+	emit_cache_headers page
+d929 42
+@
+
+
+1.97
+log
+@Emit Surrogate-Key headers for Fastly purging
+@
+text
+@d408 1
+a408 1
+    local class coll expdate expires expsecs keys
+d411 8
+d421 1
+a421 1
+	# 30 seconds
+d423 2
+d427 1
+a427 1
+	# 2 hours
+d429 8
+d439 9
+a447 1
+	# 24 hours
+d449 2
+d453 2
+a454 2
+	# page, notfound, redirect-permanent
+	case "${COLL}" in
+d456 6
+a461 2
+	    # 24 hours
+	    expsecs=86400
+d464 6
+a469 2
+	    # 90 days
+	    expsecs=7776000
+a479 2
+    coll="${COLL:-${DEFAULT_COLLECTION:-DEFAULT}}"
+
+d519 2
+@
+
+
+1.96
+log
+@Refactor cache-header emission into class-driven emit_cache_headers
+@
+text
+@d408 1
+a408 1
+    local class expdate expires expsecs
+d439 41
+d485 1
+@
+
+
+1.95
+log
+@Add testability overrides (MANCGI_PATH, MANCGI_MANROOT)
+@
+text
+@d102 1
+a102 2
+    EXPSECS=30
+    expires
+d403 4
+a406 1
+expires()
+d408 18
+a425 2
+    case "${EXPSECS:-}" in
+    '')
+d429 1
+a429 1
+	    EXPSECS=86400
+d433 1
+a433 1
+	    EXPSECS=7776000
+d439 2
+a440 2
+    EXPDATE=$(($(date '+%s') + $EXPSECS))
+    EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
+d442 2
+a443 2
+    echo "Expires: $EXPIRES"
+    echo "Cache-Control: public, max-age=$EXPSECS"
+d448 1
+d456 1
+d461 1
+a461 2
+	# 24 hours
+	EXPSECS=86400
+d466 1
+d471 1
+a471 1
+	expires
+a601 2
+echo "Content-Type: text/html; charset=$CHARSET"
+
+a760 2
+    # 2 hours
+    EXPSECS=7200
+d832 2
+d844 13
+a856 1
+expires
+@
+
+
+1.94
+log
+@Bump MANCGI_DATE for expires changes
+@
+text
+@d54 10
+d65 1
+a65 1
+PATH=/usr/local/bin:/bin:/usr/bin
+d82 1
+a82 1
+MANROOT=/p/netbsd/man/man
+@
+
+
+1.93
+log
+@Increase caching times for 404 and home page (expires)
+@
+text
+@d48 1
+a48 1
+MANCGI_DATE=2025-09-08
+@
+
+
+1.92
+log
+@Increase caching times (expires), including health check
+@
+text
+@d733 2
+a734 2
+    # 1 hour
+    EXPSECS=3600
+a758 2
+	# 10 minutes
+	EXPSECS=600
+@
+
+
+1.91
+log
+@Health check response should not be cached
+@
+text
+@a89 3
+    echo 'Cache-Control: no-cache, no-store, must-revalidate'
+    echo 'Pragma: no-cache'
+    echo 'Expires: 0'
+d91 5
+d400 2
+a401 2
+	    # 8 hours
+	    EXPSECS=28800
+d404 2
+a405 2
+	    # 16 days
+	    EXPSECS=1382400
+d423 1
+d430 3
+d437 7
+a443 1
+    expires
+@
+
+
+1.90
+log
+@Add a health check endpoint
+@
+text
+@d90 3
+@
+
+
+1.89
+log
+@Avoid problematic arithmetic expression
+@
+text
+@d42 5
+d48 1
+a48 1
+MANCGI_DATE=2025-09-07
+d79 18
+d462 3
+d488 4
+a491 1
+    "")
+@
+
+
+1.88
+log
+@Avoid sed error when requested ARCH contains a comma
+@
+text
+@d43 1
+a43 1
+MANCGI_DATE=2025-09-06
+d655 1
+a655 1
+	MINOR="$((${COLL##*.} + 0))"
+@
+
+
+1.87
+log
+@Revert smaller fonts on small screens. Add line-height.
+@
+text
+@d9 1
+a9 1
+# (c) 1997-2024 Kimmo Suominen <kimmo@@suominen.com>
+d43 1
+a43 1
+MANCGI_DATE=2024-08-26
+d138 2
+d144 1
+a144 1
+	${ARCH:+s,/${ARCH}/,/${CANONICAL_ARCH:-$ARCH}/,}
+@
+
+
+1.86
+log
+@CSS cleanup
+@
+text
+@d43 1
+a43 1
+MANCGI_DATE=2024-08-25
+d788 1
+a832 5
+@@media screen and (max-width: 768px) {
+  body { font-size: 10pt; }
+  .spacer { font-size: 5pt; }
+  .powered { font-size: 8pt; }
+}
+@
+
+
+1.85
+log
+@Hide the submit button label text with CSS
+@
+text
+@d43 1
+a43 1
+MANCGI_DATE=2024-08-24
+d182 1
+a182 1
+<tr><td colspan="2">&nbsp;</td></tr>
+a244 3
+<tr>
+<td class="section" colspan="2">&nbsp;</td>
+</tr>
+d427 1
+a427 2
+<address class="small">
+Powered by man-cgi (${MANCGI_DATE}).
+d429 1
+a429 1
+    by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>.
+d432 1
+a432 2
+>Panagiotis Christias</a>.
+</address>
+d784 7
+a790 2
+body { color: #000000; font-size: 12pt; margin: 2em; }
+body, div.queryform { background-color: #ffffff; }
+d792 1
+a792 1
+    body, div.queryform { background-color: #f0f0f0; }
+d794 1
+a794 1
+a:link, b.section a:visited { color: #0000f0; }
+d797 9
+a805 7
+    body { color: #c0c0c0; }
+    body, div.queryform { background-color: #000000; }
+    a:link, b.section a:visited { color: #90c0f0; }
+    a:visited { color: #c060c0; }
+}
+table, th, td { padding: 0; }
+.intro th, .intro td { padding-right: 1em; padding-top: 0.5ex; }
+d808 19
+a826 25
+b.section { font-size: 14pt; }
+b.section a { text-decoration: none; }
+.small { font-size: 10pt; }
+div.queryform { position: sticky; top: 0px; padding-bottom: 1ex; }
+div.queryform { margin-top: 3ex; margin-bottom: 3ex; }
+address { padding-top: 1ex; }
+div.queryform form { display: flex; flex-wrap: wrap; gap: 3px; }
+div.queryform label, div.queryform input {
+    display: flex;
+    flex-direction: column;
+}
+div.queryform input { padding-right: 5px; }
+div.queryform label {
+    text-align: left;
+    text-transform: uppercase;
+    font-weight: normal;
+    font-size: 10pt;
+    padding-bottom: 3px;
+    padding-left: 0.4em;
+}
+div.queryform label[for="command"] { padding-left: 0; }
+div.queryform label[for="submit"] span { display: none; }
+div.queryform label[for="submit"]:after { content: '\00a0'; }
+body, input, select { font-family: sans-serif; }
+code, pre, tt { font-family: monospace; }
+d828 4
+d833 3
+a835 1
+    div.queryform { position: static; }
+d838 3
+a840 2
+    h1.manpage, div.queryform { display: none; }
+    a:link, a:visited, b.section a:visited { color: #000000; }
+@
+
+
+1.84
+log
+@Update MANCGI_DATE
+@
+text
+@d347 1
+a347 1
+    <label for="submit">&gt;&gt;&gt;</label>
+a809 3
+@@media screen and (max-width: 768px) {
+    div.queryform { position: static; }
+}
+d827 2
+d832 3
+@
+
+
+1.83
+log
+@Improve usability on mobile devices
+@
+text
+@d43 1
+a43 1
+MANCGI_DATE=2024-03-20
+@
+
+
+1.82
+log
+@Convert introtable links to modern syntax
+@
+text
+@d257 8
+a264 10
+  <table>
+  <tr>
+    <th>Command:</th>
+    <th>Section:</th>
+    <th>Arch:</th>
+    <th>Collection:</th>
+    <th>&nbsp;<!-- submit --></th>
+  </tr>
+    <td><input name="command" size="24" value="$COMMAND" autofocus></td>
+    <td><select name="section">
+d298 5
+a302 2
+    </select></td>
+    <td><select name="arch">
+d321 5
+a325 2
+    </select></td>
+    <td><select name="coll">
+d344 6
+a349 4
+    </select></td>
+    <td><input type="submit" value="Show"></td>
+  </tr>
+  </table>
+d810 3
+d815 5
+d821 1
+a821 1
+div.queryform th {
+d826 2
+a827 1
+    padding-left: 3px;
+d829 1
+d832 1
+@
+
+
+1.81
+log
+@No need to mark POST redirects private
+@
+text
+@d43 1
+a43 1
+MANCGI_DATE=2024-03-18
+d173 1
+a173 1
+<td class="page"><a href="$SCRIPT_NAME?afterboot+8${ARCH:+.$ARCH}${COLL:++$COLL}"
+d178 1
+a178 1
+<td class="page"><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}"
+d185 2
+a186 1
+<td><a href="$SCRIPT_NAME?intro+1${ARCH:+.$ARCH}${COLL:++$COLL}">GENERAL COMMANDS</a></td>
+d190 2
+a191 1
+<td><a href="$SCRIPT_NAME?intro+2${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM CALLS AND ERROR NUMBERS</a></td>
+d195 2
+a196 1
+<td><a href="$SCRIPT_NAME?intro+3${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM LIBRARIES</a></td>
+d201 2
+a202 1
+<td><a href="$SCRIPT_NAME?intro+3f${ARCH:+.$ARCH}${COLL:++$COLL}">FORTRAN LIBRARIES</a></td>
+d207 2
+a208 1
+<td><a href="$SCRIPT_NAME?intro+3lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA MODULES</a></td>
+d212 2
+a213 1
+<td><a href="$SCRIPT_NAME?intro+4${ARCH:+.$ARCH}${COLL:++$COLL}">DEVICES AND DEVICE DRIVERS</a></td>
+d217 2
+a218 1
+<td><a href="$SCRIPT_NAME?intro+5${ARCH:+.$ARCH}${COLL:++$COLL}">FILE FORMATS</a></td>
+d222 2
+a223 1
+<td><a href="$SCRIPT_NAME?intro+6${ARCH:+.$ARCH}${COLL:++$COLL}">GAMES</a></td>
+d227 2
+a228 1
+<td><a href="$SCRIPT_NAME?intro+7${ARCH:+.$ARCH}${COLL:++$COLL}">MISCELLANEOUS INFORMATION PAGES</a></td>
+d232 2
+a233 1
+<td><a href="$SCRIPT_NAME?intro+8${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM MAINTENANCE PROCEDURES AND COMMANDS</a></td>
+d237 2
+a238 1
+<td><a href="$SCRIPT_NAME?intro+9${ARCH:+.$ARCH}${COLL:++$COLL}">KERNEL INTERNALS</a></td>
+d242 2
+a243 1
+<td><a href="$SCRIPT_NAME?intro+9lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA KERNEL BINDINGS</a></td>
+@
+
+
+1.80
+log
+@Add expires and cache-control to redirects
+@
+text
+@a365 7
+    EXPTYPE="${EXPTYPE:-public}"
+    case "${EXPTYPE}" in
+    private)
+	EXPSECS=0
+	;;
+    esac
+
+d370 1
+a370 1
+    echo "Cache-Control: $EXPTYPE, max-age=$EXPSECS"
+a549 1
+    EXPTYPE=private
+@
+
+
+1.79
+log
+@Fix the "future release" logic
+
+The logic was broken by the STABLE to BRANCH rename of
+the branch directories (which was done due to complaints
+about BETA and RC being labeled STABLE).
+@
+text
+@d349 67
+d557 2
+a558 8
+    ME="$(canonical_url)"
+
+    echo 'Status: 303 See Other'
+    echo "Location: $ME"
+    echo
+    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+
+    exit 0
+d645 1
+a645 8
+	    ME="$(canonical_url)"
+
+	    echo 'Status: 302 Found'
+	    echo "Location: $ME"
+	    echo
+	    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+
+	    exit 0
+d655 1
+a655 8
+		ME="$(canonical_url)"
+
+		echo 'Status: 302 Found'
+		echo "Location: $ME"
+		echo
+		echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+
+		exit 0
+d677 1
+a677 8
+    ME="$(canonical_url)"
+
+    echo 'Status: 308 Permanent Redirect'
+    echo "Location: $ME"
+    echo
+    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+
+    exit 0
+d680 10
+a689 9
+# 1 hour
+EXPSECS=3600
+
+if [ "$COMMAND" != "" ]
+then
+    case "$SECTION" in
+    "")
+	if [ "$MANPARAM" = "" ]
+	then
+d694 2
+a695 1
+	fi
+a709 11
+    else
+	case "${COLL}" in
+	*-current|*-BRANCH)
+	    # 8 hours
+	    EXPSECS=28800
+	    ;;
+	*)
+	    # 16 days
+	    EXPSECS=1382400
+	    ;;
+	esac
+d711 2
+a712 1
+fi
+d746 1
+a746 8
+	    ME="$(canonical_url)"
+
+	    echo 'Status: 308 Permanent Redirect'
+	    echo "Location: $ME"
+	    echo
+	    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+
+	    exit 0
+d767 1
+a767 5
+EXPDATE=$(($(date '+%s') + $EXPSECS))
+EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
+
+echo "Expires: $EXPIRES"
+echo "Cache-Control: public, max-age=$EXPSECS"
+@
+
+
+1.78
+log
+@Try with -STABLE before -current for XX.0 collections
+@
+text
+@d9 1
+a9 1
+# (c) 1997-2020 Kimmo Suominen <kimmo@@suominen.com>
+d43 1
+a43 1
+MANCGI_DATE=2021-06-01
+d580 5
+a584 7
+	case "${COLL}" in
+	*-[1-9][0-9].0)
+	    NCOLL="${COLL}-STABLE"
+	    if [ -d "${MANROOT}/${NCOLL}" ]
+	    then
+		COLL="${NCOLL}"
+		ME="$(canonical_url)"
+d586 4
+a589 4
+		echo 'Status: 302 Found'
+		echo "Location: $ME"
+		echo
+		echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+d591 2
+a592 2
+		exit 0
+	    fi
+d594 3
+a610 22
+	*-[1-9].*|*-[1-9][0-9].*)
+	    MINOR="$((${COLL##*.} + 0))"
+	    case "${MINOR}" in
+	    0)
+		;;
+	    *)
+		NCOLL="${COLL%.*}.$((${MINOR} - 1))-STABLE"
+		if [ -d "${MANROOT}/${NCOLL}" ]
+		then
+		    COLL="${NCOLL}"
+		    ME="$(canonical_url)"
+
+		    echo 'Status: 302 Found'
+		    echo "Location: $ME"
+		    echo
+		    echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+
+		    exit 0
+		fi
+		;;
+	    esac
+	    ;;
+d670 1
+a670 1
+	*-current|*-STABLE)
+@
+
+
+1.77
+log
+@Move /p/netbsd/www/man to /p/netbsd/man/man
+@
+text
+@d582 14
+@
+
+
+1.76
+log
+@Add autofocus to first input field
+@
+text
+@d67 1
+a67 1
+MANROOT=/p/netbsd/www/man
+@
+
+
+1.75
+log
+@Handle %2B and %5B in command from the form (POST)
+@
+text
+@d253 1
+a253 1
+    <td><input name="command" size="24" value="$COMMAND"></td>
+@
+
+
+1.74
+log
+@Fix date
+@
+text
+@d43 1
+a43 1
+MANCGI_DATE=2021-03-02
+d371 1
+a371 2
+		-e 's/%2B/+/g' \
+		-e 's/%2b/+/g' \
+d473 10
+a482 1
+	    COMMAND="$(echo "$i" | sed -e 's/command=//' -e 's,%2F,/,gi')"
+@
+
+
+1.73
+log
+@Use browser fonts again (the NetBSD.org site reverted to them, too)
+@
+text
+@d43 1
+a43 1
+MANCGI_DATE=2021-02-03
+@
+
+
+1.72
+log
+@Update usage
+@
+text
+@d43 1
+a43 1
+MANCGI_DATE=2020-09-24
+d788 2
+a789 2
+body, input, select { font-family: 'Source Sans Pro', sans-serif; }
+code, pre, tt { font-family: 'Roboto Mono', monospace; }
+a797 7
+tr -d \\n <<END
+<link href="https://fonts.googleapis.com/css2
+?family=Roboto+Mono:ital,wght@@0,400;0,700;1,400;1,700
+&family=Source+Sans+Pro:ital,wght@@0,400;0,700;0,900;1,400
+&display=swap" rel="stylesheet">
+END
+
+@
+
+
+1.71
+log
+@Remove Google Analytics
+@
+text
+@d18 2
+a19 2
+#   /ls.1
+#   /ls
+d21 1
+d23 1
+d25 1
+d29 1
+a29 1
+#   QUERY_STRING=COMMAND[+[SECTION.ARCH][+[COLLECTION]]]
+d33 2
+a34 2
+#   ls+1
+#   ls
+d36 1
+d38 1
+d40 1
+@
+
+
+1.70
+log
+@Tweak CSS layout
+@
+text
+@a356 14
+tracker()
+{
+    cat <<END
+<script><!--
+ (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ ga('create', 'UA-39862532-1', 'gw.com');
+ ga('send', 'pageview');
+// --></script>
+END
+}
+
+a938 1
+tracker
+@
+
+
+1.69
+log
+@Update section names
+@
+text
+@d786 1
+a786 1
+div.queryform, address { margin-top: 3ex; margin-bottom: 3ex; }
+@
+
+
+1.68
+log
+@Tweak front page ordering and layout
+@
+text
+@d187 1
+a187 1
+<td><a href="$SCRIPT_NAME?intro+3${ARCH:+.$ARCH}${COLL:++$COLL}">C LIBRARY FUNCTIONS</a></td>
+d192 1
+a192 1
+<td><a href="$SCRIPT_NAME?intro+3f${ARCH:+.$ARCH}${COLL:++$COLL}">FORTRAN LIBRARY FUNCTIONS</a></td>
+d201 1
+a201 1
+<td><a href="$SCRIPT_NAME?intro+4${ARCH:+.$ARCH}${COLL:++$COLL}">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
+d209 1
+a209 1
+<td><a href="$SCRIPT_NAME?intro+6${ARCH:+.$ARCH}${COLL:++$COLL}">GAMES AND DEMOS</a></td>
+d217 1
+a217 1
+<td><a href="$SCRIPT_NAME?intro+8${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM MAINTENANCE COMMANDS</a></td>
+@
+
+
+1.67
+log
+@Hide non-existing 3f intro. Add afterboot(8).
+@
+text
+@d167 11
+a229 8
+<tr>
+<td class="section" colspan="2"><a href="$SCRIPT_NAME?afterboot+8${ARCH:+.$ARCH}${COLL:++$COLL}"
+    >afterboot(8) &mdash; Things to Check After the First Complete Boot</a></td>
+</tr>
+<tr>
+<td class="section" colspan="2"><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}"
+    >X(7) &mdash; A Portable, Network-Transparent Window System</a></td>
+</tr>
+d779 3
+a781 1
+.intro th, .intro td { padding-left: 1em; padding-top: 0.5ex; }
+@
+
+
+1.66
+log
+@Update usage and signature
+@
+text
+@d37 1
+a37 1
+MANCGI_DATE=2020-09-23
+d179 1
+d183 1
+d217 9
+a225 2
+<td class="section">X</td>
+<td><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}">X WINDOW SYSTEM</a></td>
+@
+
+
+1.65
+log
+@Never leave CANONICAL_ARCH empty
+@
+text
+@a1 2
+# Man-cgi : a Common Gateway Interface which converts the output of
+#           the "man" command to HTML
+d3 1
+a3 1
+# Author  : Panagiotis J. Christias <christia@@theseas.ntua.gr>
+d5 2
+a6 29
+# Usage   : it goes in the /cgi-bin/ directory. When called without 
+#           arguments (https://www-server/cgi-bin/man-cgi) it outputs a
+#           "Front Page" with a section list and query form. When called
+#           with arguments, the first argument is the topic (e.g. ls)
+#           and the second argument (optional) is the section to look in.
+#
+#           http://www.ntua.gr/~christia/man-cgi.html
+#           XXX: Dead link detected 2017-04-15
+#
+#           Examples:
+#               http://www.ntua.gr/cgi-bin/man-cgi?ls
+#               http://www.ntua.gr/cgi-bin/man-cgi?sleep+3
+#
+# Notice  : Man-cgi uses the following two images, you may want to get them
+#           and put them in your w3 server:
+#               http://www.ntua.gr/images/doty.gif
+#               http://www.ntua.gr/images/pages.gif
+#
+# History :
+#   7.0     Handle multicharacter sections (e.g. intro(9lua)).
+#   1.15    Multiple blank lines are supressed.
+#   1.14    Man-cgi now recognizes cross-references that
+#           contain periods (e.g. foo.foo(3)).
+#   1.13    Really fixed problems occuring in pages which used
+#           multi-overstrike for emboldening (hopefully).
+#   1.12    Fixed problems occuring in pages which used multi-overstrike
+#           for emboldening. Now Man-cgi works any number of overstrike.
+#   1.11    Fixed problem with hyphenated cross-references.
+#   1.10 and earlier, no history at that time...
+d8 3
+a10 1
+# Last update: Sat Apr 15 2017
+d12 26
+d335 6
+a340 3
+Powered by man-cgi 1.15, Panagiotis Christias<br />
+Modified for <a href="${REQUEST_SCHEME:-http}://www.netbsd.org/">NetBSD</a>
+    by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>
+@
+
+
+1.64
+log
+@Fix bad $ARCH fix in canonical URL
+@
+text
+@d690 1
+a690 1
+	CANONICAL_ARCH=
+@
+
+
+1.63
+log
+@Fix faulty $ARCH canonicalization in URL
+@
+text
+@d137 1
+a138 1
+	${ARCH:+s,/${ARCH}/,/${CANONICAL_ARCH:-$ARCH}/,}
+@
+
+
+1.62
+log
+@Fix variable default value expansion typos
+@
+text
+@a136 1
+	s,/${ARCH}/,/${CANONICAL_ARCH:-$ARCH}/,
+d138 1
+@
+
+
+1.61
+log
+@Move queryform to the top
+@
+text
+@d117 1
+a117 1
+	echo "${REQUEST_SCHEME-:http}://${SERVER_NAME}${port}${SCRIPT_NAME}?+${section}${arch:+.$arch}+${coll}"
+d121 1
+a121 1
+	echo "${REQUEST_SCHEME-:http}://${SERVER_NAME}${port}${coll:+/$coll}${arch:+/$arch}/${COMMAND}${section:+.$section}"
+d337 1
+a337 1
+Modified for <a href="${REQUEST_SCHEME-:http}://www.netbsd.org/">NetBSD</a>
+@
+
+
+1.60
+log
+@Fix collection detection better
+@
+text
+@d163 194
+d748 1
+d751 2
+a752 1
+body { background-color: #ffffff; color: #000000; font-size: 12pt; margin: 2em; }
+d754 1
+a754 1
+    body { background-color: #f0f0f0; }
+d759 2
+a760 1
+    body { background-color: #000000; color: #c0c0c0; }
+d764 2
+a765 3
+table { padding: 0; }
+th, td { border: 0; padding: 0; }
+.intro th, .intro td { padding-left: 1em; padding-top: 3px; }
+d769 3
+a771 1
+div.queryform, address { padding-top: 4ex; }
+d777 1
+a777 1
+    font-size: smaller;
+d783 1
+a783 1
+    div.queryform { display: none; }
+d797 1
+a797 4
+if [ "$COMMAND" != "" ]
+then
+    cat <<END
+<title>$COMMAND${SECTION:+($SECTION)} - ${CNAME:-$OSNAME} Manual Pages</title>
+d799 1
+a800 1
+    echo
+d802 3
+a804 5
+    if [ ${notfound:-0} -eq 0 ]
+    then
+	if [ "$MANPARAM" = "" ]
+	then
+	    cat <<END
+d807 1
+a807 2
+	fi
+    fi
+d809 1
+a809 1
+    cat <<END
+d812 2
+d816 13
+a933 73
+else
+    cat <<END
+<title>${CNAME:-$OSNAME} Manual Pages</title>
+<link rel="shortcut icon" href="/s/${CNAME:-$OSNAME}.ico" type="image/x-icon">
+</head>
+<body>
+<h1>${CNAME:-$OSNAME} Manual Pages</h1>
+END
+
+    case "${DEFAULT_COLLECTION}" in
+    "")
+	cat <<END
+<p><b>${CNAME:-$OSNAME} ${CREL:-$OSREL} (${MACHINE:-$OSARCH})</b></p>
+END
+	;;
+    esac
+
+    cat <<END
+<table class="intro">
+<tr>
+<td class="section">1</td>
+<td><a href="$SCRIPT_NAME?intro+1${ARCH:+.$ARCH}${COLL:++$COLL}">GENERAL COMMANDS</a></td>
+</tr>
+<tr>
+<td class="section">2</td>
+<td><a href="$SCRIPT_NAME?intro+2${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM CALLS AND ERROR NUMBERS</a></td>
+</tr>
+<tr>
+<td class="section">3</td>
+<td><a href="$SCRIPT_NAME?intro+3${ARCH:+.$ARCH}${COLL:++$COLL}">C LIBRARY FUNCTIONS</a></td>
+</tr>
+<tr>
+<td class="section">3f</td>
+<td><a href="$SCRIPT_NAME?intro+3f${ARCH:+.$ARCH}${COLL:++$COLL}">FORTRAN LIBRARY FUNCTIONS</a></td>
+</tr>
+<tr>
+<td class="section">3lua</td>
+<td><a href="$SCRIPT_NAME?intro+3lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA MODULES</a></td>
+</tr>
+<tr>
+<td class="section">4</td>
+<td><a href="$SCRIPT_NAME?intro+4${ARCH:+.$ARCH}${COLL:++$COLL}">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
+</tr>
+<tr>
+<td class="section">5</td>
+<td><a href="$SCRIPT_NAME?intro+5${ARCH:+.$ARCH}${COLL:++$COLL}">FILE FORMATS</a></td>
+</tr>
+<tr>
+<td class="section">6</td>
+<td><a href="$SCRIPT_NAME?intro+6${ARCH:+.$ARCH}${COLL:++$COLL}">GAMES AND DEMOS</a></td>
+</tr>
+<tr>
+<td class="section">7</td>
+<td><a href="$SCRIPT_NAME?intro+7${ARCH:+.$ARCH}${COLL:++$COLL}">MISCELLANEOUS INFORMATION PAGES</a></td>
+</tr>
+<tr>
+<td class="section">8</td>
+<td><a href="$SCRIPT_NAME?intro+8${ARCH:+.$ARCH}${COLL:++$COLL}">SYSTEM MAINTENANCE COMMANDS</a></td>
+</tr>
+<tr>
+<td class="section">9</td>
+<td><a href="$SCRIPT_NAME?intro+9${ARCH:+.$ARCH}${COLL:++$COLL}">KERNEL INTERNALS</a></td>
+</tr>
+<tr>
+<td class="section">9lua</td>
+<td><a href="$SCRIPT_NAME?intro+9lua${ARCH:+.$ARCH}${COLL:++$COLL}">LUA KERNEL BINDINGS</a></td>
+</tr>
+<tr>
+<td class="section">X</td>
+<td><a href="$SCRIPT_NAME?X+7${ARCH:+.$ARCH}${COLL:++$COLL}">X WINDOW SYSTEM</a></td>
+</tr>
+</table>
+END
+d936 2
+a937 85
+cat <<END
+
+<div class="queryform">
+<form method=post action="$SCRIPT_NAME">
+  <table>
+  <tr>
+    <th>Command:</th>
+    <th>Section:</th>
+    <th>Arch:</th>
+    <th>Collection:</th>
+    <th>&nbsp;<!-- submit --></th>
+  </tr>
+    <td><input name="command" size="24" value="$COMMAND"></td>
+    <td><select name="section">
+END
+
+# XXX: Create a seclist and use that?
+for i in \
+    'ANY Search in All Sections' \
+    '1 General Commands' \
+    '2 System Calls' \
+    '3 C Library Functions' \
+    '3f Fortran Library Functions' \
+    '3lua Lua Modules' \
+    '4 Special Files and Hardware Support' \
+    '5 File Formats' \
+    '6 Games and Demos' \
+    '7 Miscellaneous Information Pages' \
+    '8 System Maintenance Commands' \
+    '9 Kernel Internals' \
+    '9lua Lua Kernel Bindings' \
+    ;
+do
+    set -- ${i}
+    s="${1}"
+    shift
+    case "$s" in
+    "$SECTION")
+	echo "      <option value=\"$s\" selected>$s - $@@</option>"
+	;;
+    *)
+	echo "      <option value=\"$s\">$s - $@@</option>"
+	;;
+    esac
+done
+
+cat <<END
+    </select></td>
+    <td><select name="arch">
+END
+
+for i in $(list_archs)
+do
+    case "$i" in
+    DEFAULT)
+	echo "      <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+	;;
+    "${ARCH}")
+	echo "      <option value=\"$i\" selected>$i</option>"
+	;;
+    *)
+	echo "      <option value=\"$i\">$i</option>"
+	;;
+    esac
+done
+
+cat <<END
+    </select></td>
+    <td><select name="coll">
+END
+
+for i in $(list_collections)
+do
+    case "$i" in
+    DEFAULT)
+	echo "      <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
+	;;
+    "$COLL")
+	echo "      <option value=\"$i\" selected>$i</option>"
+	;;
+    *)
+	echo "      <option value=\"$i\">$i</option>"
+	;;
+    esac
+done
+a939 32
+    </select></td>
+    <td><input type="submit" value="Show"></td>
+  </tr>
+  </table>
+END
+
+case "${DEFAULT_COLLECTION}" in
+"")
+    cat <<END
+  <p>Use the DEFAULT collection to view manual pages
+  for third-party software.</p>
+END
+    ;;
+esac
+
+cat <<END
+</form>
+</div>
+
+<address class="small">
+Powered by man-cgi 1.15, Panagiotis Christias<br />
+Modified for <a href="${REQUEST_SCHEME-:http}://www.netbsd.org/">NetBSD</a>
+    by <a href="https://kimmo.suominen.com/">Kimmo Suominen</a>
+</address>
+<script><!--
+ (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+ (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+ })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ ga('create', 'UA-39862532-1', 'gw.com');
+ ga('send', 'pageview');
+// --></script>
+d943 1
+@
+
+
+1.59
+log
+@Fix collection detection when multiple arch elements are present
+@
+text
+@d225 1
+d228 1
+a228 1
+	while [ ${#} -gt 3 ]
+d233 2
+a234 2
+	ARCH="${2}"
+	COMMAND="${3}"
+@
+
+
+1.58
+log
+@Horizontal queryform
+@
+text
+@d222 5
+a226 1
+	COLL="${1}"
+@
+
+
+1.57
+log
+@Visual cleanup
+@
+text
+@d569 8
+a576 1
+div.queryform input, div.queryform select { width: 100%; }
+d802 9
+a810 3
+  <tr><td>Command:&nbsp;</td><td><input name="command" size="24"
+  value="$COMMAND"></td></tr>
+  <tr><td>Section:&nbsp;</td><td><select name="section">
+d835 1
+a835 1
+	echo "  <option value=\"$s\" selected>$s - $@@</option>"
+d838 1
+a838 1
+	echo "  <option value=\"$s\">$s - $@@</option>"
+d844 2
+a845 2
+  </select></td></tr>
+  <tr><td>Architecture:&nbsp;</td><td><select name="arch">
+d852 1
+a852 1
+	echo "  <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+d855 1
+a855 1
+	echo "  <option value=\"$i\" selected>$i</option>"
+d858 1
+a858 1
+	echo "  <option value=\"$i\">$i</option>"
+d864 2
+a865 2
+  </select></td></tr>
+  <tr><td>Collection:&nbsp;</td><td><select name="coll">
+d872 1
+a872 1
+	echo "  <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
+d875 1
+a875 1
+	echo "  <option value=\"$i\" selected>$i</option>"
+d878 1
+a878 1
+	echo "  <option value=\"$i\">$i</option>"
+d884 3
+a886 3
+  </select></td></tr>
+  <tr><td>&nbsp;</td>
+  <td><input type="submit" value="Show manual page"></td></tr>
+@
+
+
+1.56
+log
+@Fix font loading and switch from Roboto to Source Sans Pro
+@
+text
+@a63 4
+# The URL of the two images :
+DOT=/s/man-dot.gif
+PAGES=/s/pages.gif
+
+d568 1
+a680 1
+<table class="outer"><tr><td>
+d682 1
+a682 1
+  <table>
+d707 1
+a707 2
+  </table>
+</td></tr></table>
+d721 6
+a726 1
+<h1><img alt="" src=$PAGES> ${CNAME:-$OSNAME} Manual Pages</h1>
+d728 5
+a732 3
+<hr />
+<table class="outer"><tr><td>
+<p>Here are the intro pages of each possible section:</p>
+a786 4
+<p class="small">Sometimes man pages are not stored in the right section
+and you may get an empty page. Follow the link at the top of the empty page
+and you'll get your man page (hopefully).</p>
+</td></tr></table>
+d791 1
+a792 3
+<hr />
+<table class="outer"><tr><td>
+<p>You can also request any man page by name and (optionally) by section:</p>
+a887 2
+</td></tr></table>
+<hr />
+d889 1
+@
+
+
+1.55
+log
+@Use 308 for missing section.
+@
+text
+@d573 1
+a573 1
+body, input, select { font-family: Roboto, sans-serif; }
+d583 7
+a595 6
+    tr -d \\n <<END
+<link href="https://fonts.googleapis.com/css2
+?family=Roboto:ital,wght@@0,400;0,700;1,400;1,700
+&family=Roboto+Mono:ital,wght@@0,400;0,700;1,400;1,700
+&display=swap" rel="stylesheet">
+END
+@
+
+
+1.54
+log
+@Use 302 for upcoming collections. Use 308 for clean URLs.
+@
+text
+@d514 1
+a514 1
+	    echo 'Status: 303 See Other'
+@
+
+
+1.53
+log
+@Improve line spacing on intro page
+@
+text
+@d379 1
+a379 1
+		echo 'Status: 303 See Other'
+d399 1
+a399 1
+		    echo 'Status: 303 See Other'
+d430 1
+a430 1
+    echo 'Status: 303 See Other'
+@
+
+
+1.52
+log
+@Usability improvements (fonts etc.)
+
+- Use Roboto and Roboto Mono fonts in order to distinguish better
+  between O and 0, and l and 1.
+- Add descriptions to the section dropdown.
+- Attempt to align query form input and select element widths.
+@
+text
+@d568 1
+a568 1
+.intro th, .intro td { padding-left: 1em; }
+@
+
+
+1.51
+log
+@Sanity check found SECTION
+@
+text
+@d572 3
+d589 7
+d804 15
+a818 1
+for i in ANY 1 2 3 3f 3lua 4 5 6 7 8 9 9lua
+d820 4
+a823 1
+    case "$i" in
+d825 1
+a825 1
+	echo "  <option value=\"$i\" selected>$i</option>"
+d828 1
+a828 1
+	echo "  <option value=\"$i\">$i</option>"
+@
+
+
+1.50
+log
+@Do all ARCH and COLL cleanup before redirect
+@
+text
+@a503 2
+    ;;
+esac
+a504 3
+case "${SECTION}" in
+"")
+    SECTION="${LASTMODFILE##*.}"
+d507 6
+a512 3
+	;;
+    *)
+	ME="$(canonical_url)"
+d514 4
+a517 4
+	echo 'Status: 303 See Other'
+	echo "Location: $ME"
+	echo
+	echo 'Goto: <a href="'"$ME"'">'"$ME"'</a>'
+d519 6
+a524 1
+	exit 0
+@
+
+
+1.49
+log
+@Redirect URLs without section to the section that was found
+@
+text
+@d323 28
+d420 6
+a437 34
+case "${DEFAULT_ARCH}" in
+"")
+    ;;
+*)
+    case "${ARCH}" in
+    DEFAULT|"")
+	ARCH="${DEFAULT_ARCH}"
+	;;
+    esac
+    ;;
+esac
+
+case "$ARCH" in
+DEFAULT|"")
+    ARCH=
+    ;;
+*)
+    export MACHINE
+    MACHINE="$ARCH"
+    ;;
+esac
+
+case "${ARCH}" in
+"${DEFAULT_ARCH}")
+    ARCH=
+    ;;
+esac
+
+case "${COLL}" in
+"${DEFAULT_COLLECTION}")
+    COLL=
+    ;;
+esac
+
+@
+
+
+1.48
+log
+@Fix CANONICAL_ARCH extraction
+
+Sometimes $COLL is already empty, so don't refer to it.
+@
+text
+@d507 20
+@
+
+
+1.47
+log
+@Reflect actual arch of found man page in rel_canonical_url
+
+Extract the actual arch of the page from its path as already
+stored in LASTMODFILE.
+
+We don't redirect the browser to the actual arch as we want to
+keep the user-selected arch intact as much as possible. It is
+already lost upon traversing links like "x86/boot(8)".
+
+Remove any port number in rel_canonical_url from the URL on
+the basis that production deployment is on a standard port
+and only that instance is generally crawled by search engines.
+@
+text
+@d486 5
+a490 1
+    CANONICAL_ARCH="${LASTMODFILE##${MANROOT}/${COLL}/}"
+d493 4
+@
+
+
+1.46
+log
+@Always use https for link rel="canonical"
+@
+text
+@d132 12
+a143 1
+    canonical_url | sed -e 's/^http:/https:/'
+d482 17
+@
+
+
+1.45
+log
+@Avoid the default collection being used in links
+@
+text
+@d130 5
+d533 1
+a533 1
+<link rel="canonical" href="$(canonical_url)">
+@
+
+
+1.44
+log
+@Fix home page links
+@
+text
+@d416 6
+@
+
+
+1.43
+log
+@Use pretty URLs and make default ARCH and COLL configurable
+
+DEFAULT_ARCH and DEFAULT_COLLECTION can be passed in
+the CGI environment to select default values.
+
+Only "NONE" seems reasonble for DEFAULT_ARCH right now.
+Other values will likely prove problematic when forming
+canonical links.
+
+Setting these turns off the "DEFAULT" value that is used
+for accessing the "native" manual pages on the host.
+@
+text
+@d653 1
+a653 1
+<td><a href="$SCRIPT_NAME?intro+1$ARCH$COLL">GENERAL COMMANDS</a></td>
+d657 1
+a657 1
+<td><a href="$SCRIPT_NAME?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</a></td>
+d661 1
+a661 1
+<td><a href="$SCRIPT_NAME?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</a></td>
+d665 1
+a665 1
+<td><a href="$SCRIPT_NAME?intro+3f$ARCH$COLL">FORTRAN LIBRARY FUNCTIONS</a></td>
+d669 1
+a669 1
+<td><a href="$SCRIPT_NAME?intro+3lua$ARCH$COLL">LUA MODULES</a></td>
+d673 1
+a673 1
+<td><a href="$SCRIPT_NAME?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
+d677 1
+a677 1
+<td><a href="$SCRIPT_NAME?intro+5$ARCH$COLL">FILE FORMATS</a></td>
+d681 1
+a681 1
+<td><a href="$SCRIPT_NAME?intro+6$ARCH$COLL">GAMES AND DEMOS</a></td>
+d685 1
+a685 1
+<td><a href="$SCRIPT_NAME?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</a></td>
+d689 1
+a689 1
+<td><a href="$SCRIPT_NAME?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</a></td>
+d693 1
+a693 1
+<td><a href="$SCRIPT_NAME?intro+9$ARCH$COLL">KERNEL INTERNALS</a></td>
+d697 1
+a697 1
+<td><a href="$SCRIPT_NAME?intro+9lua$ARCH$COLL">LUA KERNEL BINDINGS</a></td>
+d701 1
+a701 1
+<td><a href="$SCRIPT_NAME?X+7$ARCH$COLL">X WINDOW SYSTEM</a></td>
+@
+
+
+1.42
+log
+@Fix "arch/command" type commands (e.g. x86/boot+8.NONE)
+@
+text
+@d77 13
+a89 3
+    case "${SERVER_PORT:-443}" in
+    443) port=;;
+    *)  port=":${SERVER_PORT}";;
+d92 3
+a94 3
+    case "$ARCH" in
+    .*)
+	arch="$(echo "$ARCH" | sed -e 's/^\.//')"
+d97 1
+a97 1
+	arch="$ARCH"
+d101 3
+a103 3
+    case "$SECTION.$arch" in
+    ANY.DEFAULT)
+	section=""
+d105 2
+a106 2
+    *.DEFAULT|*.)
+	section="+${SECTION}"
+d108 5
+a112 2
+    ANY.*)
+	section="+.${arch}"
+d115 1
+a115 1
+	section="+${SECTION}.${arch}"
+d119 3
+a121 3
+    case "$COLL" in
+    +*)
+	coll="$(echo "$COLL" | sed -e 's/^\+//')"
+d124 2
+a125 1
+	coll="$COLL"
+d128 1
+d130 3
+a132 1
+    case "$coll" in
+d134 1
+d136 10
+a145 12
+    DEFAULT)
+	coll=""
+	;;
+    *)
+	case "$section" in
+	"")
+	    coll="++${coll}"
+	    ;;
+	*)
+	    coll="+${coll}"
+	    ;;
+	esac
+d148 1
+a148 2
+
+    echo "${REQUEST_SCHEME-:http}://${SERVER_NAME}${port}${SCRIPT_NAME}?${COMMAND}${section}${coll}"
+d174 8
+d210 7
+a217 2
+	ARCH="${2}"
+	COLL="${1}"
+d251 1
+a251 1
+	    ARCH=$(echo "$i" | sed -e 's/arch=//')
+d254 1
+a254 1
+	    COLL=$(echo "$i" | sed -e 's/coll=//')
+d257 1
+a257 1
+	    COMMAND=$(echo "$i" | sed -e 's/command=//' -e 's,%2F,/,gi')
+d260 1
+a260 1
+	    SECTION=$(echo "$i" | sed -e 's/section=//')
+d278 2
+a279 2
+    ARCH=$(echo $SECTION | sed -e 's/^\.//')
+    SECTION=""
+d282 2
+a283 2
+    ARCH=$(echo $SECTION | awk -F. '{print $2}')
+    SECTION=$(echo $SECTION | awk -F. '{print $1}')
+d286 1
+d289 1
+a289 1
+    SECTION=""
+d292 1
+d299 1
+d306 16
+a321 3
+case "$COLL" in
+""|DEFAULT)
+    COLL=""
+d371 26
+a396 3
+    CNAME=$(echo $COLL | awk -F- '{print $1}')
+    CREL=$(echo $COLL | sed -e 's/^[^-]*-//')
+    COLL="+$COLL"
+d399 1
+d401 2
+a402 2
+""|DEFAULT)
+    ARCH=""
+d406 7
+a412 9
+    case "$ARCH" in
+    NONE)
+	MACHINE=.
+	;;
+    *)
+	MACHINE="$ARCH"
+	;;
+    esac
+    ARCH=".$ARCH"
+d446 1
+a446 1
+	*current*)
+d516 1
+d526 1
+d531 1
+d593 1
+a593 1
+	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_/]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"$SCRIPT_NAME\?\3+\5$ARCH$COLL\">\1</a>#g" \
+d598 1
+a598 1
+	    -e "s#^\(\([0-9A-z_][-0-9A-z_/]*\) *(\([1-9][A-z_]*\))\)#<a href=\"$SCRIPT_NAME\?\2+\3$ARCH$COLL\">\1</a>#" \
+a601 8
+	case "$ARCH$COLL" in
+	"")
+	    SECTION=""
+	    ;;
+	*)
+	    SECTION="+"
+	    ;;
+	esac
+d633 1
+d637 1
+a698 4
+END
+    case "$ARCH$COLL" in
+    "")
+	cat <<END
+d701 1
+a701 1
+<td><a href="$SCRIPT_NAME?X">X WINDOW SYSTEM</a></td>
+a702 4
+END
+	;;
+    esac
+    cat <<END
+d710 1
+d722 3
+a724 9
+for i in ANY:ANY \
+    1:1 2:2 3:3 3f:3f 3lua:3lua 4:4 5:5 6:6 7:7 8:8 9:9 9lua:9lua l:l n:n \
+    X:X11R7 \
+    X11R6:X11R6 \
+    games:games \
+    local:local \
+    perl:perl \
+    pkg:packages \
+    std:system
+d726 1
+a726 5
+    OIFS="$IFS"
+    IFS=":$IFS"
+    set -- $i
+    IFS="$OIFS"
+    case "$1" in
+d728 1
+a728 1
+	echo "  <option value=\"$1\" selected>$2</option>"
+d731 1
+a731 1
+	echo "  <option value=\"$1\">$2</option>"
+d735 1
+d740 2
+a741 1
+for i in DEFAULT NONE $(cat $MANROOT/archlist)
+d743 2
+a744 2
+    case ".$i" in
+    .DEFAULT)
+d747 1
+a747 1
+    "$ARCH")
+d755 1
+d760 2
+a761 1
+for i in DEFAULT $(cat $MANROOT/colllist)
+d763 2
+a764 2
+    case "+$i" in
+    +DEFAULT)
+d775 1
+d781 5
+d788 5
+@
+
+
+1.41
+log
+@Add man page selection using PATH_INFO
+@
+text
+@d155 1
+a155 1
+    COMMAND="${1##*/}"
+a247 7
+case "$COMMAND" in
+*.[1-9]|*.3f|*.[39]lua)
+    SECTION="${COMMAND##*.}"
+    COMMAND="${COMMAND%.*}"
+    ;;
+esac
+
+d263 12
+@
+
+
+1.40
+log
+@Redirect to current (HEAD branch)
+from a future .0 release version
+@
+text
+@d65 2
+a66 2
+DOT=/common/images/man-dot.gif
+PAGES=/common/images/pages.gif
+d133 1
+a133 1
+    echo "https://${SERVER_NAME}${port}${SCRIPT_NAME}?${COMMAND}${section}${coll}"
+d136 25
+a160 11
+if [ $# -lt 2 ]
+then
+    QS="$(
+	echo "${1:-${QUERY_STRING:-}}" \
+	| sed \
+	    -e 's/%20/+/g' \
+	    -e 's/%2B/+/g' \
+	    -e 's/%2b/+/g' \
+	    -e 's/=$//' \
+	    ;
+    )"
+d162 2
+a163 2
+    IFS="${OIFS}+"
+    set -- ${QS}
+d165 29
+a193 1
+fi
+d195 6
+a200 4
+COMMAND="${1##*/}"
+SECTION="${2:-ANY}"
+COLL="${3:-DEFAULT}"
+ARCH=DEFAULT
+d248 4
+a251 4
+case "$PATH_INFO" in
+/apropos)
+    MANPARAM="-k"
+    echo 'X-Robots-Tag: noindex'
+d443 1
+a443 1
+<link rel="shortcut icon" href="/${CNAME:-$OSNAME}.ico" type="image/x-icon">
+d574 1
+a574 1
+<link rel="shortcut icon" href="/${CNAME:-$OSNAME}.ico" type="image/x-icon">
+d655 1
+a655 1
+<form method=post action="$SCRIPT_NAME/man">
+d733 1
+a733 1
+Modified for <a href="https://www.netbsd.org/">NetBSD</a>
+@
+
+
+1.39
+log
+@Redirect to the corresponding STABLE branch
+from a future release version
+@
+text
+@d235 15
+@
+
+
+1.38
+log
+@Improve section heading styling (now that they are links)
+@
+text
+@d232 27
+@
+
+
+1.37
+log
+@Add id for the anchor itself
+@
+text
+@d332 1
+a332 1
+a:link { color: #0000f0; }
+d336 1
+a336 1
+    a:link { color: #90c0f0; }
+d343 1
+d347 1
+@
+
+
+1.36
+log
+@add anchors to section headings
+@
+text
+@d412 1
+a412 1
+	    -e 's/^[A-Z][-+() ,A-Z_\/]*$/<br \/><b class="section"><a href="#&">&<\/a><\/b><br \/>/' \
+@
+
+
+1.35
+log
+@Remove pipeline from "man -w" as we need the exit code from man (not sed)
+@
+text
+@d412 1
+a412 1
+	    -e 's/^[A-Z][-+() ,A-Z_\/]*$/<br \/><b class="section">&<\/b><br \/>/' \
+@
+
+
+1.34
+log
+@Provide actual Last-Modified date of the manual page
+@
+text
+@d269 1
+a269 2
+		man -C "$MANROOT/man.conf" -w -- "$COMMAND" 2>/dev/null \
+		| sed -e 1q
+d276 1
+a276 2
+	    man -C "$MANROOT/man.conf" -w -- "$SECTION" "$COMMAND" 2>/dev/null \
+	    | sed -e 1q
+d301 2
+@
+
+
+1.33
+log
+@Remove bad quotes in variable expansions
+@
+text
+@d69 1
+a69 6
+BUILDFILE="$MANROOT/NetBSD-current/build"
+if [ -f "$BUILDFILE" ]
+then
+    eval $(stat -s "$BUILDFILE")
+    LASTMOD=$(date -u -r "$st_mtime" '+%a, %d %b %Y %H:%M:%S GMT')
+fi
+a165 4
+if [ -n "$LASTMOD" ]
+then
+    echo "Last-Modified: $LASTMOD"
+fi
+d268 4
+a271 1
+	    man -C "$MANROOT/man.conf" -w -- "$COMMAND" >/dev/null 2>&1
+d276 4
+a279 1
+	man -C "$MANROOT/man.conf" -w -- "$SECTION" "$COMMAND" >/dev/null 2>&1
+d303 10
+@
+
+
+1.32
+log
+@Ease up on caching a bit
+@
+text
+@d347 2
+a348 2
+<title>$COMMAND${SECTION:+"($SECTION)"} - ${CNAME:-"$OSNAME"} Manual Pages</title>
+<link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
+d478 2
+a479 2
+<title>${CNAME:-"$OSNAME"} Manual Pages</title>
+<link rel="shortcut icon" href="/${CNAME:-"$OSNAME"}.ico" type="image/x-icon">
+d482 2
+a483 2
+<h1><img alt="" src=$PAGES> ${CNAME:-"$OSNAME"} Manual Pages</h1>
+<p><b>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</b></p>
+@
+
+
+1.31
+log
+@Use 303 redirects from POST to GET
+@
+text
+@a75 5
+# Expires date is 16 days in the future
+EXPSECS=1382400
+EXPDATE=$(($(date '+%s') + $EXPSECS))
+EXPIRES=$(date -u -r "$EXPDATE" '+%a, %d %b %Y %H:%M:%S GMT')
+
+a219 7
+# Cache a lot
+if [ "$COMMAND" != "" ]
+then
+    echo "Expires: $EXPIRES"
+    echo "Cache-Control: public, max-age=$EXPSECS"
+fi
+
+d268 3
+d290 13
+d306 6
+@
+
+
+1.30
+log
+@Fix colors for printing. Hide query form when printing.
+Don't assert copyright on manual pages, instead say "powered by".
+@
+text
+@d209 1
+d211 1
+a211 1
+    echo ""
+@
+
+
+1.29
+log
+@Tweak layout and also colors a little bit
+@
+text
+@a67 3
+# Copyright year
+CYEAR=$(date +%Y)
+
+d310 4
+a313 1
+body { background-color: #f0f0f0; color: #000000; font-size: 12pt; margin: 2em; }
+d326 3
+d545 1
+d624 1
+d626 2
+a627 2
+&copy;1994 Man-cgi 1.15, Panagiotis Christias<br>
+&copy;1996-$CYEAR Modified for <a href="https://www.netbsd.org/">NetBSD</a>
+@
+
+
+1.28
+log
+@tweak colors
+@
+text
+@d313 1
+a313 1
+body { background-color: #f0f0f0; color: #000000; }
+d317 1
+a317 1
+    body { background-color: #303030; color: #c0c0c0; }
+a321 1
+table.outer { width: 500px; }
+d323 3
+a325 3
+.intro th, .intro td { padding-left: 10px; }
+b.section { font-size: 150%; }
+.small { font-size: 80%; }
+d391 1
+a391 1
+	    -e 's/^[A-Z][-+() ,A-Z_]*$/<b class="section">&<\/b>/' \
+d468 3
+a471 3
+<h1><img alt="" src=$PAGES> ${CNAME:-"$OSNAME"} Manual Pages</h1>
+<b>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</b>
+<hr>
+d542 1
+a543 1
+<hr>
+a616 1
+  <hr>
+d619 1
+@
+
+
+1.27
+log
+@Add dark mode
+@
+text
+@d313 3
+a315 1
+body { background-color: white; color: black; }
+d317 3
+a319 3
+    body { background-color: #303030; color: white; }
+    a:link { color: #809fff; }
+    a:visited { color: #c09fff; }
+@
+
+
+1.26
+log
+@add Qwant to search links
+@
+text
+@d313 6
+@
+
+
+1.25
+log
+@add Yandex to search links
+@
+text
+@d425 1
+a425 1
+    href="https://bing.com/search?q=site%3A$SERVER_NAME+$COMMAND"
+d429 1
+a429 1
+    href="https://duckduckgo.com/?q=site%3A$SERVER_NAME+$COMMAND"
+d433 5
+a437 1
+    href="https://google.com/search?q=site%3A$SERVER_NAME+$COMMAND"
+d441 1
+a441 1
+    href="https://search.yahoo.com/search?p=site%3A$SERVER_NAME+$COMMAND"
+d445 1
+a445 1
+    href="https://yandex.com/search/?text=site%3A$SERVER_NAME+$COMMAND"
+@
+
+
+1.24
+log
+@Replace apropos with links to search engines
+@
+text
+@d440 4
+@
+
+
+1.23
+log
+@Leave empty collection alone
+@
+text
+@d421 21
+a441 3
+<p>The manual page was not found.
+<a href="$SCRIPT_NAME/apropos?$COMMAND$SECTION$ARCH$COLL">Try
+apropos</a> or select a different architecture.</p>
+d443 3
+@
+
+
+1.22
+log
+@Only output canonical URL for found pages that are not apropos.
+@
+text
+@d129 2
+@
+
+
+1.21
+log
+@Add canonical URL. Replace MANCGI with SCRIPT_NAME.
+@
+text
+@d326 6
+d333 4
+@
+
+
+1.20
+log
+@Transform common URL encoding cases seen in the queries
+@
+text
+@d8 1
+a8 1
+#           arguments (http://www-server/cgi-bin/man-cgi) it outputs a
+a63 3
+# The full URL of the Man-cgi :
+MANCGI='/cgi-bin/man-cgi'
+
+d86 61
+d154 3
+a156 1
+	    -e 's/%2b/+/g'
+d189 1
+d207 3
+a209 33
+    case "$SERVER_PORT" in
+    80) ;;
+    *)  PORT=":${SERVER_PORT}";;
+    esac
+    case "$SECTION.$ARCH" in
+    ANY.DEFAULT)
+	SECTION=""
+	;;
+    *.DEFAULT)
+	SECTION="+${SECTION}"
+	;;
+    ANY.*)
+	SECTION="+.${ARCH}"
+	;;
+    *)
+	SECTION="+${SECTION}.${ARCH}"
+	;;
+    esac
+    case "$COLL" in
+    DEFAULT)
+	COLL=""
+	;;
+    *)
+	case "$SECTION" in
+	"")
+	    COLL="++${COLL}"
+	    ;;
+	*)
+	    COLL="+${COLL}"
+	    ;;
+	esac
+    esac
+    ME="http://${SERVER_NAME}${PORT}${SCRIPT_NAME}?${COMMAND}${SECTION}${COLL}"
+d213 1
+d326 1
+d391 1
+a391 1
+	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_/]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
+d396 1
+a396 1
+	    -e "s#^\(\([0-9A-z_][-0-9A-z_/]*\) *(\([1-9][A-z_]*\))\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
+d410 1
+a410 1
+<a href="$MANCGI/apropos?$COMMAND$SECTION$ARCH$COLL">Try
+d428 1
+a428 1
+<td><a href="$MANCGI?intro+1$ARCH$COLL">GENERAL COMMANDS</a></td>
+d432 1
+a432 1
+<td><a href="$MANCGI?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</a></td>
+d436 1
+a436 1
+<td><a href="$MANCGI?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</a></td>
+d440 1
+a440 1
+<td><a href="$MANCGI?intro+3f$ARCH$COLL">FORTRAN LIBRARY FUNCTIONS</a></td>
+d444 1
+a444 1
+<td><a href="$MANCGI?intro+3lua$ARCH$COLL">LUA MODULES</a></td>
+d448 1
+a448 1
+<td><a href="$MANCGI?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</a></td>
+d452 1
+a452 1
+<td><a href="$MANCGI?intro+5$ARCH$COLL">FILE FORMATS</a></td>
+d456 1
+a456 1
+<td><a href="$MANCGI?intro+6$ARCH$COLL">GAMES AND DEMOS</a></td>
+d460 1
+a460 1
+<td><a href="$MANCGI?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</a></td>
+d464 1
+a464 1
+<td><a href="$MANCGI?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</a></td>
+d468 1
+a468 1
+<td><a href="$MANCGI?intro+9$ARCH$COLL">KERNEL INTERNALS</a></td>
+d472 1
+a472 1
+<td><a href="$MANCGI?intro+9lua$ARCH$COLL">LUA KERNEL BINDINGS</a></td>
+d480 1
+a480 1
+<td><a href="$MANCGI?X">X WINDOW SYSTEM</a></td>
+d497 1
+a497 1
+<form method=post action="$MANCGI/man">
+d574 1
+a574 1
+&copy;1996-$CYEAR Modified for <a href="http://www.netbsd.org/">NetBSD</a>
+@
+
+
+1.19
+log
+@Tell robots not to index apropos queries
+@
+text
+@d89 1
+a89 1
+if [ $# -lt 1 ]
+d91 7
+d100 1
+a100 1
+    set -- ${QUERY_STRING}
+@
+
+
+1.18
+log
+@Return 404 when page not found. Collect stderr when doing apropos.
+@
+text
+@d182 1
+@
+
+
+1.17
+log
+@Strip leading path from COMMAND.
+CVE-2018-14429: Local file include via absolute path traversal
+http://seclists.org/bugtraq/2018/Aug/12
+Mitigated by man.conf only accepting select filename suffixes.
+
+Remove an unnecessary eval.
+Improve quoting.
+@
+text
+@a191 19
+# End of headers
+cat <<END
+
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=$CHARSET">
+<style type="text/css">
+<!--
+table { padding: 0; }
+table.outer { width: 500px; }
+th, td { border: 0; padding: 0; }
+.intro th, .intro td { padding-left: 10px; }
+b.section { font-size: 150%; }
+.small { font-size: 80%; }
+-->
+</style>
+END
+
+d255 28
+d294 6
+a299 1
+	    man -C "$MANROOT/man.conf" $MANPARAM -- "$COMMAND" 2>/dev/null
+@
+
+
+1.16
+log
+@restore X to be conditional on default arch and coll only
+it refers to normal numerical sections that won't work elsewhere
+@
+text
+@d97 3
+a99 3
+COMMAND=${1}
+SECTION=${2:-ANY}
+COLL=${3:-DEFAULT}
+d103 1
+a103 1
+COMMAND=$1
+d105 1
+a105 1
+SECTION=$1
+d107 1
+a107 1
+COLL=$1
+d460 1
+a460 1
+    eval set -- $i
+@
+
+
+1.15
+log
+@handle "mach/command" in addition to just "command"
+requires NetBSD 7.1 or later (or possibly something before 2013)
+@
+text
+@d419 4
+d427 4
+@
+
+
+1.14
+log
+@revert utf-8 back to iso-8859-1
+otherwise options (e.g. "-1" etc. for ls(1)) don't display correctly
+@
+text
+@d132 1
+a132 1
+	    COMMAND=$(echo "$i" | sed -e 's/command=//')
+d336 1
+a336 1
+	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9][A-z]*\))\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
+d341 1
+a341 1
+	    -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9][A-z_]*\))\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
+@
+
+
+1.13
+log
+@redo front page as a table
+add 3f, 3lua, and 9lua to front page
+make X unconditional on front page
+switch to utf-8
+@
+text
+@d51 1
+a51 1
+# Character set UTF-8
+d53 2
+a54 2
+LC_CTYPE=en_US.UTF-8
+CHARSET=utf-8
+@
+
+
+1.12
+log
+@original author page is 404
+remove email addresses from footer
+@
+text
+@d51 1
+a51 1
+# Character set ISO-8859-1
+d53 2
+a54 2
+LC_CTYPE=en_US.ISO8859-1
+CHARSET=iso-8859-1
+d204 1
+d369 55
+a423 23
+<p>Here are the intro pages of each section:</p>
+<ol>
+<li><a href="$MANCGI?intro+1$ARCH$COLL">GENERAL COMMANDS</a></li>
+<li><a href="$MANCGI?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</a></li>
+<li><a href="$MANCGI?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</a></li>
+<li><a href="$MANCGI?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</a></li>
+<li><a href="$MANCGI?intro+5$ARCH$COLL">FILE FORMATS</a></li>
+<li><a href="$MANCGI?intro+6$ARCH$COLL">GAMES AND DEMOS</a></li>
+<li><a href="$MANCGI?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</a></li>
+<li><a href="$MANCGI?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</a></li>
+<li><a href="$MANCGI?intro+9$ARCH$COLL">KERNEL INTERNALS</a></li>
+</ol>
+END
+    case "$ARCH$COLL" in
+    "")
+	cat <<END
+<ul>
+<li><a href="$MANCGI?X">X WINDOW SYSTEM</a></li>
+</ul>
+END
+	;;
+    esac
+    cat <<END
+@
+
+
+1.11
+log
+@handle multicharacter sections (e.g. intro(9lua))
+add X11R6, 3lua, and 9lua
+@
+text
+@a4 2
+VERSION="7.0"
+#
+d13 3
+d477 1
+a477 2
+&copy;1994 <a href="http://www.ntua.gr/~christia/man-cgi.html">Man-cgi
+$VERSION</A>, Panagiotis Christias &lt;christia@@softlab.ntua.gr&gt;<br>
+d479 1
+a479 12
+by <a href="http://kimmo.suominen.com/">Kimmo Suominen</a>
+<script><!--
+document.write ('&lt;<A HREF="mailto:')
+document.write ('kimmo')
+document.write ('@@')
+document.write ('suominen.com')
+document.write ('">')
+document.write ('kimmo')
+document.write ('@@')
+document.write ('suominen.com')
+document.write ('</A>&gt;\n')
+// --></script>
+d482 6
+a487 6
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-39862532-1', 'gw.com');
+  ga('send', 'pageview');
+@
+
+
+1.10
+log
+@replace X11R6 with X11R7
+refer to X instead of X+X11
+adjust section ordering
+@
+text
+@d5 1
+a5 1
+VERSION="1.15"
+d25 1
+d36 1
+a36 1
+# Last update: Fri May 5 1995
+d334 1
+a334 1
+	    -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9]\)[A-z]*)\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
+d339 1
+a339 1
+	    -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9]\)[A-z_]*)\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
+d407 1
+a407 1
+    1:1 2:2 3:3 3f:3f 4:4 5:5 6:6 7:7 8:8 9:9 l:l n:n \
+d409 1
+@
+
+
+1.9
+log
+@Use our own man.conf, which calls nroff instead of mandoc.
+We don't know how to point mandoc at the version-specific macros.
+@
+text
+@d383 1
+a383 1
+<li><a href="$MANCGI?X+X11">X WINDOW SYSTEM</a></li>
+d406 2
+a407 2
+    1:1 2:2 3:3 3f:3f 4:4 5:5 6:6 7:7 8:8 9:9 n:n l:l \
+    X:X11R6 \
+d410 1
+a411 1
+    perl:perl \
+@
+
+
+1.8
+log
+@look at QUERY_STRING if no arguments are passed to the script
+fcgiwrap does not set up the argument vector from QUERY_STRING
+@
+text
+@d262 1
+a262 1
+	    man -w -- "$COMMAND" >/dev/null 2>&1
+d267 1
+a267 1
+	man -w -- "$SECTION" "$COMMAND" >/dev/null 2>&1
+d282 1
+a282 1
+	    man $MANPARAM -- "$COMMAND" 2>/dev/null
+d285 1
+a285 1
+	    man -- "$SECTION" "$COMMAND" 2>/dev/null
+@
+
+
+1.7
+log
+@no expires header for the search form
+@
+text
+@d87 8
+d119 1
+a136 1
+    IFS="${OIFS}"
+@
+
+
+1.6
+log
+@update MANROOT for running on talisker
+@
+text
+@d176 5
+a180 2
+echo "Expires: $EXPIRES"
+echo "Cache-Control: public, max-age=$EXPSECS"
+@
+
+
+1.5
+log
+@Add support for NONE architecture to see non-arch versions of pages.
+Use "man -w" to see if a page exists instead of scraping stderr from man.
+Don't link the header (uppercased link won't work).
+Fix indentation a lot.
+@
+text
+@d60 1
+a60 1
+MANROOT=/proj/www/man
+@
+
+
+1.4
+log
+@Fix GROFF_TMAC_PATH
+@
+text
+@d130 2
+a131 2
+	80) ;;
+	*)  PORT=":${SERVER_PORT}";;
+d134 12
+a145 12
+	ANY.DEFAULT)
+	    SECTION=""
+	    ;;
+	*.DEFAULT)
+	    SECTION="+${SECTION}"
+	    ;;
+	ANY.*)
+	    SECTION="+.${ARCH}"
+	    ;;
+	*)
+	    SECTION="+${SECTION}.${ARCH}"
+	    ;;
+d148 7
+a154 2
+	DEFAULT)
+	    COLL=""
+d157 3
+a159 8
+	    case "$SECTION" in
+		"")
+		    COLL="++${COLL}"
+		    ;;
+		*)
+		    COLL="+${COLL}"
+		    ;;
+	    esac
+d164 1
+a164 1
+    echo 'Goto: <A HREF="'"$ME"'">'"$ME"'</A>'
+d233 8
+a240 1
+    MACHINE="$ARCH"
+d245 16
+a260 2
+if [ "$COMMAND" != "" ] ; then
+  cat <<END
+a264 1
+<pre>
+d266 14
+a279 6
+  case "$SECTION" in
+  "") man $MANPARAM -- "$COMMAND";;
+  *)  man -- "$SECTION" "$COMMAND";;
+  esac 2>&1 | \
+  sed \
+          -e '/- *$/N
+d284 1
+a284 1
+          -e '/- *$/N
+d289 1
+a289 1
+          -e '/- *$/N
+d294 1
+a294 1
+          -e '/- *$/N
+d299 2
+a300 2
+	  -e 's/</«/g' \
+	  -e 's/>/»/g' \
+d302 2
+a303 2
+	  -e '/^[A-Z]/s/.//g' \
+	  -e 's/^[A-Z][-+() ,A-Z_]*$/<b class="section">&<\/b>/' \
+d305 2
+a306 2
+	  -e 's/_\(.\)/<i>\1<\/i>/g' \
+	  -e 's/.\(.\)/<b>\1<\/b>/g' \
+d308 5
+a312 5
+	  -e 's#<i>\(.\)</i<b>\1</b>#<b>\1</b>#g' \
+          -e 's#</b><b>.##g' \
+          -e 's#</b>.<b>##g' \
+          -e 's#.##g' \
+          -e 's#_</i<b><</b>i>##g'  \
+d314 2
+a315 2
+	  -e 's#</i>\( *\)<i>#\1#g' \
+	  -e 's#</b>\( *\)<b>#\1#g' \
+d317 1
+a317 1
+	  -e 's#</b><i>\(.\)</i><b>#\1#g' \
+d319 2
+a320 2
+	  -e 's/^  \([A-Z][ ,0-9A-z_]*\)$/  <b>\1<\/b>/' \
+	  -e 's/^   \([A-Z][ ,0-9A-z_]*\)$/   <b>\1<\/b>/' \
+d322 1
+a322 1
+	  -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9]\)[A-z]*)\)#<a href=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</a>#g" \
+d324 16
+a339 28
+	  -e 's/\&/\&amp;/g' \
+          -e 's/«/\&lt;/g' \
+          -e 's/»/\&gt;/g' \
+	  -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9]\)[A-z_]*)\)#<a href=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</a>#" \
+	  2>/dev/null | \
+  ( read a
+    notfound=0
+    set -- $a
+    case "$2 $3 $4" in
+    "Formatting manual page...")
+      ;;
+    "no entry for")
+      notfound=1
+      echo "$a"
+      ;;
+    *)
+      echo "$a"
+      ;;
+    esac
+    cat -s 2>/dev/null
+    echo "</PRE>"
+    if [ $notfound -eq 1 ]
+    then
+      case "$ARCH$COLL" in
+      "") SECTION="";;
+      *)  SECTION="+";;
+      esac
+      cat <<END
+a344 1
+  )
+d346 1
+a346 1
+  cat <<END
+d368 3
+a370 3
+  case "$ARCH$COLL" in
+  "")
+    cat <<END
+d375 3
+a377 3
+    ;;
+  esac
+  cat <<END
+d394 1
+a394 1
+  for i in ANY:ANY \
+d402 1
+a402 1
+  do
+d415 2
+a416 2
+  done
+  cat <<END
+d420 2
+a421 2
+  for i in DEFAULT $(cat $MANROOT/archlist)
+  do
+d424 2
+a425 2
+      echo "  <option value=\"DEFAULT\">DEFAULT ($OSARCH)</option>"
+      ;;
+d427 2
+a428 2
+      echo "  <option value=\"$i\" selected>$i</option>"
+      ;;
+d430 2
+a431 2
+      echo "  <option value=\"$i\">$i</option>"
+      ;;
+d433 2
+a434 2
+  done
+  cat <<END
+d438 2
+a439 2
+  for i in DEFAULT $(cat $MANROOT/colllist)
+  do
+d442 2
+a443 2
+      echo "  <option value=\"$i\">$i ($OSNAME-$OSREL)</option>"
+      ;;
+d445 2
+a446 2
+      echo "  <option value=\"$i\" selected>$i</option>"
+      ;;
+d448 2
+a449 2
+      echo "  <option value=\"$i\">$i</option>"
+      ;;
+d451 2
+a452 2
+  done
+  cat <<END
+@
+
+
+1.3
+log
+@Validate as HTML5.
+Add Google Analytics.
+@
+text
+@d221 1
+a221 1
+    GROFF_TMAC_PATH="${MANROOT}/tmac"
+@
+
+
+1.2
+log
+@add Expires, Cache-Control and Last-Modified headers
+replace `...` with $(...)
+@
+text
+@d49 5
+d99 1
+a99 1
+echo "Content-Type: text/html"
+d180 16
+a195 1
+echo ""
+d240 5
+a244 7
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD>
+<TITLE>$COMMAND${SECTION:+"($SECTION)"} - ${CNAME:-"$OSNAME"} Manual Pages</TITLE>
+<LINK REL="shortcut icon" HREF="/${CNAME:-"$OSNAME"}.ico" TYPE="image/x-icon">
+</HEAD>
+<BODY>
+<PRE>
+d275 1
+a275 1
+	  -e 's/^[A-Z][-+() ,A-Z_]*$/<B><FONT SIZE="+2">&<\/FONT><\/B>/' \
+d294 1
+a294 1
+	  -e "/^  */s#\(\(<[bi]>\)*\([0-9A-z_][-.,0-9A-z_]*\) *\(</[bi]>\)* *(\([1-9]\)[A-z]*)\)#<A HREF=\"$MANCGI\?\3+\5$ARCH$COLL\">\1</A>#g" \
+d299 1
+a299 1
+	  -e "s#^\(\([0-9A-z_][-0-9A-z_]*\) *(\([1-9]\)[A-z_]*)\)#<A HREF=\"$MANCGI\?\2+\3$ARCH$COLL\">\1</A>#" \
+d324 3
+a326 3
+<P>The manual page was not found.
+<A HREF="$MANCGI/apropos?$COMMAND$SECTION$ARCH$COLL">Try
+apropos</A> or select a different architecture.</P>
+d332 20
+a351 22
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HEAD>
+<TITLE>${CNAME:-"$OSNAME"} Manual Pages</TITLE>
+<LINK REL="shortcut icon" HREF="/${CNAME:-"$OSNAME"}.ico" TYPE="image/x-icon">
+</HEAD>
+<BODY>
+<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=500><TR><TD>
+<H1><IMG ALT="" SRC=$PAGES> ${CNAME:-"$OSNAME"} Manual Pages</H1>
+<STRONG>${CNAME:-"$OSNAME"} ${CREL:-"$OSREL"} (${MACHINE:-"$OSARCH"})</STRONG>
+<HR>
+<P>Here are the intro pages of each section:</P>
+<OL>
+<LI><A HREF="$MANCGI?intro+1$ARCH$COLL">GENERAL COMMANDS</A></LI>
+<LI><A HREF="$MANCGI?intro+2$ARCH$COLL">SYSTEM CALLS AND ERROR NUMBERS</A></LI>
+<LI><A HREF="$MANCGI?intro+3$ARCH$COLL">C LIBRARY FUNCTIONS</A></LI>
+<LI><A HREF="$MANCGI?intro+4$ARCH$COLL">SPECIAL FILES AND HARDWARE SUPPORT</A></LI>
+<LI><A HREF="$MANCGI?intro+5$ARCH$COLL">FILE FORMATS</A></LI>
+<LI><A HREF="$MANCGI?intro+6$ARCH$COLL">GAMES AND DEMOS</A></LI>
+<LI><A HREF="$MANCGI?intro+7$ARCH$COLL">MISCELLANEOUS INFORMATION PAGES</A></LI>
+<LI><A HREF="$MANCGI?intro+8$ARCH$COLL">SYSTEM MAINTENANCE COMMANDS</A></LI>
+<LI><A HREF="$MANCGI?intro+9$ARCH$COLL">KERNEL INTERNALS</A></LI>
+</OL>
+d356 3
+a358 3
+<UL>
+<LI><A HREF="$MANCGI?X+X11">X WINDOW SYSTEM</A></LI>
+</UL>
+d363 4
+a366 4
+<P><FONT SIZE="-1">Sometimes man pages are not stored in the right
+section and you may get an empty page. Follow the link at the top of
+the empty page and you'll get your man page (hopefully).</FONT></P>
+</TD></TR></TABLE>
+d370 8
+a377 8
+<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH=500><TR><TD>
+<HR>
+<P>You can also request any man page by name and (optionally) by section:</P>
+<FORM METHOD=POST ACTION="$MANCGI/man">
+  <TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
+  <TR><TD>Command:&nbsp;</TD><TD><INPUT NAME=command SIZE=24
+  VALUE="$COMMAND"></TD></TR>
+  <TR><TD>Section:&nbsp;</TD><TD><SELECT NAME=section>
+d394 1
+a394 1
+	echo "  <OPTION VALUE=\"$1\" SELECTED> $2"
+d397 1
+a397 1
+	echo "  <OPTION VALUE=\"$1\"> $2"
+d402 2
+a403 2
+  </SELECT></TD></TR>
+  <TR><TD>Architecture:&nbsp;</TD><TD><SELECT NAME=arch>
+d409 1
+a409 1
+      echo "  <OPTION VALUE=\"DEFAULT\"> DEFAULT ($OSARCH)"
+d412 1
+a412 1
+      echo "  <OPTION VALUE=\"$i\" SELECTED> $i"
+d415 1
+a415 1
+      echo "  <OPTION VALUE=\"$i\"> $i"
+d420 2
+a421 2
+  </SELECT></TD></TR>
+  <TR><TD>Collection:&nbsp;</TD><TD><SELECT NAME=coll>
+d427 1
+a427 1
+      echo "  <OPTION VALUE=\"$i\"> $i ($OSNAME-$OSREL)"
+d430 1
+a430 1
+      echo "  <OPTION VALUE=\"$i\" SELECTED> $i"
+d433 1
+a433 1
+      echo "  <OPTION VALUE=\"$i\"> $i"
+d438 15
+a452 15
+  </SELECT></TD></TR>
+  <TR><TD>&nbsp;</TD>
+  <TD><INPUT TYPE=submit VALUE="Show manual page"></TD></TR>
+  </TABLE>
+  <P>Use the DEFAULT collection to view manual pages
+  for third-party software.</P>
+  <HR>
+</FORM>
+</TD></TR></TABLE>
+<ADDRESS><FONT SIZE="-1">
+&copy;1994 <A HREF="http://www.ntua.gr/~christia/man-cgi.html">Man-cgi
+$VERSION</A>, Panagiotis Christias &lt;christia@@softlab.ntua.gr&gt;<BR>
+&copy;1996-$CYEAR Modified for <A HREF="http://www.netbsd.org/">NetBSD</A>
+by <A HREF="http://kimmo.suominen.com/">Kimmo Suominen</A>
+<SCRIPT LANGUAGE="JavaScript"><!--
+d462 12
+a473 4
+// --></SCRIPT>
+</FONT></ADDRESS>
+</BODY>
+</HTML>
+@
+
+
+1.1
+log
+@Initial revision
+@
+text
+@d50 3
+a52 3
+OSARCH=`uname -m`
+OSNAME=`uname -s`
+OSREL=`uname -r`
+d65 14
+a78 1
+CYEAR=`date +%Y`
+d94 5
+a98 1
+echo "Content-type: text/html"
+d110 1
+a110 1
+	    ARCH=`echo "$i" | sed -e 's/arch=//'`
+d113 1
+a113 1
+	    COLL=`echo "$i" | sed -e 's/coll=//'`
+d116 1
+a116 1
+	    COMMAND=`echo "$i" | sed -e 's/command=//'`
+d119 1
+a119 1
+	    SECTION=`echo "$i" | sed -e 's/section=//'`
+d170 4
+d179 1
+a179 1
+    ARCH=`echo $SECTION | sed -e 's/^\.//'`
+d183 2
+a184 2
+    ARCH=`echo $SECTION | awk -F. '{print $2}'`
+    SECTION=`echo $SECTION | awk -F. '{print $1}'`
+d197 1
+a197 1
+    COLL=`echo "$COLL" | tr -c -d '[-.A-Za-z0-9]'`
+d202 2
+a203 2
+    CNAME=`echo $COLL | awk -F- '{print $1}'`
+    CREL=`echo $COLL | sed -e 's/^[^-]*-//'`
+d389 1
+a389 1
+  for i in DEFAULT `cat $MANROOT/archlist`
+d407 1
+a407 1
+  for i in DEFAULT `cat $MANROOT/colllist`
+@

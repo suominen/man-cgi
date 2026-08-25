@@ -7,7 +7,7 @@
 # 20260809  Kimmo Suominen
 #
 
-MANCGI="${MANCGI:-${TESTS_DIR}/../../sh/man-cgi}"
+MANCGI="${MANCGI:-${TESTS_DIR}/../src/man-cgi}"
 MANROOT="${TESTS_DIR}/fixtures/manroot"
 
 # Expected Last-Modified values for fixture files; setup_fixtures()

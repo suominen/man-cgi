@@ -1,0 +1,6 @@
+Disable pathname expansion script-wide
+
+The unquoted set -- splits globbed the request words against the
+filesystem before the sanitizers ran, so /ls* with a matching file
+in fcgiwrap's cwd became a request for ls. One script-wide set -f,
+no set +f -- nothing in the script globs. Test: tests/t/globbing.

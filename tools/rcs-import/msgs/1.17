@@ -1,0 +1,10 @@
+Strip the leading path from COMMAND (CVE-2018-14429)
+
+CVE-2018-14429: Local file include via absolute path traversal
+http://seclists.org/bugtraq/2018/Aug/12
+Mitigated by man.conf only accepting select filename suffixes.
+
+Also:
+
+- Remove an unnecessary eval.
+- Improve quoting.

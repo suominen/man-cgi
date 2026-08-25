@@ -1,9 +1,9 @@
 # TODO
 
 Open work for man.netbsd.org. Each item becomes a separately
-reviewable changeset (a feature branch here, an RCS revision of
-`../sh/man-cgi`, or a branch in the repo named). Unscheduled
-collects open ideas and known defects not yet part of any effort.
+reviewable changeset (a feature branch here, or a branch in the
+repo named). Unscheduled collects open ideas and known defects not
+yet part of any effort.
 
 ## Unscheduled
 

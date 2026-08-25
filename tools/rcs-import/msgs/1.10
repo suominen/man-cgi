@@ -1,0 +1,5 @@
+Replace X11R6 with X11R7 and adjust the section list
+
+- Replace X11R6 with X11R7.
+- Refer to X instead of X+X11.
+- Adjust section ordering.

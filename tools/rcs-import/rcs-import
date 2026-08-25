@@ -1,0 +1,374 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Replay an RCS file's revisions and an existing git history into one
+# linear git branch, ordered by timestamp.
+#
+# 20260825  Kimmo Suominen
+#
+# How it works
+#
+# 1. Every revision in the RCS file (trunk only: a branch revision is
+#    an error) and every commit reachable from OLDREF (which must be
+#    linear: a merge is an error) becomes an event "epoch seq kind
+#    id".  The events are sorted by epoch, then by seq, which keeps
+#    git commits in their original order when two of them share a
+#    timestamp; an RCS revision sharing a timestamp with any other
+#    event is an error, because the order would be arbitrary and the
+#    result not reproducible.  Git commits are placed by author date:
+#    it is what git log shows and what an amend preserves.  The root
+#    commit of OLDREF is skipped when its tree is empty (the "empty
+#    root commit" convention), so that the first RCS revision can be
+#    the root of the result.
+#
+# 2. The events are replayed with git plumbing into a private index
+#    (GIT_INDEX_FILE), never touching the working tree or the real
+#    index.  A git event reads the original commit's whole tree and
+#    adds the current RCS blob at PATH; an RCS event reads the tree
+#    of the most recently replayed git commit (or the empty tree)
+#    and adds the new blob.  Replaying whole trees instead of
+#    cherry-picking diffs means no conflict is possible.
+#
+# 3. A git commit is copied as an object: the original commit object
+#    with its tree and parent lines replaced and any signature
+#    dropped, so author, committer, both dates, encoding and message
+#    stay byte for byte (a message without a final newline gains
+#    one, which rcs-import-verify reports).  An RCS revision is made
+#    with commit-tree: the author given with -a (for every RCS
+#    author; the login names are only reported), the RCS date -- RCS
+#    stores UTC -- rendered with the offset the zone given with -z
+#    had at that instant, the committer equal to the author, and the
+#    rlog text as the message unless MSGDIR/REV exists, in which
+#    case that file replaces it.
+#
+# 4. The result is stored as refs/heads/NEWREF and a map of every
+#    event to its new commit is written to stdout, one per line:
+#    "git OLDSHA NEWSHA" or "rcs REV NEWSHA".  rcs-import-verify
+#    reads that map.
+#
+# Requires GNU date (-d) and the RCS tools (rlog, co).
+#
+
+set -eu
+set -o pipefail
+
+PATH=/bin:/usr/bin
+export PATH
+LC_ALL=C
+export LC_ALL
+unset RCSINIT
+
+PROG="${0##*/}"
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+warn()
+{
+    echo "${PROG}: ${*}" 1>&2
+}
+
+usage()
+{
+    cat <<EOU
+Usage:	${PROG} [-fhx] [-a author] [-m msgdir] [-z zone]
+	rcsfile path oldref newref
+
+Replay the revisions of RCSFILE and the commits reachable from the
+git ref OLDREF into one linear branch NEWREF, ordered by timestamp,
+with the RCS file's content stored at PATH in every commit.  Run
+inside the git repository.  Writes a map of old commits and RCS
+revisions to new commits on stdout.
+
+Options:
+-a	Author (Name <email>) for the RCS revisions; default from
+	git config user.name and user.email
+-f	Replace NEWREF if it already exists
+-h	Show this help
+-m	Directory of replacement messages, one file per revision,
+	named after the revision (e.g. 1.17)
+-x	Store PATH as an executable (mode 100755, default 100644)
+-z	Time zone for the RCS dates (e.g. Europe/Helsinki);
+	default is the local zone
+EOU
+}
+
+# Print the log message of RCS revision $1 in $2.  rlog -r prints
+# one revision block: a 28-character line of dashes, the revision
+# and date lines, the message, and a line of equals signs, which is
+# dropped as the last line.
+rcs_message()
+{
+    rlog -r"${1}" "${2}" |
+    awk '
+	want == "" && length($0) == 28 && /^-+$/ { want = "date"; next }
+	want == "date" && /^date: / { want = "first"; next }
+	want == "first" { want = "body"; if ($0 ~ /^branches: /) next }
+	want == "body" { line[n++] = $0 }
+	END { for (i = 0; i < n - 1; i++) print line[i] }
+    '
+}
+
+author=
+force=
+mode=100644
+msgdir=
+zone=
+
+while getopts a:fhm:xz: opt
+do
+    case "${opt}" in
+    a)  author="${OPTARG}";;
+    f)  force=true;;
+    h)  usage; exit 0;;
+    m)  msgdir="${OPTARG}";;
+    x)  mode=100755;;
+    z)  zone="${OPTARG}";;
+    *)  usage 1>&2; exit 2;;
+    esac
+done
+shift $((${OPTIND} - 1))
+
+if [ $# -ne 4 ]
+then
+    usage 1>&2
+    exit 2
+fi
+
+rcsfile="${1}"
+path="${2}"
+oldref="${3}"
+newref="${4}"
+
+[ -r "${rcsfile}" ] ||
+die "Cannot read ${rcsfile}"
+if [ -n "${msgdir}" ] && [ ! -d "${msgdir}" ]
+then
+    die "Not a directory: ${msgdir}"
+fi
+case "${path}" in
+''|/*|*/../*|../*|*/..|..|.|./*|*/./*|*/.|*/)
+    die "Invalid path: ${path}"
+    ;;
+esac
+if [ -n "${author}" ]
+then
+    case "${author}" in
+    ?*' <'?*'>')
+	;;
+    *)
+	die "Invalid author (want Name <email>): ${author}"
+	;;
+    esac
+fi
+if [ -n "${zone}" ]
+then
+    [ -r "${TZDIR:-/usr/share/zoneinfo}/${zone}" ] ||
+    die "Unknown time zone: ${zone}"
+    TZ="${zone}"
+    export TZ
+fi
+
+command -v git > /dev/null ||
+die 'git is required'
+command -v rlog > /dev/null ||
+die 'rlog is required'
+command -v co > /dev/null ||
+die 'co is required'
+date -d @0 +%s > /dev/null 2>&1 ||
+die 'GNU date is required'
+
+git rev-parse --git-dir > /dev/null 2>&1 ||
+die 'Not inside a git repository'
+git rev-parse --verify --quiet "${oldref}^{commit}" > /dev/null ||
+die "Not a commit: ${oldref}"
+[ -z "$(git rev-list -n 1 "${oldref}" -- "${path}")" ] ||
+die "${oldref} already tracks ${path}"
+git check-ref-format --branch "${newref}" > /dev/null 2>&1 ||
+die "Invalid branch name: ${newref}"
+if git show-ref --verify --quiet "refs/heads/${newref}"
+then
+    ${force:-false} ||
+    die "Branch exists (use -f to replace): ${newref}"
+    [ "$(git symbolic-ref --quiet HEAD || :)" != "refs/heads/${newref}" ] ||
+    die "Branch is checked out: ${newref}"
+fi
+
+if [ -z "${author}" ]
+then
+    name=$(git config user.name) || die 'No git user.name'
+    email=$(git config user.email) || die 'No git user.email'
+    author="${name} <${email}>"
+fi
+author_name="${author% <*}"
+author_email="${author##* <}"
+author_email="${author_email%>}"
+
+tmp=$(mktemp -d)
+trap 'rm -rf "${tmp}"' EXIT INT TERM HUP
+
+GIT_INDEX_FILE="${tmp}/index"
+export GIT_INDEX_FILE
+
+empty_tree=$(git hash-object -t tree /dev/null)
+
+#
+# Build the event list
+#
+
+merges=$(git rev-list --count --merges "${oldref}")
+[ "${merges}" -eq 0 ] ||
+die "${oldref} has ${merges} merge commit(s):" \
+    'only a linear history can be replayed'
+
+root=$(git rev-list --max-parents=0 "${oldref}")
+exclude=
+if [ "$(git rev-parse "${root}^{tree}")" = "${empty_tree}" ]
+then
+    warn "skipping the empty root commit ${root}"
+    exclude="^${root}"
+fi
+# ${exclude} is unquoted on purpose: empty means no argument.
+git log --reverse --format='%at %H' "${oldref}" ${exclude} |
+awk '{ print $1, NR, "git", $2 }' > "${tmp}/events"
+
+# One "date time revision login" line per revision.  A revision block
+# starts with rlog's 28-character line of dashes; the revision and
+# date lines follow it, and nothing after the date line is looked at
+# until the next block.
+rlog "${rcsfile}" |
+awk '
+    length($0) == 28 && /^-+$/ { want = "revision"; next }
+    want == "revision" && /^revision / { rev = $2; want = "date"; next }
+    want == "date" && /^date: / {
+	gsub(";", "", $2); gsub(";", "", $3); sub(";$", "", $5)
+	print $2, $3, rev, $5
+	want = ""
+    }
+' > "${tmp}/rcs"
+[ -s "${tmp}/rcs" ] ||
+die "No revisions in ${rcsfile}"
+
+while read -r day time rev login
+do
+    case "${rev}" in
+    *.*.*)
+	die "Revision ${rev} is on a branch: only a trunk can be replayed"
+	;;
+    esac
+    epoch=$(date -u -d "${day} ${time}" +%s) ||
+    die "Cannot parse RCS date for ${rev}: ${day} ${time}"
+    echo "${epoch} 0 rcs ${rev}"
+done < "${tmp}/rcs" >> "${tmp}/events"
+
+logins=$(awk '{ print $4 }' "${tmp}/rcs" | sort -u | tr '\n' ' ')
+warn "RCS revisions by ${logins}are attributed to ${author}"
+
+sort -k1,1n -k2,2n "${tmp}/events" > "${tmp}/sorted"
+
+awk '
+    NR > 1 && $1 == prev && ($3 == "rcs" || kind == "rcs") {
+	print line; print; exit 1
+    }
+    { prev = $1; kind = $3; line = $0 }
+' "${tmp}/sorted" > "${tmp}/ties" ||
+die "Events share a timestamp: $(tr '\n' ';' < "${tmp}/ties")"
+
+#
+# Replay
+#
+
+parent=
+blob=
+gittree="${empty_tree}"
+commit=
+
+while read -r epoch seq kind id <&3
+do
+    case "${kind}" in
+    git)
+	git read-tree "${id}"
+	gittree=$(git rev-parse "${id}^{tree}")
+	if [ -n "${blob}" ]
+	then
+	    git update-index --add --cacheinfo "${mode},${blob},${path}"
+	fi
+	tree=$(git write-tree)
+
+	# Copy the commit object, replacing the tree and parent lines
+	# and dropping any signature (it would not verify), which is a
+	# header line followed by continuation lines starting with a
+	# space.  Everything else, including the message, is kept as
+	# it is.
+	commit=$(
+	    git cat-file commit "${id}" |
+	    awk -v tree="${tree}" -v parent="${parent}" '
+		body { print; next }
+		/^$/ { body = 1; print; next }
+		/^tree / {
+		    print "tree " tree
+		    if (parent != "") print "parent " parent
+		    next
+		}
+		/^parent / { next }
+		/^gpgsig/ { skip = 1; next }
+		skip && /^ / { next }
+		{ skip = 0; print }
+	    ' |
+	    git hash-object -t commit -w --stdin
+	) || die "Cannot copy commit ${id}"
+	;;
+    rcs)
+	blob=$(
+	    co -q -p -ko -r"${id}" "${rcsfile}" |
+	    git hash-object -w --stdin
+	) || die "Cannot check out revision ${id}"
+	git read-tree "${gittree}"
+	git update-index --add --cacheinfo "${mode},${blob},${path}"
+	tree=$(git write-tree)
+
+	if [ -n "${msgdir}" ] && [ -f "${msgdir}/${id}" ]
+	then
+	    cat "${msgdir}/${id}" > "${tmp}/msg"
+	else
+	    rcs_message "${id}" "${rcsfile}" > "${tmp}/msg"
+	fi
+	grep -q '[^[:space:]]' "${tmp}/msg" ||
+	die "Empty message for revision ${id}"
+
+	date=$(date -d "@${epoch}" +"${epoch} %z") ||
+	die "Cannot render the date of revision ${id}"
+	if [ -n "${parent}" ]
+	then
+	    set -- -p "${parent}"
+	else
+	    set --
+	fi
+	commit=$(
+	    GIT_AUTHOR_NAME="${author_name}" \
+	    GIT_AUTHOR_EMAIL="${author_email}" \
+	    GIT_AUTHOR_DATE="${date}" \
+	    GIT_COMMITTER_NAME="${author_name}" \
+	    GIT_COMMITTER_EMAIL="${author_email}" \
+	    GIT_COMMITTER_DATE="${date}" \
+	    git commit-tree "${tree}" "${@}" -F "${tmp}/msg"
+	) || die "Cannot commit revision ${id}"
+	;;
+    *)
+	die "Unknown event kind: ${kind}"
+	;;
+    esac
+
+    echo "${kind} ${id} ${commit}"
+    parent="${commit}"
+done 3< "${tmp}/sorted"
+
+[ -n "${commit}" ] ||
+die 'No events to replay'
+
+git update-ref "refs/heads/${newref}" "${commit}"
+warn "refs/heads/${newref} is ${commit}" \
+    "($(($(wc -l < "${tmp}/sorted"))) commits)"

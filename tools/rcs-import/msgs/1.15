@@ -1,0 +1,3 @@
+Handle "mach/command" in addition to just "command"
+
+Requires NetBSD 7.1 or later (or possibly something before 2013).

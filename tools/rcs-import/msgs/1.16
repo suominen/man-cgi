@@ -1,0 +1,3 @@
+Restore X to be conditional on default arch and coll only
+
+It refers to normal numerical sections that won't work elsewhere.

@@ -1,0 +1,333 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Verify the branch built by rcs-import against its sources: every
+# git commit copied byte for byte, every RCS revision stored at PATH
+# with its RCS date and message, one linear chain in timestamp order
+# that covers both histories.
+#
+# 20260825  Kimmo Suominen
+#
+# The RCS log message is extracted with the same awk as in
+# rcs-import, so a message whose first line starts "branches: "
+# would lose that line in both and pass.  No message in the RCS
+# file of man-cgi does that.
+#
+# Requires GNU date (-d) and the RCS tools (rlog, co).
+#
+
+set -eu
+set -o pipefail
+
+PATH=/bin:/usr/bin
+export PATH
+LC_ALL=C
+export LC_ALL
+unset RCSINIT
+
+PROG="${0##*/}"
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+usage()
+{
+    cat <<EOU
+Usage:	${PROG} [-hx] [-a author] [-m msgdir] [-z zone]
+	rcsfile path oldref newref map
+
+Check the branch NEWREF that rcs-import built from RCSFILE and
+OLDREF, and the map it wrote on stdout, against the sources: the
+chain is linear and in timestamp order, it covers every trunk
+revision of RCSFILE and every commit of OLDREF (except an empty
+root commit), every copied git commit differs from its original
+only by PATH, every RCS revision is stored at PATH with the RCS
+date and message and, when -a and -z are given, the expected
+author and offsets.  Run from the top of the working tree.  Exits
+0 when everything checks out and reports every failure otherwise.
+
+Options:
+-a	Expected author (Name <email>) of the RCS revisions
+-h	Show this help
+-m	Directory of replacement messages given to rcs-import
+-x	Expect PATH to be executable (mode 100755, default 100644)
+-z	Time zone given to rcs-import
+EOU
+}
+
+# Print the log message of RCS revision $1 in $2 (see rcs-import).
+rcs_message()
+{
+    rlog -r"${1}" "${2}" |
+    awk '
+	want == "" && length($0) == 28 && /^-+$/ { want = "date"; next }
+	want == "date" && /^date: / { want = "first"; next }
+	want == "first" { want = "body"; if ($0 ~ /^branches: /) next }
+	want == "body" { line[n++] = $0 }
+	END { for (i = 0; i < n - 1; i++) print line[i] }
+    '
+}
+
+# Print header field $1 of the commit object in file $2.
+header()
+{
+    sed -n "/^\$/q; s/^${1} //p" "${2}"
+}
+
+fail()
+{
+    echo "FAIL: ${*}" 1>&2
+    failures=$((${failures} + 1))
+}
+
+author=
+mode=100644
+msgdir=
+zone=
+
+while getopts a:hm:xz: opt
+do
+    case "${opt}" in
+    a)  author="${OPTARG}";;
+    h)  usage; exit 0;;
+    m)  msgdir="${OPTARG}";;
+    x)  mode=100755;;
+    z)  zone="${OPTARG}";;
+    *)  usage 1>&2; exit 2;;
+    esac
+done
+shift $((${OPTIND} - 1))
+
+if [ $# -ne 5 ]
+then
+    usage 1>&2
+    exit 2
+fi
+
+rcsfile="${1}"
+path="${2}"
+oldref="${3}"
+newref="${4}"
+map="${5}"
+
+[ -r "${rcsfile}" ] ||
+die "Cannot read ${rcsfile}"
+[ -r "${map}" ] ||
+die "Cannot read ${map}"
+if [ -n "${msgdir}" ] && [ ! -d "${msgdir}" ]
+then
+    die "Not a directory: ${msgdir}"
+fi
+case "${path}" in
+''|/*|*/../*|../*|*/..|..|.|./*|*/./*|*/.|*/)
+    die "Invalid path: ${path}"
+    ;;
+esac
+if [ -n "${zone}" ]
+then
+    [ -r "${TZDIR:-/usr/share/zoneinfo}/${zone}" ] ||
+    die "Unknown time zone: ${zone}"
+    TZ="${zone}"
+    export TZ
+fi
+
+command -v git > /dev/null ||
+die 'git is required'
+command -v rlog > /dev/null ||
+die 'rlog is required'
+command -v co > /dev/null ||
+die 'co is required'
+date -d @0 +%s > /dev/null 2>&1 ||
+die 'GNU date is required'
+
+git rev-parse --git-dir > /dev/null 2>&1 ||
+die 'Not inside a git repository'
+[ -z "$(git rev-parse --show-prefix)" ] ||
+die 'Run from the top of the working tree'
+git rev-parse --verify --quiet "${oldref}^{commit}" > /dev/null ||
+die "Not a commit: ${oldref}"
+git rev-parse --verify --quiet "${newref}^{commit}" > /dev/null ||
+die "Not a commit: ${newref}"
+[ -z "$(git rev-list -n 1 "${oldref}" -- "${path}")" ] ||
+die "${oldref} already tracks ${path}"
+
+tmp=$(mktemp -d)
+trap 'rm -rf "${tmp}"' EXIT INT TERM HUP
+
+failures=0
+empty_tree=$(git hash-object -t tree /dev/null)
+
+#
+# Shape: the map lists the branch in order; the chain is linear, in
+# author timestamp order, and only two git commits may share a
+# timestamp (they keep their original order)
+#
+
+git rev-list --reverse "${newref}" > "${tmp}/chain"
+awk '{ print $3 }' "${map}" > "${tmp}/mapped"
+cmp -s "${tmp}/chain" "${tmp}/mapped" ||
+fail "map does not list the commits of ${newref} in order"
+
+awk '{ print $1 }' "${map}" > "${tmp}/kinds"
+git log --reverse --format='%at %P' "${newref}" > "${tmp}/log"
+paste -d ' ' "${tmp}/kinds" "${tmp}/log" |
+awk '
+    NR > 1 && $2 < prev { print "timestamp decreasing at commit " NR }
+    NR > 1 && $2 == prev && ($1 == "rcs" || kind == "rcs") {
+	print "revision shares a timestamp at commit " NR
+    }
+    NR == 1 && NF != 2 { print "root commit has a parent" }
+    NR > 1 && NF != 3 { print "commit " NR " has " NF - 2 " parents" }
+    { prev = $2; kind = $1 }
+' > "${tmp}/shape"
+if [ -s "${tmp}/shape" ]
+then
+    fail "$(cat "${tmp}/shape")"
+fi
+
+#
+# Coverage: every old commit but an empty root, every trunk revision
+#
+
+merges=$(git rev-list --count --merges "${oldref}")
+[ "${merges}" -eq 0 ] ||
+fail "${oldref} has ${merges} merge commit(s)"
+root=$(git rev-list --max-parents=0 "${oldref}" | sed -n 1p)
+exclude=
+if [ "$(git rev-parse "${root}^{tree}")" = "${empty_tree}" ]
+then
+    exclude="^${root}"
+fi
+# ${exclude} is unquoted on purpose: empty means no argument.
+git rev-list --reverse "${oldref}" ${exclude} > "${tmp}/old"
+awk '$1 == "git" { print $2 }' "${map}" > "${tmp}/old.mapped"
+cmp -s "${tmp}/old" "${tmp}/old.mapped" ||
+fail "map does not list the commits of ${oldref} in order"
+
+rlog "${rcsfile}" |
+awk '
+    length($0) == 28 && /^-+$/ { want = "revision"; next }
+    want == "revision" && /^revision / { rev = $2; want = "date"; next }
+    want == "date" && /^date: / {
+	gsub(";", "", $2); gsub(";", "", $3)
+	print rev, $2, $3
+	want = ""
+    }
+' > "${tmp}/rcs"
+awk '{ print $1 }' "${tmp}/rcs" | sort -t. -k1,1n -k2,2n > "${tmp}/revs"
+awk '$1 == "rcs" { print $2 }' "${map}" |
+sort -t. -k1,1n -k2,2n > "${tmp}/revs.mapped"
+cmp -s "${tmp}/revs" "${tmp}/revs.mapped" ||
+fail "map does not list the revisions of ${rcsfile}"
+
+if [ -n "${msgdir}" ]
+then
+    for file in "${msgdir}"/*
+    do
+	[ -f "${file}" ] || continue
+	awk -v r="${file##*/}" '
+	    $1 == "rcs" && ($2 "") == (r "") { found = 1 }
+	    END { exit !found }
+	' "${map}" ||
+	fail "replacement message ${file} matches no revision"
+    done
+fi
+
+#
+# Every commit
+#
+
+prev=
+while read -r kind id new <&3 || [ -n "${new}" ]
+do
+    if [ -n "${prev}" ]
+    then
+	[ "$(git rev-parse "${new}^")" = "${prev}" ] ||
+	fail "${new} does not follow ${prev}"
+    fi
+    git cat-file commit "${new}" > "${tmp}/new"
+    sed '1,/^$/d' "${tmp}/new" > "${tmp}/new.msg"
+    [ -z "$(sed -n '/^$/q; /^gpgsig/p' "${tmp}/new")" ] ||
+    fail "${new}: carries a signature"
+
+    case "${kind}" in
+    git)
+	git cat-file commit "${id}" > "${tmp}/old"
+	for field in author committer encoding
+	do
+	    [ "$(header "${field}" "${tmp}/old")" = \
+		"$(header "${field}" "${tmp}/new")" ] ||
+	    fail "${new}: ${field} differs from ${id}"
+	done
+	sed '1,/^$/d' "${tmp}/old" > "${tmp}/old.msg"
+	cmp -s "${tmp}/old.msg" "${tmp}/new.msg" ||
+	fail "${new}: message differs from ${id}"
+	git diff --quiet "${id}" "${new}" -- . ":!${path}" ||
+	fail "${new}: tree differs from ${id} outside ${path}"
+	git diff --quiet "${prev:-${empty_tree}}" "${new}" -- "${path}" ||
+	fail "${new}: git commit changed ${path}"
+	;;
+    rcs)
+	want=$(co -q -p -ko -r"${id}" "${rcsfile}" | git hash-object --stdin) ||
+	want=
+	got=$(git rev-parse --verify --quiet "${new}:${path}") || got=
+	if [ -z "${want}" ] || [ "${want}" != "${got}" ]
+	then
+	    fail "${new}: ${path} is not revision ${id}"
+	fi
+	got=$(git ls-tree "${new}" -- "${path}" | awk '{ print $1 }')
+	[ "${got}" = "${mode}" ] ||
+	fail "${new}: ${path} has mode ${got}, want ${mode}"
+
+	# Compare as strings: to awk, 1.1 and 1.10 are the same number.
+	when=$(awk -v r="${id}" '($1 "") == (r "") { print $2, $3 }' "${tmp}/rcs")
+	a=$(header author "${tmp}/new")
+	c=$(header committer "${tmp}/new")
+	[ "${a}" = "${c}" ] ||
+	fail "${new}: committer differs from author"
+	if [ -z "${when}" ]
+	then
+	    fail "revision ${id} is not in ${rcsfile}"
+	elif epoch=$(date -u -d "${when}" +%s)
+	then
+	    [ "${a##*> }" = "${epoch} $(date -d "@${epoch}" +%z)" ] ||
+	    fail "${new}: date ${a##*> } is not RCS ${when} UTC"
+	else
+	    fail "revision ${id}: cannot parse RCS date ${when}"
+	fi
+	if [ -n "${author}" ]
+	then
+	    [ "${a%> *}>" = "${author}" ] ||
+	    fail "${new}: author is ${a%> *}>"
+	fi
+
+	if [ -n "${msgdir}" ] && [ -f "${msgdir}/${id}" ]
+	then
+	    cat "${msgdir}/${id}" > "${tmp}/want.msg"
+	else
+	    rcs_message "${id}" "${rcsfile}" > "${tmp}/want.msg"
+	fi
+	cmp -s "${tmp}/want.msg" "${tmp}/new.msg" ||
+	fail "${new}: message differs from revision ${id}"
+	git diff --quiet "${prev:-${empty_tree}}" "${new}" -- . ":!${path}" ||
+	fail "${new}: revision ${id} changed more than ${path}"
+	;;
+    *)
+	fail "unknown map entry: ${kind} ${id} ${new}"
+	;;
+    esac
+    prev="${new}"
+    new=
+done 3< "${map}"
+
+git fsck --no-dangling "${newref}" > "${tmp}/fsck" 2>&1 ||
+fail "git fsck: $(cat "${tmp}/fsck")"
+
+if [ "${failures}" -gt 0 ]
+then
+    die "${failures} check(s) failed"
+fi
+echo "${PROG}: ${newref} checks out ($(($(wc -l < "${map}"))) commits)"

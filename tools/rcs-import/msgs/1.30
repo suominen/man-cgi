@@ -1,0 +1,6 @@
+Fix the print stylesheet and stop asserting copyright on pages
+
+- Fix colors for printing.
+- Hide query form when printing.
+- Don't assert copyright on manual pages, instead say "powered
+  by".

@@ -34,7 +34,7 @@ usage()
 Usage:	${PROG} [-h] [test ...]
 
 Run the man-cgi characterization and regression tests against the
-CGI script (default ../../sh/man-cgi relative to the tests
+CGI script (default ../src/man-cgi relative to the tests
 directory; override with the MANCGI environment variable). With no
 arguments all scripts in t/ run; otherwise only the named tests
 run. Failing tests have their TAP output shown.
