@@ -1,0 +1,78 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Characterize pathname expansion of the request: every entry form
+# is word-split with an unquoted set --, and the words are globbed
+# against the working directory before any sanitizer sees them. A
+# name with a * in it must not become whatever file happens to
+# match it -- it is not a name, and the request is a 404 (or, on
+# the POST arm, a 303 to the form with no name).
+#
+# 20260825  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+test_init
+
+# The harness never changes directory, so man-cgi runs wherever
+# run-tests was started. A decoy directory with names the requests
+# match makes the expansion observable; without one the * survives
+# to the sanitizer and the request is a 404 either way. The names
+# are not the patterns minus their *, so that merely stripping the
+# * could not pass for a match.
+mkdir "${TESTTMP}/cwd"
+: > "${TESTTMP}/cwd/lsnot"
+: > "${TESTTMP}/cwd/command=lsnot"
+cd "${TESTTMP}/cwd"
+
+# --- PATH_INFO -------------------------------------------------------
+
+# Expanded, ls* is the decoy's lsnot: a 404 for a page of that name,
+# with the name in the chrome and the search links.
+run_cgi '/ls*'
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_header '^Surrogate-Key: all notfound coll:NetBSD-current$'
+assert_body 'value="" autofocus'
+assert_body_absent 'lsnot'
+assert_body_absent 'site:'
+
+# --- Legacy query string ---------------------------------------------
+
+# Expanded, this was a 301 to /lsnot.1.
+CGI_QUERY='ls*+1'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 404 Not Found$'
+assert_no_header '^Location:'
+assert_body_absent 'lsnot'
+
+CGI_QUERY=
+
+# --- POST body -------------------------------------------------------
+
+# The body is split into whole fields, so the decoy has to match
+# the field: command=ls* expanded to command=lsnot, and the 303 went
+# to /lsnot.1. A rejected name degrades to the form with no name.
+CGI_METHOD=POST
+CGI_BODY='command=ls*&section=1&arch=DEFAULT&coll=DEFAULT'
+run_cgi ''
+
+assert_exit 0
+assert_header '^Status: 303 See Other$'
+assert_header '^Location: https://man\.netbsd\.org/cgi-bin/man-cgi?+1+$'
+assert_body_absent 'lsnot'
+
+CGI_METHOD=
+CGI_BODY=
+
+test_done
