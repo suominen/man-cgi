@@ -273,6 +273,80 @@ sanitize_arch()
     fi
 }
 
+# A page name reaches <title>, <h1>, the query form's value
+# attribute, the menu lead, the 404 page's search links and every
+# redirect body, and reached them raw. The set is what the served
+# trees actually use: base and X11 names are [A-Za-z0-9_.-] plus
+# + (c++, g++) and [ (the [.1 alias of test); pkgsrc adds @ (date@)
+# and : (perl modules). ] pairs with [, and the POST parser already
+# decodes both. / is not a name character: every entry form splits
+# an arch prefix off before this runs, except the POST body, where
+# the value is still [arch/]name[.section] and the 303 needs the
+# separator to survive.
+#
+# Dropped whole rather than repaired, as sanitize_arch does: the
+# part that passes the filter would be a name the client never
+# asked for, and a page it did not ask for could be served under
+# it. The value becomes empty so that no sink can reflect it, and
+# BADCOMMAND makes the request a 404.
+sanitize_command()
+{
+    local clean
+
+    case "${COMMAND}" in
+    '')
+	return
+	;;
+    esac
+
+    clean=$(printf '%s' "${COMMAND}" | tr -cd 'A-Za-z0-9_.+@:[]/-')
+
+    if [ "${clean}" != "${COMMAND}" ]
+    then
+	BADCOMMAND=true
+	COMMAND=
+    fi
+}
+
+# Only the legacy query string and the command line can put
+# arbitrary text here: the PATH_INFO parser takes a section only
+# from a name suffix that matches the section patterns, and the
+# POST arm filters the value to the arch set before its 303
+# because the field also carries .ARCH. Runs after the
+# SECTION.ARCH split and the ANY mapping, so what it sees is the
+# section alone. The set, [0-9a-z], covers the section names (1-9,
+# 3f, 3lua, 9lua, n, l); a well-formed section that is not one is
+# left to man(1), which answers not found. Dropped whole for the
+# same reason as the name: with the section gone the request
+# would be a sectionless lookup, which is a 301 to a page the
+# client did not ask for.
+sanitize_section()
+{
+    local clean
+
+    case "${SECTION}" in
+    '')
+	return
+	;;
+    esac
+
+    clean=$(printf '%s' "${SECTION}" | tr -cd '0-9a-z')
+
+    if [ "${clean}" != "${SECTION}" ]
+    then
+	BADSECTION=true
+	SECTION=
+    fi
+}
+
+# True when any sanitizer rejected its value: the request names
+# no page, whatever the rest of it says.
+rejected()
+{
+    ${BADCOLL:-false} || ${BADARCH:-false} ||
+    ${BADCOMMAND:-false} || ${BADSECTION:-false}
+}
+
 rel_canonical_url()
 {
     # Assumptions:
@@ -1055,6 +1129,8 @@ COLL="$1"
 # response class.
 BADCOLL=
 BADARCH=
+BADCOMMAND=
+BADSECTION=
 
 case "$REQUEST_METHOD" in
 POST)
@@ -1082,10 +1158,9 @@ POST)
 	    COLL="$(printf '%s' "${i#coll=}" | tr -d '\000-\037\177')"
 	    ;;
 	command=*)
-	    # A page name can hold characters no other field does, so
-	    # this one keeps its character set and is only scrubbed.
-	    # Reflecting it into page chrome is a separate matter; here
-	    # it only has to stay out of the header's line structure.
+	    # Scrubbed here and judged by sanitize_command below: the
+	    # scrub is about the header's line structure, the judgement
+	    # about what a name may hold.
 	    COMMAND="$(
 		printf '%s' "${i#command=}" \
 		| sed \
@@ -1097,31 +1172,39 @@ POST)
 	    )"
 	    ;;
 	section=*)
-	    # The form's own values are ANY and the section names, and
-	    # the split below also accepts SECTION.ARCH and .ARCH, so
-	    # the set is the arch one, which subsumes the scrub. No
-	    # shape rule: a leading dot is how an arch-only section
-	    # arrives.
-	    SECTION="$(
-		printf '%s' "${i#section=}" | tr -cd '.A-Za-z0-9_-'
-	    )"
+	    SECTION="$(printf '%s' "${i#section=}" | tr -d '\000-\037\177')"
 	    ;;
 	esac
     done
 
+    # The section is judged here rather than by sanitize_section:
+    # it still holds the form's ANY, and the SECTION.ARCH split
+    # below has not happened yet, so the set is the arch one. Not
+    # only the body's field -- a body without one leaves whatever
+    # the legacy query string parsed above. A rejected section
+    # degrades to ANY, the form's own default, rather than being
+    # repaired: the same rule as every other value on this arm.
+    case "${SECTION}" in
+    *[!-.A-Za-z0-9_]*)
+	SECTION=ANY
+	;;
+    esac
+
     # Scrubbed but not yet judged, and the 303 quotes all four
-    # into a header.
+    # into a header and its body.
     #
     # The body is the only one of the three entry forms that can
     # hold a raw control character in practice -- nginx passes
     # PATH_INFO and QUERY_STRING undecoded and rejects a request
-    # line carrying one -- so COMMAND and SECTION are filtered
+    # line carrying one -- so the control-character scrub lives
     # here rather than on the shared path below. That is a
     # property of the front end, not of this script: decode
     # PATH_INFO at the front end and the other two need the same
-    # treatment.
+    # treatment. The section was judged just above; the name's
+    # sanitizer runs here as it does on the shared path.
     sanitize_coll
     sanitize_arch
+    sanitize_command
 
     redirect 303
     ;;
@@ -1149,6 +1232,10 @@ ANY)
     ;;
 esac
 
+# After the SECTION.ARCH split above and before the suffix split
+# below, whose section has already matched the section patterns.
+sanitize_section
+
 case "$COMMAND" in
 *.[1-9]|*.3f|*.[39]lua)
     SECTION="${COMMAND##*.}"
@@ -1165,10 +1252,13 @@ esac
 
 # After every path that can set it: the URL component and the
 # legacy query string's SECTION.ARCH field. (The arch-prefixed
-# COMMAND just above is reachable only from the command line --
-# PATH_INFO is split on / before it gets here, QUERY_STRING is not
-# %2F-decoded, and the POST arm returns at its 303.)
+# COMMAND just above is reachable from the command line and from a
+# literal / in the query string -- PATH_INFO is split on / before
+# it gets here, QUERY_STRING is not %2F-decoded, and the POST arm
+# returns at its 303.) The name is
+# judged at the same point, once every split has taken its share.
 sanitize_arch
+sanitize_command
 
 case "${DEFAULT_ARCH}" in
 "")
@@ -1251,14 +1341,15 @@ case "${COLL}" in
     ;;
 esac
 
-# A name that is not a collection or not an architecture cannot be
-# canonicalized: there is no page to point at, and a 301 is
-# durable (ADR-0005). Only the legacy query string and the POST
-# body can produce a bad collection -- the PATH_INFO parser takes
-# one only from an [A-Z]* component, which always survives both
-# the character set and the shape check -- but any entry form can
-# produce a bad architecture.
-if ${BADCOLL:-false} || ${BADARCH:-false}
+# A name that is not a collection, an architecture, a page name or
+# a section cannot be canonicalized: there is no page to point at,
+# and a 301 is durable (ADR-0005). Only the legacy query string and
+# the POST body can produce a bad collection -- the PATH_INFO
+# parser takes one only from an [A-Z]* component, which always
+# survives both the character set and the shape check -- and only
+# the legacy query string a bad section, but any entry form can
+# produce a bad architecture or page name.
+if rejected
 then
     need_redirect=
 fi
@@ -1341,15 +1432,15 @@ case "${COMMAND}" in
     ;;
 esac
 
-# Whatever man(1) just said, a request whose collection or
-# architecture did not survive validation has no page. (A
-# well-formed name for a collection that merely does not exist is a
-# different thing, and so is an architecture that is real but ships
-# no pages of its own in this collection; both are left alone.)
-# Both names were reset to the default first, so the response still
-# gets a validator and cache keys that can be purged, but the
-# lookup's result is not this request's answer.
-if ${BADCOLL:-false} || ${BADARCH:-false}
+# Whatever man(1) just said, a request whose collection,
+# architecture, name or section did not survive validation has no
+# page. (A well-formed name for a collection that merely does not
+# exist is a different thing, and so is an architecture that is
+# real but ships no pages of its own in this collection; both are
+# left alone.) Every rejected value was reset first, so the
+# response still gets a validator and cache keys that can be
+# purged, but the lookup's result is not this request's answer.
+if rejected
 then
     notfound=1
     LASTMODFILE="${COLLSTAMP}"
@@ -1470,9 +1561,10 @@ case "${COMMAND}" in
     ;;
 esac
 
-# Not conditional on COMMAND: a bad name with no command would
-# otherwise be classed as the home page and answered 200.
-if ${BADCOLL:-false} || ${BADARCH:-false}
+# Not conditional on COMMAND: a bad name with no command -- and a
+# rejected name is no command by now -- would otherwise be classed
+# as the home page and answered 200.
+if rejected
 then
     CLASS=notfound
 fi
@@ -1619,7 +1711,9 @@ queryform
 LT=$(printf '\001')
 GT=$(printf '\002')
 
-if [ -z "$COMMAND" ]
+# Keyed on the response class rather than on the name: a rejected
+# name is empty by now, and a 404 must not carry the home page.
+if [ "${CLASS}" = home ]
 then
     case "${DEFAULT_COLLECTION}" in
     "")
@@ -1717,7 +1811,13 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
 	    2>/dev/null
 	echo "</pre>"
     else
-	cat <<END
+	# A rejected name is empty, and there is nothing to search for.
+	case "${COMMAND}" in
+	'')
+	    echo '<p>The manual page was not found.</p>'
+	    ;;
+	*)
+	    cat <<END
 <p>The manual page was not found. Try searching instead:</p>
 <table>
   <tr><td>Bing:&nbsp;</td><td><a
@@ -1746,6 +1846,8 @@ s/\([0-9A-z][-,0-9A-z]*\)-\n\(  *\)\([0-9A-z][-,0-9A-z]*([1-9][A-z]*)\)/\1\3\
   </td></tr>
 </table>
 END
+	    ;;
+	esac
 
 # <a href="$SCRIPT_NAME/apropos?$COMMAND$SECTION$ARCH$COLL">Try
 # apropos</a> or select a different architecture.</p>
