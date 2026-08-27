@@ -48,7 +48,10 @@ with the collection it describes.
 via `man -w`), clamped to at least `MINLASTMOD` — a floor embedded
 in the CGI and bumped whenever a script change alters rendered
 output (ADR-0011), so such changes reach every tier through normal
-revalidation instead of cache wipes.
+revalidation instead of cache wipes. A validator already above the
+floor does not move, which is what a bump followed by a newer
+NetBSD-current build runs into; `deployment.md`, step 8, has the
+condition and the choices.
 
 Responses that describe the **collection** rather than one page —
 404s and multi-match menus — take their mtime from the resolved
@@ -137,24 +140,28 @@ only after crawlers re-follow the new 301s.
 
 ## Sample response headers
 
-As emitted by the CGI (QA, uncached vhost, 2026-08-09):
+As emitted by the CGI (QA, uncached vhost, 2026-08-27; nginx's own
+`Vary` and security headers omitted):
 
     HTTP/1.1 200 OK
     Content-Type: text/html; charset=windows-1252
-    Last-Modified: Sat, 08 Aug 2026 13:15:15 GMT
-    Expires: Sun, 09 Aug 2026 09:31:44 GMT
+    Last-Modified: Thu, 27 Aug 2026 04:43:31 GMT
+    Expires: Thu, 27 Aug 2026 19:20:25 GMT
     Cache-Control: public, max-age=3600
     Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800
     Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1
 
-(`X-Accel-Expires` is absent from every observed response because
-nginx consumes it even on the uncached QA vhost.)
+Here `Last-Modified` is the `MINLASTMOD` floor itself, the commit
+time of that day's output change: `ls.1`'s own mtime is older, so
+the floor is the validator. (`X-Accel-Expires` is absent from
+every observed response because nginx consumes it even on the
+uncached QA vhost.)
 
 The 304, same request with `If-Modified-Since` echoed:
 
     HTTP/1.1 304 Not Modified
-    Last-Modified: Sat, 08 Aug 2026 13:15:15 GMT
-    Expires: Sun, 09 Aug 2026 09:32:12 GMT
+    Last-Modified: Thu, 27 Aug 2026 04:43:31 GMT
+    Expires: Thu, 27 Aug 2026 19:20:27 GMT
     Cache-Control: public, max-age=3600
     Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800
     Surrogate-Key: all coll:NetBSD-current page:NetBSD-current:ls.1
