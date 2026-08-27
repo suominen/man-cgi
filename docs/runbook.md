@@ -107,12 +107,15 @@ the other host while nginx is down, so wipe one host at a time.
 
 - **Script deploys with output changes that must land immediately,
   or where the `MINLASTMOD` bump was missed.** A bumped
-  `MINLASTMOD` (ADR-0011) moves every validator, so even
+  `MINLASTMOD` (ADR-0011) moves every validator below it, so even
   frozen-release objects stop revalidating to 304s and pick up the
   new output as they expire — without it their validators never
   change and markup or header changes never reach them through
-  expiry alone. (List changes stopped being a wipe trigger when
-  the JS query form removed the embedded lists from page bodies.)
+  expiry alone. (NetBSD-current and branch objects cached after a
+  pull that brought a build newer than the bump have validators
+  above the floor and wait for the next one; see `deployment.md`,
+  step 8. List changes stopped being a wipe trigger when the JS
+  query form removed the embedded lists from page bodies.)
 - After the wipe, follow with `manno-purge all` so Fastly
   revalidates against the fresh origin.
 

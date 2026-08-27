@@ -33,12 +33,20 @@ workflow:
    run is only needed when the deploy must reach lcm immediately.
    `make smoke-prod` checks the edge.
 8. If the change altered rendered output and `MINLASTMOD` was
-   bumped, caches converge on their own: every validator moved, so
-   nginx entries pick up the new output as they expire. Wipe the
-   nginx caches (runbook) and `manno-purge all` only when the
-   change must be visible immediately — or when the bump was
-   missed.
-9. Redirects are the exception to step 8. nginx does not
+   bumped, caches converge on their own: every validator below the
+   floor moved, so nginx entries pick up the new output as they
+   expire. A validator already above the floor does not move.
+   NetBSD-current and branch objects take theirs from the extracted
+   files, which carry the upstream build's timestamp, and the home
+   page from the NetBSD-current `build` file, which is the pull
+   time (`caching.md`). Once a pull has brought a build newer than
+   the bump — for the home page, once any pull has run after it —
+   objects cached since that pull keep the old output until a newer
+   build arrives, normally the next day. Deploy before the next
+   pull, accept the day, or wipe. Wipe the nginx caches (runbook)
+   and `manno-purge all` only when the change must be visible
+   immediately — or when the bump was missed.
+9. Redirects are the other exception to step 8. nginx does not
    revalidate them conditionally (`tests/nginx-lab/`), so no
    `MINLASTMOD` bump reaches them; they refresh only when their
    nginx entry expires — a day for 301s, 3 hours for 302s. If the
