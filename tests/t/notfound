@@ -30,7 +30,6 @@ assert_body 'The manual page was not found'
 assert_body 'duckduckgo.com'
 assert_body_absent 'rel="canonical"'
 # The form keeps the name but does not autofocus on a 404 either.
-assert_body '^      value="nosuchcommand">$'
-assert_body_absent ' autofocus>'
+assert_command_no_autofocus nosuchcommand
 
 test_done

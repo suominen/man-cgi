@@ -243,6 +243,22 @@ assert_body_before()
     fi
 }
 
+# The command field's own line in the query form: its value and
+# whether it autofocuses. The home page and a collection index are
+# the form, so the field autofocuses there; a man page, a menu or a
+# 404 is read and scrolled, so it must not. Anchoring the whole
+# line makes the check positive either way: a page that dropped the
+# form fails it too. NAME lands in a BRE, so it is a plain name.
+assert_command_autofocus()
+{
+    assert_body "^      value=\"${1}\" autofocus>\$"
+}
+
+assert_command_no_autofocus()
+{
+    assert_body "^      value=\"${1}\">\$"
+}
+
 assert_no_body()
 {
     if [ -s "${TESTTMP}/body" ]
