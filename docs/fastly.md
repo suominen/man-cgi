@@ -30,12 +30,19 @@ itself in only one of them:
   timeout) reaches `vcl_error` with `stale.exists` set, and the
   same choice applies; otherwise Fastly's own 503 goes out.
 
-Two VCL snippets, type `fetch` and type `error`, make the choice.
-Both test `stale.exists`, which is true only while a cached object
-is inside its `stale-if-error` window, so a request with nothing
-stale to serve behaves as before.
+Two VCL snippets, one in `vcl_fetch` and one in `vcl_error`, make
+the choice. Both test `stale.exists`, which is true only while a
+cached object is inside its `stale-if-error` window, so a request
+with nothing stale to serve behaves as before.
 
-Snippet `serve-stale-on-error`, type `fetch`:
+Both are added the same way, under Edit configuration, VCL, VCL
+snippets, Add snippet, in a cloned version: Type *Regular* (a
+regular snippet is part of the service version and deploys with
+it; a dynamic one changes outside versioning), Placement *Within
+subroutine*, Priority left at its default of 100. Names must be
+unique within the service.
+
+Snippet `serve-stale-fetch`, Subroutine *fetch (vcl_fetch)*:
 
     if (beresp.status >= 500 && beresp.status < 600) {
       if (stale.exists) {
@@ -43,7 +50,7 @@ Snippet `serve-stale-on-error`, type `fetch`:
       }
     }
 
-Snippet `serve-stale-on-error`, type `error`:
+Snippet `serve-stale-error`, Subroutine *error (vcl_error)*:
 
     if (obj.status >= 500 && obj.status < 600) {
       if (stale.exists) {
@@ -51,12 +58,11 @@ Snippet `serve-stale-on-error`, type `error`:
       }
     }
 
-Snippets are added under Edit configuration, VCL, VCL snippets,
-and take effect with the version they are activated in. A `fetch`
-snippet is inserted at the boilerplate's `#FASTLY fetch` point,
-ahead of the boilerplate's one restart on a 500 or 503, so a stale
-object is served before the retry that would move the request to
-lcm; with nothing stale the restart proceeds as before.
+They take effect with the version they are activated in. A
+`fetch` snippet is inserted at the boilerplate's `#FASTLY fetch`
+point, ahead of the boilerplate's one restart on a 500 or 503, so
+a stale object is served before the retry that would move the
+request to lcm; with nothing stale the restart proceeds as before.
 
 Not the **Serve stale** switch under Settings: it enables the same
 mechanism, but with its own stale TTL (12 hours for both
@@ -71,7 +77,10 @@ in `Fastly-Debug-TTL`); without them the same request returns the
 origin's 503.
 
 Service version 5 (2026-08-08), the version live at the 2026-08-09
-cutover, is boilerplate only.
+cutover, is boilerplate only; version 6, activated 2026-08-27
+19:58 UTC, is version 5 plus these two snippets, inside the
+`#--FASTLY FETCH` and `#--FASTLY ERROR` blocks of the generated
+VCL.
 
 ## References
 
@@ -91,7 +100,9 @@ Fastly documentation, as of 2026-08-27:
   <https://www.fastly.com/documentation/reference/vcl/subroutines/fetch/>
 - `vcl_error` (when it runs; a 5xx answer does not reach it):
   <https://www.fastly.com/documentation/reference/vcl/subroutines/error>
-- Using VCL snippets:
+- About VCL snippets — regular versus dynamic:
+  <https://www.fastly.com/documentation/guides/full-site-delivery/fastly-vcl/vcl-snippets/about-vcl-snippets/>
+- Using VCL snippets — adding one in the UI:
   <https://www.fastly.com/documentation/guides/full-site-delivery/fastly-vcl/vcl-snippets/using-vcl-snippets/>
 - `Surrogate-Control` (preferred over `Cache-Control` at Fastly):
   <https://www.fastly.com/documentation/reference/http/http-headers/Surrogate-Control/>
