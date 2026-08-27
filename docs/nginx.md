@@ -62,7 +62,10 @@ This file records what the configuration does for caching and why.
 ## Header handling facts
 
 - nginx consumes and strips `X-Accel-Expires` (a default-hidden
-  header) on every response, cached or not.
+  header) on every response, cached or not — but it stays in the
+  cache file with the rest of the stored FastCGI record, which is
+  what lets the runbook select entries by the TTL they were filled
+  with ("Removing one class of entries").
 - nginx stores and **forwards** `Surrogate-Control` and
   `Surrogate-Key` — Fastly needs to receive them even on nginx
   cache hits. Consequence: clients that reach nginx directly

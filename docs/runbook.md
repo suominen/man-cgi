@@ -80,11 +80,11 @@ objects refill. Pace any smoke checks through it (`ct-check
 
 ## Purging / wiping nginx
 
-nginx (open source) has no cache-purge module: the only options are
-waiting out `X-Accel-Expires` or wiping the cache filesystem. Wiping
-is safe while requests flow — a missing cache file is just a MISS —
-but the fast method reformats the filesystem, which needs nginx
-stopped:
+nginx (open source) has no cache-purge module: the options are
+waiting out `X-Accel-Expires`, removing the entries of one class
+by hand (below), or wiping the cache filesystem. Removing is safe
+while requests flow — a missing cache file is just a MISS — but the
+fast wipe reformats the filesystem, which needs nginx stopped:
 
     # on the host being wiped (as root)
     service nginx stop
@@ -102,6 +102,50 @@ needs (many small objects). On lcm's sub-128 GiB device 8 KiB is
 already the default, so the flag is a harmless no-op — use the same
 command everywhere. Fastly's health probe fails the shield over to
 the other host while nginx is down, so wipe one host at a time.
+
+### Removing one class of entries
+
+A cache file starts with nginx's binary header, then a `KEY:` line
+with the cache key (`GET/pc532/ls.1`), then the FastCGI record as
+the CGI sent it: the `Status:` line and every header, including
+`X-Accel-Expires`, which nginx keeps in the file though it never
+forwards it (`nginx.md`). The stored headers therefore identify an
+entry's class and the TTL it was filled with, and the file names
+are hex, so a `find` over the cache with a `grep -l` selects a
+class and `rm` retires it. The `grep` needs `-a` (the file is
+binary) and must not anchor on `^`: the FastCGI record header sits
+on the same line as `Status:`.
+
+Worked example (2026-08-27): the 301s filled between 2026-08-09
+and the ADR-0015 deploy of 2026-08-25 carried a 30-day nginx hold,
+which no later change could reach (redirects are never
+revalidated). Their signature is the stored `X-Accel-Expires:
+2592000`, a value only those redirects ever had. As root, one host
+at a time:
+
+    d=$(mktemp -d) || exit 1
+    find /p/fcgicache/man-cache -type f -print0 |
+    xargs -0 grep -a -l 'X-Accel-Expires: 2592000' > "$d/remnants"
+    wc -l "$d/remnants"
+    head -3 "$d/remnants" |
+    xargs grep -a -o -E 'KEY: [^[:cntrl:]]*|Status: 30[12][^[:cntrl:]]*|X-Accel-Expires: [0-9]*'
+    xargs rm < "$d/remnants"
+    rm -rf "$d"
+
+The `head` step shows the key, status and stored TTL of a sample,
+which is the check that the selector matches the intended class
+before anything is removed. `grep -l` stops at the first match
+and the headers are in the first kilobyte, so the run costs a
+directory walk: minutes on lcm, considerably longer on oxygene.
+A `find` time filter (`\! -newer` a `touch -t` reference file) can
+narrow the walk, but the fill time is what matters and the file's
+mtime is close to it only for entries never revalidated; the
+stored headers are the reliable selector. lcm found 2567 files
+that day; the same selector then ran on oxygene.
+
+Afterwards, purge the same class at Fastly (`manno-purge redirect`
+in the example) so its objects refill from the fresh nginx entries
+rather than the other way round.
 
 ### When an nginx wipe is needed
 
@@ -153,7 +197,8 @@ sectionless URL they answer, such as `/printf` and `/i386/apm`,
 was previously a cached 301), or when a 301 turns out to be wrong:
 
 1. Deploy (or fix).
-2. Wait a day (the 301's nginx TTL).
+2. Wait a day (the 301's nginx TTL), or remove the affected
+   entries at nginx ("Removing one class of entries" above).
 3. `manno-purge redirect`.
 4. Confirm at the edge: status and `Location` against the QA
    vhost.
