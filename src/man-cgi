@@ -50,7 +50,7 @@
 # sanitizers see them. Nothing in this script globs.
 set -f
 
-MANCGI_DATE=2026-08-25
+MANCGI_DATE=2026-08-27
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
