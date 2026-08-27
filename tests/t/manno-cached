@@ -1,0 +1,294 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# bin/manno-cached: select nginx cache files by their stored
+# Surrogate-Key tokens and X-Accel-Expires value, listing them on
+# stdout with the report on stderr, against a synthetic cache in
+# nginx's on-disk layout.
+#
+# 20260828  Kimmo Suominen
+#
+
+set -eu
+
+CDPATH=
+
+TESTS_DIR=$(cd "$(dirname "${0}")/.." && pwd)
+. "${TESTS_DIR}/lib.sh"
+
+MANNO_CACHED="${TESTS_DIR}/../bin/manno-cached"
+
+if [ ! -r "${MANNO_CACHED}" ]
+then
+    echo "Bail out! no ${MANNO_CACHED}"
+    exit 1
+fi
+
+test_init
+
+CACHE="${TESTTMP}/cache"
+
+# A cache file as nginx writes it: a binary header, the KEY: line
+# with the request, then the FastCGI record with its own binary
+# header on the same line as Status: and CRLF-terminated headers
+# (see the runbook).
+mkentry()
+{
+    local accel keys path status uri
+
+    path="${CACHE}/${1}"
+    uri="${2}"
+    status="${3}"
+    accel="${4}"
+    keys="${5}"
+
+    mkdir -p "${path%/*}"
+    {
+	printf '\005\000\000\000\000\000\000\000\275\126\264\152\000\000'
+	printf '\000\000\377\377\377\377\377\377\377\377\000\000\000\000'
+	printf '\nKEY: GET%s\n' "${uri}"
+	printf '\001\006\000\001\003\231\007\000'
+	printf 'Status: %s\r\n' "${status}"
+	printf 'Content-Type: text/html; charset=windows-1252\r\n'
+	printf 'Cache-Control: public, max-age=3600\r\n'
+	printf 'X-Accel-Expires: %s\r\n' "${accel}"
+	printf 'Surrogate-Control: max-age=86400\r\n'
+	printf 'Surrogate-Key: %s\r\n' "${keys}"
+	printf '\r\n<html><body>%s</body></html>\n' "${keys}"
+    } > "${path}"
+}
+
+E1="81/cd/da/89d5398dfb8a6fb4b9f5474c18dacd81"
+E2="81/cd/1f/5e688afc0483b2982de6e27adb1fcd81"
+E3="81/6f/1e/900f8322e5568ba09234a8dc391e6f81"
+E4="81/62/9f/cd0c66ff0d0052f6819ed1cd6e9f6281"
+E5="81/a6/d2/23f48809c101b43c7a342ae6dbd2a681"
+E6="da/12/5c/7e576c8da0157b9fe36d66aceb5c12da"
+E7="2a/7b/03/4c1e9d0b8f67a52e3d9c1b7e6f5a032a"
+
+mkentry "${E1}" /pc532/ls.1 '301 Moved Permanently' 2592000 \
+    'all redirect coll:NetBSD-current'
+mkentry "${E2}" /NetBSD-10.1/vax/ls.1 '301 Moved Permanently' 86400 \
+    'all redirect coll:NetBSD-10.1'
+mkentry "${E3}" /ls.1 '200 OK' 3600 \
+    'all coll:NetBSD-current page:NetBSD-current:ls.1'
+mkentry "${E4}" /nosuchcommand.1 '404 Not Found' 3600 \
+    'all notfound coll:NetBSD-current'
+# Decoy for whole-token matching: coll:NetBSD-10.1 is a prefix.
+mkentry "${E5}" /NetBSD-10.1a/ls.1 '200 OK' 86400 \
+    'all coll:NetBSD-10.1a page:NetBSD-10.1a:ls.1'
+# Decoy for -x: the old redirect TTL on a page, so -x alone finds
+# it and -x with a key must not.
+mkentry "${E6}" /NetBSD-9.x-BRANCH/ls.1 '200 OK' 2592000 \
+    'all coll:NetBSD-9.x-BRANCH page:NetBSD-9.x-BRANCH:ls.1'
+# Decoys for the '.' in a key, which must not match any character
+# (ls_1 for ls.1), and for the end of an -x value (36000 for 3600).
+mkentry "${E7}" /ls_1.1 '200 OK' 36000 \
+    'all coll:NetBSD-current page:NetBSD-current:ls_1'
+
+# Run the script with stdout and stderr captured separately.
+run_mc()
+{
+    if sh "${MANNO_CACHED}" -c "${CACHE}" "${@}" \
+	> "${TESTTMP}/mc.out" 2> "${TESTTMP}/mc.err"
+    then
+	MC_EXIT=0
+    else
+	MC_EXIT=${?}
+    fi
+}
+
+assert_mc_exit()
+{
+    if [ "${MC_EXIT}" -eq "${1}" ]
+    then
+	tap_pass "exit status is ${1}"
+    else
+	tap_fail "exit status is ${1} (got ${MC_EXIT})"
+	diag "${TESTTMP}/mc.err"
+    fi
+}
+
+# The listed files, as cache-relative paths, must be exactly the
+# given ones (space-separated, any order).
+assert_listed()
+{
+    local want
+
+    if [ -n "${1}" ]
+    then
+	printf '%s\n' ${1} | sort > "${TESTTMP}/want"
+    else
+	: > "${TESTTMP}/want"
+    fi
+    sed -e "s|^${CACHE}/||" "${TESTTMP}/mc.out" | sort > "${TESTTMP}/got"
+    if cmp -s "${TESTTMP}/want" "${TESTTMP}/got"
+    then
+	tap_pass "lists: ${1:-nothing}"
+    else
+	tap_fail "lists: ${1:-nothing}"
+	diag "${TESTTMP}/got"
+	diag "${TESTTMP}/mc.err"
+    fi
+}
+
+assert_report()
+{
+    if grep -q -e "${1}" "${TESTTMP}/mc.err"
+    then
+	tap_pass "report matches: ${1}"
+    else
+	tap_fail "report matches: ${1}"
+	diag "${TESTTMP}/mc.err"
+    fi
+}
+
+assert_report_count()
+{
+    local n
+
+    n=$(grep -c -e "${1}" "${TESTTMP}/mc.err" || :)
+    if [ "${n}" -eq "${2}" ]
+    then
+	tap_pass "report has ${2} of: ${1}"
+    else
+	tap_fail "report has ${2} of: ${1} (got ${n})"
+	diag "${TESTTMP}/mc.err"
+    fi
+}
+
+# --- One key ---------------------------------------------------------
+
+run_mc redirect
+
+assert_mc_exit 0
+assert_listed "${E1} ${E2}"
+# The report is on stderr: the count, and a sample showing each
+# entry's key, status, TTL and Surrogate-Key.
+assert_report '^2 cache files match$'
+assert_report 'KEY: GET/pc532/ls.1$'
+assert_report 'Status: 301 Moved Permanently$'
+assert_report 'X-Accel-Expires: 2592000$'
+assert_report 'Surrogate-Key: all redirect coll:NetBSD-current$'
+# The sample is drawn from the matches, not from the cache.
+assert_report_count 'KEY: ' 2
+# Nothing but paths on stdout.
+if grep -q -v -e "^${CACHE}/" "${TESTTMP}/mc.out"
+then
+    tap_fail 'stdout carries only paths'
+    diag "${TESTTMP}/mc.out"
+else
+    tap_pass 'stdout carries only paths'
+fi
+
+# --- Whole-token matching and regex characters in keys -----------------
+
+run_mc coll:NetBSD-10.1
+
+assert_mc_exit 0
+assert_listed "${E2}"
+
+run_mc page:NetBSD-current:ls.1
+
+assert_mc_exit 0
+assert_listed "${E3}"
+
+# The first token, right after the header name, matches too.
+run_mc all
+
+assert_mc_exit 0
+assert_listed "${E1} ${E2} ${E3} ${E4} ${E5} ${E6} ${E7}"
+
+# --- Several keys are OR'd -------------------------------------------
+
+run_mc notfound redirect
+
+assert_mc_exit 0
+assert_listed "${E1} ${E2} ${E4}"
+assert_report '^3 cache files match$'
+
+# --- -x alone, and -x AND'd with a key ---------------------------------
+
+run_mc -x 2592000
+
+assert_mc_exit 0
+assert_listed "${E1} ${E6}"
+
+run_mc -x 3600
+
+assert_mc_exit 0
+assert_listed "${E3} ${E4}"
+
+run_mc -x 2592000 redirect
+
+assert_mc_exit 0
+assert_listed "${E1}"
+
+# --- -f narrows a saved list without walking the cache ------------------
+
+printf '%s\n' "${CACHE}/${E1}" "${CACHE}/${E2}" "${CACHE}/${E4}" \
+    > "${TESTTMP}/saved"
+
+run_mc -f "${TESTTMP}/saved" -x 86400
+
+assert_mc_exit 0
+assert_listed "${E2}"
+
+# --- The sample size ---------------------------------------------------
+
+run_mc -n 1 notfound redirect
+
+assert_mc_exit 0
+assert_report_count 'KEY: ' 1
+
+# --- No match: exit 1, empty list, count still reported -----------------
+
+run_mc arch:vax
+
+assert_mc_exit 1
+assert_listed ''
+assert_report '^0 cache files match$'
+
+# --- Errors ------------------------------------------------------------
+
+# No selector at all is a usage error.
+run_mc
+
+assert_mc_exit 2
+
+# A key outside manno-purge's character class is refused.
+run_mc 'redirect;rm'
+
+assert_mc_exit 1
+assert_listed ''
+
+# -x must be a number.
+run_mc -x 30d
+
+assert_mc_exit 1
+
+# Stdout on a terminal is refused: the list is meant to be saved
+# and fed to rm, not to scroll by. script(1) lends a pty. Its -e
+# does not report the command's status on NetBSD 11, so the status
+# is read from the typescript; and it quits when its own stdin
+# ends, before the command has run, so stdin is held open by a
+# sleep long enough for the command to finish.
+if command -v script > /dev/null
+then
+    sleep 3 |
+    script -q -c \
+	"sh '${MANNO_CACHED}' -c '${CACHE}' redirect; echo rc=\$?" \
+	"${TESTTMP}/typescript" > /dev/null 2>&1 || true
+    if grep -q -e 'rc=1' "${TESTTMP}/typescript" &&
+	grep -q -e 'stdout is a terminal' "${TESTTMP}/typescript"
+    then
+	tap_pass 'refuses a terminal on stdout'
+    else
+	tap_fail 'refuses a terminal on stdout'
+	diag "${TESTTMP}/typescript"
+    fi
+else
+    tap_pass 'refuses a terminal on stdout # SKIP no script(1)'
+fi
+
+test_done

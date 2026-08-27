@@ -110,38 +110,39 @@ with the cache key (`GET/pc532/ls.1`), then the FastCGI record as
 the CGI sent it: the `Status:` line and every header, including
 `X-Accel-Expires`, which nginx keeps in the file though it never
 forwards it (`nginx.md`). The stored headers therefore identify an
-entry's class and the TTL it was filled with, and the file names
-are hex, so a `find` over the cache with a `grep -l` selects a
-class and `rm` retires it. The `grep` needs `-a` (the file is
-binary) and must not anchor on `^`: the FastCGI record header sits
-on the same line as `Status:`.
+entry's class and the TTL it was filled with. `bin/manno-cached`
+(keep a copy on both hosts) selects by them: any of the given
+Surrogate-Key tokens, the keys `manno-purge` takes, and/or `-x`
+the `X-Accel-Expires` value the entry was filled with. It lists
+the files on stdout, to be saved, and reports on stderr: the count
+and, for the first few matches, their key, status, TTL and
+Surrogate-Key. Removing a cache file is safe while nginx runs; the
+next request is a MISS. As root, on each host:
+
+    manno-cached -x 2592000 > remnants
+    xargs rm < remnants
+
+The report is the check that the selector matches the intended
+class; read it before the `rm`. The run costs a directory walk
+(`grep -l` stops at the first match, and the headers are in the
+first kilobyte): minutes on lcm, under an hour on oxygene. Save
+the list;
+`manno-cached -f remnants ...` narrows a saved list with further
+selectors without walking again. Underneath it is `find` and
+`grep -a -l` (the file is binary), matching without a `^` anchor
+because the FastCGI record header sits on the same line as
+`Status:`. A `find` time filter would not do: the fill time is
+what matters, and the file's mtime is close to it only for entries
+never revalidated.
 
 Worked example (2026-08-27): the 301s filled between 2026-08-09
 and the ADR-0015 deploy of 2026-08-25 carried a 30-day nginx hold,
 which no later change could reach (redirects are never
 revalidated). Their signature is the stored `X-Accel-Expires:
-2592000`, a value only those redirects ever had. As root, one host
-at a time:
-
-    d=$(mktemp -d) || exit 1
-    find /p/fcgicache/man-cache -type f -print0 |
-    xargs -0 grep -a -l 'X-Accel-Expires: 2592000' > "$d/remnants"
-    wc -l "$d/remnants"
-    head -3 "$d/remnants" |
-    xargs grep -a -o -E 'KEY: [^[:cntrl:]]*|Status: 30[12][^[:cntrl:]]*|X-Accel-Expires: [0-9]*'
-    xargs rm < "$d/remnants"
-    rm -rf "$d"
-
-The `head` step shows the key, status and stored TTL of a sample,
-which is the check that the selector matches the intended class
-before anything is removed. `grep -l` stops at the first match
-and the headers are in the first kilobyte, so the run costs a
-directory walk: minutes on lcm, considerably longer on oxygene.
-A `find` time filter (`\! -newer` a `touch -t` reference file) can
-narrow the walk, but the fill time is what matters and the file's
-mtime is close to it only for entries never revalidated; the
-stored headers are the reliable selector. lcm found 2567 files
-that day; the same selector then ran on oxygene.
+2592000`, a value only those redirects ever had: the same
+selector, run as a hand-written pipeline that day, found 2567
+files on lcm and 1892312 on oxygene, a walk of under an hour
+there.
 
 Afterwards, purge the same class at Fastly (`manno-purge redirect`
 in the example) so its objects refill from the fresh nginx entries

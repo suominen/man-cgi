@@ -27,6 +27,10 @@ The caching design across the three tiers is described in
 `docs/runbook.md` and `docs/deployment.md`; what the nginx and
 Fastly tiers need beyond the headers is in `docs/nginx.md` and
 `docs/fastly.md`; design decisions are recorded in `docs/adr/`.
+`bin/` holds the operator tools: `manno-purge` (Fastly, by
+Surrogate-Key) and `manno-cached` (nginx: list cache files by
+their stored Surrogate-Key tokens or `X-Accel-Expires`, for
+removal by hand).
 
 ## Tests
 

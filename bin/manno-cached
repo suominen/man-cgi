@@ -1,0 +1,224 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# List the nginx cache files of man.netbsd.org that carry given
+# Surrogate-Key tokens and/or X-Accel-Expires value.
+#
+# 20260828  Kimmo Suominen
+#
+
+set -eu
+
+PATH=/bin:/usr/bin:/usr/pkg/bin:/usr/local/bin
+export PATH
+
+PROG="${0##*/}"
+
+CACHE_DIR=/p/fcgicache/man-cache
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+usage()
+{
+    cat <<EOF
+Usage:	${PROG} [-h] [-c dir] [-f file] [-n count] [-x seconds] [key ...]
+
+List the nginx cache files of man.netbsd.org whose stored response
+carries any of the given Surrogate-Key tokens (the keys manno-purge
+takes: redirect, notfound, coll:<collection>, ...), and, with -x,
+the given X-Accel-Expires value: the TTL the entry was filled
+with. Keys are OR'd; -x narrows them. Either may be given alone.
+
+The files are listed on stdout, one per line, for saving and
+feeding to rm: removing a cache file is safe while nginx runs (the
+next request is a MISS). The list is refused on a terminal. The
+report on stderr gives the count and, for the first few matches,
+their key, status, X-Accel-Expires and Surrogate-Key lines: check
+it before removing anything. The exit status is 0 with matches
+and 1 with none.
+
+Walking the cache takes long; -f takes the candidate files from a
+saved list instead, one path per line, to narrow it further. A
+file gone from the cache since the list was made is reported and
+skipped.
+
+Options:
+-c	Cache directory (default ${CACHE_DIR})
+-f	Candidate files from this list instead of walking the cache
+-h	Show this help
+-n	Sample size in the report (default 3; 0 for none)
+-x	Require this X-Accel-Expires value (seconds)
+EOF
+}
+
+cache_dir="${CACHE_DIR}"
+list=
+sample=3
+accel=
+
+while getopts c:f:hn:x: opt
+do
+    case "${opt}" in
+    c)  cache_dir="${OPTARG}";;
+    f)  list="${OPTARG}";;
+    h)  usage; exit 0;;
+    n)  sample="${OPTARG}";;
+    x)  accel="${OPTARG}";;
+    *)  usage 1>&2; exit 2;;
+    esac
+done
+shift $((${OPTIND} - 1))
+
+if [ ${#} -lt 1 ] && [ -z "${accel}" ]
+then
+    usage 1>&2
+    exit 2
+fi
+
+if [ -t 1 ]
+then
+    die 'stdout is a terminal; save the list to a file'
+fi
+
+for key
+do
+    case "${key}" in
+    ''|*[!A-Za-z0-9._:-]*)
+	die "Invalid key: ${key}"
+	;;
+    esac
+done
+
+case "${accel}" in
+*[!0-9]*)
+    die "Invalid X-Accel-Expires value: ${accel}"
+    ;;
+esac
+
+case "${sample}" in
+''|*[!0-9]*)
+    die "Invalid sample size: ${sample}"
+    ;;
+esac
+
+# The paths reach grep through xargs, which splits on blanks and
+# reads quotes; the cache's own paths are hex, so this only guards
+# the directory named with -c.
+case "${cache_dir}" in
+*[[:space:]\"\'\\]*)
+    die "Unusable cache directory name: ${cache_dir}"
+    ;;
+esac
+
+if [ -n "${list}" ]
+then
+    [ -r "${list}" ] ||
+    die "Cannot read list: ${list}"
+else
+    [ -d "${cache_dir}" ] ||
+    die "No such directory: ${cache_dir}"
+fi
+
+# The stored header lines end in CR LF as fcgiwrap sends them;
+# grep drops the LF, so a token is followed by a space, by the CR,
+# or (should a line ever come bare) by the end of the line. The
+# neighbouring tokens are held to the key character set, so a
+# page body quoting a Surrogate-Key line cannot match. Only '.'
+# in a key is special in an ERE.
+key_pattern()
+{
+    local alt key
+
+    alt=
+    for key
+    do
+	key=$(printf '%s\n' "${key}" | sed -e 's/\./\\./g')
+	alt="${alt:+${alt}|}${key}"
+    done
+    printf '%s(%s)%s\n' 'Surrogate-Key: ([A-Za-z0-9._:-]+ )*' "${alt}" \
+	'( [A-Za-z0-9._:-]+)*([[:cntrl:]]|$)'
+}
+
+accel_pattern()
+{
+    printf 'X-Accel-Expires: %s([[:cntrl:]]|$)\n' "${1}"
+}
+
+# grep -l over the candidates on stdin, one path per line. xargs
+# exits 123 when any grep in a batch exited non-zero: no match at
+# all in the batch, the normal case for most of the cache, or a
+# file gone since the walk (nginx evicts all the time), which grep
+# reports on stderr and this skips. Anything else stops the script.
+select_files()
+{
+    local rc
+
+    rc=0
+    xargs grep -a -l -E -e "${1}" ||
+    rc=${?}
+    case "${rc}" in
+    0|123)
+	;;
+    *)
+	die "grep failed (xargs exit ${rc})"
+	;;
+    esac
+}
+
+tmp=$(mktemp -d)
+trap 'rm -rf "${tmp}"' EXIT INT TERM HUP
+
+if [ ${#} -ge 1 ]
+then
+    first=$(key_pattern "${@}")
+    second="${accel:+$(accel_pattern "${accel}")}"
+else
+    first=$(accel_pattern "${accel}")
+    second=
+fi
+
+{
+    if [ -n "${list}" ]
+    then
+	cat "${list}"
+    else
+	find "${cache_dir}" -type f
+    fi
+} |
+select_files "${first}" > "${tmp}/first"
+
+if [ -n "${second}" ]
+then
+    select_files "${second}" < "${tmp}/first" > "${tmp}/list"
+else
+    mv "${tmp}/first" "${tmp}/list"
+fi
+
+count=$(wc -l < "${tmp}/list" | tr -d ' ')
+
+echo "${count} cache files match" 1>&2
+
+# The sample is informational: a file gone since the selection
+# must not abort the run and lose the list.
+if [ "${count}" -gt 0 ] && [ "${sample}" -gt 0 ]
+then
+    head -n "${sample}" "${tmp}/list" |
+    xargs grep -a -H -o -E \
+	-e 'KEY: [^[:cntrl:]]*' \
+	-e 'Status: [0-9]{3}[^[:cntrl:]]*' \
+	-e 'X-Accel-Expires: [0-9]*' \
+	-e 'Surrogate-Key: [^[:cntrl:]]*' \
+	1>&2 ||
+    :
+fi
+
+cat "${tmp}/list"
+
+if [ "${count}" -eq 0 ]
+then
+    exit 1
+fi

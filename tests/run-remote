@@ -1,8 +1,8 @@
 #!/bin/sh
 # @(#)$KimmoSuominen$
 #
-# Sync the test suite and the CGI script to the NetBSD test host
-# and run the tests there.
+# Sync the test suite, the CGI script and the bin/ scripts to the
+# NetBSD test host and run the tests there.
 #
 # 20260809  Kimmo Suominen
 #
@@ -29,7 +29,7 @@ usage()
     cat <<EOF
 Usage:	${PROG} [-h] [test ...]
 
-Rsync the tests directory and the CGI script to the NetBSD test
+Rsync the tests directory, the CGI script and bin/ to the NetBSD test
 host and run run-tests there, passing any test names through. The
 tests must run on a NetBSD host because man-cgi depends on NetBSD
 stat(1), date(1), and man(1) behaviour.
@@ -67,6 +67,7 @@ die 'rsync is required'
 
 TESTS_DIR=$(cd "$(dirname "${0}")" && pwd)
 SRC_DIR=$(cd "${TESTS_DIR}/../src" && pwd)
+BIN_DIR=$(cd "${TESTS_DIR}/../bin" && pwd)
 
 [ -f "${SRC_DIR}/man-cgi" ] ||
 die "No CGI script at ${SRC_DIR}/man-cgi"
@@ -79,11 +80,14 @@ SSH="ssh -i ${IDENTITY} -o BatchMode=yes -o IdentitiesOnly=yes"
 RSYNC_RSH="${SSH}"
 export RSYNC_RSH
 
-# The remote repo/tests + repo/src layout mirrors the local checkout
-# so that lib.sh's default MANCGI path (tests/../src/man-cgi)
-# resolves on the remote as well.
-${SSH} "${REMOTE}" "mkdir -p '${DEST}/repo/tests' '${DEST}/repo/src'"
+# The remote repo/tests + repo/src + repo/bin layout mirrors the
+# local checkout so that lib.sh's default MANCGI path
+# (tests/../src/man-cgi) and the bin/ scripts under test resolve on
+# the remote as well.
+${SSH} "${REMOTE}" \
+    "mkdir -p '${DEST}/repo/tests' '${DEST}/repo/src' '${DEST}/repo/bin'"
 rsync -a --delete "${TESTS_DIR}/" "${REMOTE}:${DEST}/repo/tests/"
 rsync -a --delete "${SRC_DIR}/man-cgi" "${REMOTE}:${DEST}/repo/src/"
+rsync -a --delete "${BIN_DIR}/" "${REMOTE}:${DEST}/repo/bin/"
 
 exec ${SSH} "${REMOTE}" "sh '${DEST}/repo/tests/run-tests'" "${@}"
