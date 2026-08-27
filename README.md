@@ -24,8 +24,9 @@ Request path:
 
 The caching design across the three tiers is described in
 `docs/caching.md`; operational procedures (purging, deployment) are in
-`docs/runbook.md` and `docs/deployment.md`; design decisions are
-recorded in `docs/adr/`.
+`docs/runbook.md` and `docs/deployment.md`; what the nginx and
+Fastly tiers need beyond the headers is in `docs/nginx.md` and
+`docs/fastly.md`; design decisions are recorded in `docs/adr/`.
 
 ## Tests
 

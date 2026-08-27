@@ -190,6 +190,16 @@ compatible with the probe cadence. The CGI's health check verifies
 that `$MANROOT` and the NetBSD-current `build` file exist and
 otherwise answers 503 (not cached by Fastly; 30s at nginx).
 
+While the origin fails, Fastly keeps serving what it holds past
+its `max-age` for the `stale-if-error` window (`caching.md`): by
+itself when both backends are sick, and for backends answering
+5xx or unreachable provided the service VCL delivers stale on
+error — the generated boilerplate alone does not (`fastly.md`).
+The window is a week for pages, the home page, the API lists and
+301s, and a day for 404s and the 302; anything not cached gets
+Fastly's own 503. A soft purge during an outage leaves that
+fallback in place; a hard purge (`manno-purge -H`) removes it.
+
 ## Verifying cache behavior
 
 - `X-Man-Cache` (from nginx, baked into stored objects): MISS, HIT,

@@ -99,8 +99,8 @@ LASTMODFILE="$MANROOT/NetBSD-current/build"
 # chrome, error bodies. Signature and MANCGI_DATE changes do not
 # qualify.
 #
-# 2026-08-27 04:43:31 UTC
-MINLASTMOD=${MANCGI_MINLASTMOD:-1787805811}
+# 2026-08-27 18:40:34 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1787856034}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -938,12 +938,19 @@ emit_cache_headers()
     # Fastly. Browsers cache briefly (they cannot be purged), nginx
     # briefly (expiry costs only a 304 revalidation), Fastly long
     # (purgeable by Surrogate-Key).
+    #
+    # stale-if-error lets Fastly keep serving an object while the
+    # origin fails: a week for what should outlive an outage, a day
+    # for what has to stop soon anyway (404s, the 302 of ADR-0015),
+    # and none for the health check, which must not report stale
+    # health.
     case "${class}" in
     api)
 	# 1 hour; a week at Fastly
 	expsecs=3600
 	accel=3600
 	surrogate='max-age=604800, stale-while-revalidate=3600'
+	surrogate="${surrogate}, stale-if-error=604800"
 	;;
     health)
 	# 30 seconds everywhere
@@ -956,6 +963,7 @@ emit_cache_headers()
 	expsecs=7200
 	accel=7200
 	surrogate='max-age=86400, stale-while-revalidate=3600'
+	surrogate="${surrogate}, stale-if-error=604800"
 	;;
     notfound|api-notfound)
 	# 1 hour; a day at Fastly (a rebuild can add the page)
@@ -972,7 +980,7 @@ emit_cache_headers()
 	# refetch costs less than a 404 revalidation.
 	expsecs=3600
 	accel=10800
-	surrogate='max-age=86400'
+	surrogate='max-age=86400, stale-if-error=86400'
 	;;
     redirect-permanent)
 	# 24 hours for browsers and nginx; 30 days at Fastly, where
@@ -984,7 +992,7 @@ emit_cache_headers()
 	# which is why these redirects are 301s (ADR-0005).
 	expsecs=86400
 	accel=86400
-	surrogate='max-age=2592000'
+	surrogate='max-age=2592000, stale-if-error=604800'
 	;;
     *)
 	# page: the resolved collection decides

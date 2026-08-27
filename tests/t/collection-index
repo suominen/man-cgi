@@ -34,7 +34,7 @@ assert_header '^Content-Type: text/html; charset=windows-1252$'
 assert_header "^Last-Modified: ${LM_REL_MDOC}\$"
 assert_header '^Cache-Control: public, max-age=7200$'
 assert_header '^X-Accel-Expires: 7200$'
-assert_header '^Surrogate-Control: max-age=86400, stale-while-revalidate=3600$'
+assert_header '^Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800$'
 assert_header '^Surrogate-Key: all home coll:NetBSD-10.1$'
 assert_body '<title>NetBSD Manual Pages</title>'
 assert_body 'href="/NetBSD-10.1/afterboot.8"'
@@ -72,7 +72,7 @@ assert_header '^Status: 301 Moved Permanently$'
 assert_header '^Location: https://man.netbsd.org/NetBSD-10.1/$'
 assert_header '^Cache-Control: public, max-age=86400$'
 assert_header '^X-Accel-Expires: 86400$'
-assert_header '^Surrogate-Control: max-age=2592000$'
+assert_header '^Surrogate-Control: max-age=2592000, stale-if-error=604800$'
 assert_no_header '^Last-Modified:'
 
 # The index of the default collection is /, not an alias of it.

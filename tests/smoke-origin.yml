@@ -12,7 +12,7 @@ checklist:
 
 - path: /
   headers:
-    surrogate-control: "max-age=86400, stale-while-revalidate=3600"
+    surrogate-control: "max-age=86400, stale-while-revalidate=3600, stale-if-error=604800"
     surrogate-key: "all home coll:NetBSD-current"
 
 - path: /ls.1
@@ -63,13 +63,14 @@ checklist:
 # release.
 - path: /NetBSD-10.1/
   headers:
-    surrogate-control: "max-age=86400, stale-while-revalidate=3600"
+    surrogate-control: "max-age=86400, stale-while-revalidate=3600, stale-if-error=604800"
     surrogate-key: "all home coll:NetBSD-10.1"
 
 # API list objects keep the form key (the lists live here now).
 - path: /api/v1/archlist
   type: text/plain
   headers:
+    surrogate-control: "max-age=604800, stale-while-revalidate=3600, stale-if-error=604800"
     surrogate-key: "all api form archlist"
 
 # 404s revalidate at the origin (nginx's benefit; Fastly does not
@@ -84,7 +85,7 @@ checklist:
 - path: /ls
   code: 301
   headers:
-    surrogate-control: "max-age=2592000"
+    surrogate-control: "max-age=2592000, stale-if-error=604800"
     surrogate-key: "all redirect coll:NetBSD-current"
 
 # A .0 release that never existed 302s to current; the short
@@ -92,7 +93,7 @@ checklist:
 - path: /NetBSD-99.0/ls.1
   code: 302
   headers:
-    surrogate-control: "max-age=86400"
+    surrogate-control: "max-age=86400, stale-if-error=86400"
     surrogate-key: "all redirect coll:NetBSD-current"
 
 - path: /.well-known/health

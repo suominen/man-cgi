@@ -26,13 +26,25 @@ by Surrogate-Key at any time).
 |-------|------------------------|------------------------|---------------------------|
 | current / -BRANCH page | `public, max-age=3600` | 3600 | `max-age=86400, stale-while-revalidate=3600, stale-if-error=604800` |
 | release page | `public, max-age=86400` | 86400 | `max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800` |
-| home page | `public, max-age=7200` | 7200 | `max-age=86400, stale-while-revalidate=3600` |
+| home page | `public, max-age=7200` | 7200 | `max-age=86400, stale-while-revalidate=3600, stale-if-error=604800` |
 | 404 | `public, max-age=3600` | 3600 | `max-age=86400, stale-if-error=86400` |
-| 302 collection fallback | `public, max-age=3600` | 10800 | `max-age=86400` |
-| 301 canonicalization | `public, max-age=86400` | 86400 | `max-age=2592000` |
-| api lists (`/api/v1/*`) | `public, max-age=3600` | 3600 | `max-age=604800, stale-while-revalidate=3600` |
+| 302 collection fallback | `public, max-age=3600` | 10800 | `max-age=86400, stale-if-error=86400` |
+| 301 canonicalization | `public, max-age=86400` | 86400 | `max-age=2592000, stale-if-error=604800` |
+| api lists (`/api/v1/*`) | `public, max-age=3600` | 3600 | `max-age=604800, stale-while-revalidate=3600, stale-if-error=604800` |
 | health check | `public, max-age=30` | 30 | `max-age=30` |
 | 303 (POST form) | `no-store` | — | — |
+
+`stale-if-error` lets Fastly keep serving an object while the
+origin fails: a week for what should outlive an outage, a day for
+what has to stop soon anyway (404s, the 302 of ADR-0015), and none
+for the health check, which must not report stale health. Fastly
+acts on it by itself only for a backend its health check calls
+sick; a backend that answers 5xx or cannot be reached needs
+`return(deliver_stale)` in the service VCL, in `vcl_fetch` and
+`vcl_error` respectively. The generated boilerplate has neither
+(service version 5, of 2026-08-08, the day before the header first
+appeared); without them a 5xx is cached for a second and served.
+`fastly.md` has the snippets and the Fastly references.
 
 The page class branches on the **resolved** collection: the default
 collection (NetBSD-current) takes the frequently-rebuilt arm even
@@ -80,10 +92,15 @@ is always current. It only costs a render a 304 would have avoided.
 The CGI answers `If-Modified-Since` with a **304** when the client's
 value is byte-identical to the `Last-Modified` it would send. The
 304 carries the full caching-header block (Cache-Control, Expires,
-X-Accel-Expires, Surrogate-Control, Surrogate-Key) so both nginx and
-Fastly refresh entry validity and purge keys on revalidation, and it
-skips the expensive render entirely — the origin cost drops to a
-`man -w` and a `stat`.
+X-Accel-Expires, Surrogate-Control, Surrogate-Key), so nginx
+refreshes the entry's validity on revalidation, and it skips the
+expensive render entirely — the origin cost drops to a `man -w` and
+a `stat`. What nginx then serves, to clients and to Fastly, is the
+header block it stored with the body; only a full response replaces
+it. A change to the headers alone therefore travels like a change
+to the markup: through the `MINLASTMOD` bump (ADR-0011), which
+moves the validator and turns the next revalidation into a full
+fetch.
 
 Exact string match is a complete test, not an approximation: with
 caching enabled, nginx never forwards client conditionals to the
