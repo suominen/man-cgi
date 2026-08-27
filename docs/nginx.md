@@ -52,8 +52,12 @@ This file records what the configuration does for caching and why.
   cover (that only serialises MISS fills). Measured in
   `tests/nginx-lab/` (`drive-stale`).
 - `add_header X-Man-Cache $upstream_cache_status` — the nginx cache
-  status, guarded behind `nginx_version >= 1.29.3`
-  (add_header_inherit support in the patched build).
+  status. Emitted together with `add_header_inherit merge`, and
+  only on nginx 1.29.3 or later, which introduced that directive:
+  an `add_header` at location level otherwise replaces every
+  `add_header` inherited from the server level (the security
+  headers), so an older nginx goes without `X-Man-Cache` rather
+  than without those.
 
 ## Header handling facts
 
@@ -79,3 +83,43 @@ become a problem. Note that `limit_req` rejects in nginx's
 preaccess phase, before the cache is consulted, so nothing masks
 those 429s (the `use_stale http_429` directive only covers a 429
 from the FastCGI upstream, which man-cgi never emits).
+
+## References
+
+nginx documentation, as of 2026-08-27. The FastCGI cache
+directives are all on one page; the anchors name them.
+
+- `ngx_http_fastcgi_module`:
+  <https://nginx.org/en/docs/http/ngx_http_fastcgi_module.html>
+  - `#fastcgi_cache_path` — the zone, `max_size` (enforced by the
+    cache manager) and `inactive` (eviction by disuse, regardless
+    of freshness)
+  - `#fastcgi_cache_revalidate` — expired entries revalidated with
+    `If-Modified-Since` / `If-None-Match`
+  - `#fastcgi_cache_valid` — the fallback, and the rule that caching
+    parameters in the response header ("X-Accel-Expires", then
+    "Expires" / "Cache-Control") take priority over it
+  - `#fastcgi_cache_key`
+  - `#fastcgi_cache_use_stale` — `updating` and the other cases
+  - `#fastcgi_cache_background_update`
+  - `#fastcgi_cache_lock` — serialises the fill of a *new* entry only
+  - `#fastcgi_hide_header` — "Status" and the "X-Accel-..." fields
+    are not passed to the client by default
+  - `#fastcgi_ignore_headers` — the response fields whose cache
+    processing can be disabled (not used here)
+- `$upstream_cache_status` (`X-Man-Cache`): MISS, BYPASS, EXPIRED,
+  STALE, UPDATING, REVALIDATED, HIT:
+  <https://nginx.org/en/docs/http/ngx_http_upstream_module.html#var_upstream_cache_status>
+- `add_header` and its inheritance rule; `add_header_inherit`
+  (1.29.3):
+  <https://nginx.org/en/docs/http/ngx_http_headers_module.html#add_header>
+- `limit_req` / `limit_req_zone` (`$binary_remote_addr`; rejects
+  with `limit_req_status`, 503 by default, 429 here):
+  <https://nginx.org/en/docs/http/ngx_http_limit_req_module.html>
+- `ngx_http_realip_module` (`set_real_ip_from`, `real_ip_header`),
+  the include deliberately not applied:
+  <https://nginx.org/en/docs/http/ngx_http_realip_module.html>
+
+That nginx withholds client conditionals from the FastCGI backend
+when caching is enabled is not stated on these pages; it is the
+lab measurement in `../tests/nginx-lab/README.md`.
