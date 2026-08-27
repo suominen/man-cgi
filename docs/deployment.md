@@ -11,7 +11,9 @@ workflow:
 2. Tests first (TDD): `make test` runs the suite in `tests/` on the
    NetBSD test host via `tests/run-remote` (the script needs NetBSD
    stat(1), date(1), man(1); the Makefile names the host and the
-   ssh identity). All tests green before the branch is reviewed.
+   ssh identity). A change to the inline script also gets
+   `make test-browser`, which drives it in headless Chromium
+   locally. All tests green before the branch is reviewed.
 3. Merge to `main` by fast-forward only, so the reviewed commit is
    the one that lands.
 4. When a change alters *rendered output* (markup, headers — not

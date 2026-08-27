@@ -38,6 +38,9 @@ script depends on NetBSD `stat -s`, BSD `date -r`, and NetBSD
 repository): `tests/smoke.yml` works against any tier, and
 `tests/smoke-origin.yml` additionally checks the Surrogate headers,
 which only the origin and the QA vhost expose (Fastly strips them).
+The inline script's `/` shortcut is behaviour the suite can only
+grep for, so `make test-browser` drives it in headless Chromium
+(`tests/run-browser`, locally: needs `chromium` and `node`).
 
 ## Layout
 

@@ -1,0 +1,516 @@
+#!/usr/bin/env node
+// @(#)$KimmoSuominen$
+//
+// Drive the query form's inline script in headless Chromium and
+// check the / shortcut's behaviour: what the shell suite cannot
+// see, since it only greps the markup. The style and script blocks
+// are taken verbatim from the CGI script and wrapped in a page
+// shaped like a man page; no browser automation library is needed,
+// only Chromium's own DevTools protocol over the WebSocket built
+// into node.
+//
+// 20260827  Kimmo Suominen
+//
+
+'use strict';
+
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { spawn } = require('node:child_process');
+
+const TESTS_DIR = __dirname;
+const MANCGI = process.env.MANCGI ||
+    path.join(TESTS_DIR, '..', 'src', 'man-cgi');
+const CHROMIUM = process.env.CHROMIUM || 'chromium';
+const TITLE = 'Press / to focus';
+
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// The heredocs are literal, so the blocks can be cut out of the
+// shell source by their delimiter lines.
+function block(src, open, close)
+{
+    const lines = src.split('\n');
+    const from = lines.indexOf(open);
+    const to = lines.indexOf(close, from);
+    if (from < 0 || to < 0)
+    {
+	throw new Error(`cannot find ${open} .. ${close} in ${MANCGI}`);
+    }
+    return lines.slice(from, to + 1).join('\n');
+}
+
+const src = fs.readFileSync(MANCGI, 'utf8');
+const STYLE = block(src, '<style type="text/css">', '</style>');
+const SCRIPT = block(src, '<script>', '</script>');
+
+// The queryform() markup, as rendered for a man page (value=ls)
+// or for the home page (autofocus). Keep in step with the CGI
+// script's heredocs.
+function page(opts)
+{
+    const focus = opts.autofocus ? ' autofocus' : '';
+    const value = opts.autofocus ? '' : 'ls';
+    const pre = opts.nofetch ?
+	'<script>window.fetch = undefined;</script>\n' : '';
+    const hide = opts.hidden ?
+	'<style>.queryform { display: none; }</style>\n' : '';
+    const body = Array.from({ length: 400 },
+	(_, i) => `line ${i + 1} of the manual page`).join('\n');
+    return `<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+${STYLE}
+${hide}<title>ls(1) - NetBSD Manual Pages</title>
+</head>
+<body>
+<h1 class="manpage">ls(1)
+  - NetBSD Manual Pages</h1>
+<div class="queryform">
+<form method=post action="/cgi-bin/man-cgi">
+  <div>
+    <label for="command">Command:&nbsp;&nbsp;&nbsp;&nbsp;</label>
+    <input name="command" id="command" size="24" type="text"
+      value="${value}"${focus}>
+  </div>
+  <div>
+    <label for="section">Section:&nbsp;&nbsp;&nbsp;</label>
+    <select name="section" id="section">
+      <option value="1" selected>1 - General Commands</option>
+      <option value="8">8 - System Maintenance Commands</option>
+    </select>
+  </div>
+  <div>
+    <label for="arch">Arch:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
+    <select name="arch" id="arch">
+      <option value="NONE">NONE</option>
+    </select>
+  </div>
+  <div>
+    <label for="coll">Collection:</label>
+    <select name="coll" id="coll">
+      <option value="NetBSD-current" selected>NetBSD-current</option>
+    </select>
+  </div>
+  <div>
+    <label for="submit"><span>&gt;&gt;&gt;</span></label>
+    <input id="submit" type="submit" value="Show">
+  </div>
+</form>
+</div>
+${pre}${SCRIPT}
+<pre class="manpage">
+${body}
+</pre>
+</body>
+</html>
+`;
+}
+
+class Browser
+{
+    constructor(tmp)
+    {
+	this.tmp = tmp;
+	this.id = 0;
+	this.pending = new Map();
+    }
+
+    async start()
+    {
+	const profile = path.join(this.tmp, 'profile');
+	this.proc = spawn(CHROMIUM, [
+	    '--headless=new',
+	    '--remote-debugging-port=0',
+	    `--user-data-dir=${profile}`,
+	    '--no-first-run',
+	    '--no-default-browser-check',
+	    '--disable-gpu',
+	    'about:blank',
+	], { stdio: ['ignore', 'ignore', 'pipe'] });
+	let stderr = '';
+	this.proc.stderr.on('data', d => { stderr += d; });
+	this.proc.on('error', e => { this.failed = e; });
+	this.proc.on('exit', () => this.fail(`${CHROMIUM} exited`));
+	let port;
+	for (let i = 0; i < 100 && !port; i++)
+	{
+	    if (this.failed || this.gone())
+	    {
+		throw new Error(`${CHROMIUM}: ${this.failed || stderr}`);
+	    }
+	    try
+	    {
+		port = fs.readFileSync(
+		    path.join(profile, 'DevToolsActivePort'), 'utf8')
+		    .split('\n')[0];
+	    }
+	    catch (e)
+	    {
+		await sleep(100);
+	    }
+	}
+	if (!port)
+	{
+	    throw new Error(`no DevToolsActivePort from ${CHROMIUM}`);
+	}
+	const targets = await (await fetch(`http://127.0.0.1:${port}/json`))
+	    .json();
+	const target = targets.find(t => t.type === 'page');
+	this.ws = new WebSocket(target.webSocketDebuggerUrl);
+	this.ws.onmessage = ev =>
+	{
+	    const m = JSON.parse(ev.data);
+	    if (m.id && this.pending.has(m.id))
+	    {
+		this.pending.get(m.id).resolve(m);
+		this.pending.delete(m.id);
+	    }
+	    else if (m.method === 'Page.loadEventFired' && this.loaded)
+	    {
+		this.loaded();
+		this.loaded = null;
+	    }
+	};
+	this.ws.onclose = () => this.fail('DevTools connection closed');
+	this.ws.onerror = () => this.fail('DevTools connection failed');
+	await new Promise((resolve, reject) =>
+	{
+	    this.ws.onopen = resolve;
+	    this.ws.addEventListener('error',
+		() => reject(new Error('DevTools connect failed')), { once: true });
+	});
+	await this.send('Page.enable');
+	await this.send('Runtime.enable');
+    }
+
+    // Everything still waiting on the browser fails at once: a
+    // reply that never comes must not leave the run hanging, or
+    // let it end with a clean exit status and a short TAP stream.
+    fail(why)
+    {
+	if (this.closing)
+	{
+	    return;
+	}
+	this.failed = this.failed || new Error(why);
+	for (const p of this.pending.values())
+	{
+	    p.reject(this.failed);
+	}
+	this.pending.clear();
+    }
+
+    send(method, params = {})
+    {
+	return new Promise((resolve, reject) =>
+	{
+	    if (this.failed)
+	    {
+		reject(this.failed);
+		return;
+	    }
+	    const id = ++this.id;
+	    const timer = setTimeout(() =>
+	    {
+		this.pending.delete(id);
+		reject(new Error(`${method}: no reply in 10 s`));
+	    }, 10000);
+	    this.pending.set(id, {
+		resolve: m => { clearTimeout(timer); resolve(m); },
+		reject: e => { clearTimeout(timer); reject(e); },
+	    });
+	    this.ws.send(JSON.stringify({ id, method, params }));
+	});
+    }
+
+    async open(opts)
+    {
+	const file = path.join(this.tmp, 'page.html');
+	fs.writeFileSync(file, page(opts));
+	await this.send('Emulation.setDeviceMetricsOverride', {
+	    width: opts.width || 1000,
+	    height: 500,
+	    deviceScaleFactor: 1,
+	    mobile: false,
+	});
+	const loaded = new Promise(r => { this.loaded = r; });
+	await this.send('Page.navigate', { url: `file://${file}` });
+	await Promise.race([loaded, sleep(5000)]);
+	await this.js(`window.__prevented = null;
+	    document.addEventListener('keydown', function (e) {
+		window.__prevented = e.defaultPrevented;
+	    });`);
+    }
+
+    // Run an expression in the page (CDP Runtime.evaluate); this is
+    // the test driving the browser, not the page running input.
+    async js(expression)
+    {
+	const r = await this.send('Runtime.evaluate',
+	    { expression, returnByValue: true });
+	if (r.result && r.result.exceptionDetails)
+	{
+	    throw new Error(JSON.stringify(r.result.exceptionDetails));
+	}
+	return r.result && r.result.result ? r.result.result.value : undefined;
+    }
+
+    key(type, key, extra = {})
+    {
+	const codes = { '/': [191, 'Slash'], '7': [55, 'Digit7'],
+	    Escape: [27, 'Escape'] };
+	const [vk, code] = codes[key];
+	const params = { type, key, code,
+	    windowsVirtualKeyCode: vk, nativeVirtualKeyCode: vk };
+	if (type === 'keyDown' && key.length === 1)
+	{
+	    params.text = key;
+	    params.unmodifiedText = key;
+	}
+	return this.send('Input.dispatchKeyEvent',
+	    Object.assign(params, extra));
+    }
+
+    async press(key, extra = {})
+    {
+	await this.key('keyDown', key, extra);
+	await this.key('keyUp', key);
+	await sleep(50);
+    }
+
+    state()
+    {
+	return this.js(`(function () {
+	    var c = document.getElementById('command');
+	    var a = document.activeElement;
+	    return {
+		active: a ? (a.id || a.tagName) : null,
+		value: c.value,
+		selected: c.value.substring(c.selectionStart, c.selectionEnd),
+		title: c.title,
+		prevented: window.__prevented,
+		scrollY: window.scrollY
+	    };
+	})()`);
+    }
+
+    // A process killed by a signal has exitCode null and only
+    // signalCode set.
+    gone()
+    {
+	return this.proc.exitCode !== null || this.proc.signalCode !== null;
+    }
+
+    // Wait for the browser to be gone before the caller removes
+    // the profile directory, or it is recreated while shutting
+    // down.
+    async close()
+    {
+	this.closing = true;
+	try { await this.send('Browser.close'); } catch (e) {}
+	if (this.ws) { this.ws.close(); }
+	if (this.proc && !this.gone())
+	{
+	    await new Promise(resolve =>
+	    {
+		const hard = setTimeout(() =>
+		{
+		    this.proc.kill('SIGKILL');
+		    resolve();
+		}, 2000);
+		this.proc.once('exit', () => { clearTimeout(hard); resolve(); });
+		this.proc.kill();
+	    });
+	}
+    }
+}
+
+let n = 0;
+let failed = 0;
+
+function ok(cond, name, got)
+{
+    n++;
+    if (cond)
+    {
+	console.log(`ok ${n} - ${name}`);
+    }
+    else
+    {
+	failed++;
+	console.log(`not ok ${n} - ${name}`);
+	console.log(`# got: ${JSON.stringify(got)}`);
+    }
+}
+
+async function main()
+{
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'man-cgi-browser-'));
+    const b = new Browser(tmp);
+    try
+    {
+	await b.start();
+	let s;
+
+	// From the page body, / moves focus into the field, selects
+	// the page's own name so typing replaces it, and does not
+	// reach the browser (Firefox would open Quick Find).
+	await b.open({});
+	await b.press('/');
+	s = await b.state();
+	ok(s.active === 'command' && s.selected === 'ls' && s.prevented,
+	    '/ from the body focuses the field and selects its text', s);
+
+	// Inside the field itself / is an ordinary character.
+	await b.open({});
+	await b.js(`document.getElementById('command').focus();
+	    document.getElementById('command').setSelectionRange(2, 2)`);
+	await b.press('/');
+	s = await b.state();
+	ok(s.active === 'command' && s.value === 'ls/' && !s.prevented,
+	    '/ inside the field types a slash', s);
+
+	// The shortcut does not depend on fetch(), which the
+	// select-filling half of the script needs.
+	await b.open({ nofetch: true });
+	await b.press('/');
+	s = await b.state();
+	ok(s.active === 'command' && s.selected === 'ls',
+	    '/ works without window.fetch', s);
+
+	// Below 800px the form is position: static, so focusing it
+	// would scroll a deep-read page back to the top.
+	await b.open({ width: 700 });
+	await b.js('window.scrollTo(0, 3000)');
+	const before = (await b.state()).scrollY;
+	await b.press('/');
+	s = await b.state();
+	ok(s.active === 'command' && before > 0 && s.scrollY === before,
+	    '/ on a narrow layout keeps the scroll position', s);
+
+	// Holding / past the auto-repeat delay must not type slashes
+	// over the freshly selected name; once released, / is a
+	// character again.
+	await b.open({});
+	await b.key('keyDown', '/');
+	await b.key('keyDown', '/', { autoRepeat: true });
+	await b.key('keyDown', '/', { autoRepeat: true });
+	await b.key('keyUp', '/');
+	await sleep(50);
+	s = await b.state();
+	ok(s.active === 'command' && s.value === 'ls' && s.selected === 'ls',
+	    'a held / does not type over the selection', s);
+	await b.press('/');
+	s = await b.state();
+	ok(s.value === '/', 'after release / replaces the selection', s);
+
+	// Tabbing through the form ends on the Show button; the
+	// selects sit in between. Neither takes text, so / must still
+	// reach the shortcut from them.
+	await b.open({});
+	await b.js("document.getElementById('submit').focus()");
+	await b.press('/');
+	s = await b.state();
+	ok(s.active === 'command' && s.selected === 'ls' && s.prevented,
+	    '/ from the Show button focuses the field', s);
+	await b.open({});
+	await b.js("document.getElementById('section').focus()");
+	await b.press('/');
+	s = await b.state();
+	ok(s.active === 'command' && s.selected === 'ls' && s.prevented,
+	    '/ from a select focuses the field', s);
+
+	// Escape is the way back out after an accidental or abandoned
+	// /: focus returns to the page (so Space and PgDn scroll again)
+	// and the selection collapses, with the value left alone.
+	await b.open({});
+	await b.press('/');
+	await b.press('Escape');
+	s = await b.state();
+	ok(s.active === 'BODY' && s.selected === '' && s.value === 'ls',
+	    'Escape in the field returns focus to the page', s);
+
+	// The tooltip advertising the shortcut is the script's to add:
+	// only where the script runs and the field is not already
+	// autofocused (the home page) does the hint apply.
+	await b.open({});
+	s = await b.state();
+	ok(s.title === TITLE, 'the script adds the / hint to the field', s);
+	await b.open({ autofocus: true });
+	s = await b.state();
+	ok(s.title === '' && s.active === 'command',
+	    'an autofocused field gets no / hint', s);
+
+	// With the form hidden (a user stylesheet, a content blocker)
+	// focus cannot move, and then / must stay the browser's:
+	// Firefox opens Quick Find on it.
+	await b.open({ hidden: true });
+	await b.press('/');
+	s = await b.state();
+	ok(s.active === 'BODY' && s.prevented === false,
+	    '/ is left to the browser when the field cannot take focus', s);
+
+	// Once released, the key is the field's again, auto-repeat
+	// included: a held / inside the field types slashes.
+	await b.open({});
+	await b.press('/');
+	await b.key('keyDown', '/');
+	await b.key('keyDown', '/', { autoRepeat: true });
+	await b.key('keyUp', '/');
+	await sleep(50);
+	s = await b.state();
+	ok(s.value === '//', 'after release a held / types in the field', s);
+
+	// On a Finnish layout / is Shift-7, and Shift usually goes up
+	// first: the keyup then reports 7, not /. The physical key is
+	// what must be seen released.
+	await b.open({});
+	await b.key('keyDown', '/', { code: 'Digit7', modifiers: 8 });
+	await b.key('keyUp', '7', { code: 'Digit7' });
+	await sleep(50);
+	await b.key('keyDown', '/');
+	await b.key('keyDown', '/', { autoRepeat: true });
+	await b.key('keyUp', '/');
+	await sleep(50);
+	s = await b.state();
+	ok(s.value === '//', 'Shift released before 7 still releases /', s);
+
+	// Escape during IME composition is the IME's, not ours.
+	await b.open({});
+	await b.press('/');
+	await b.js(`document.getElementById('command').dispatchEvent(
+	    new KeyboardEvent('keydown',
+		{ key: 'Escape', isComposing: true, bubbles: true }))`);
+	s = await b.state();
+	ok(s.active === 'command', 'Escape while composing stays put', s);
+    }
+    finally
+    {
+	await b.close();
+	fs.rmSync(tmp, { recursive: true, force: true });
+    }
+    console.log(`1..${n}`);
+    planned = true;
+    process.exit(failed ? 1 : 0);
+}
+
+let planned = false;
+
+process.on('exit', code =>
+{
+    if (!planned && code === 0)
+    {
+	console.log('Bail out! run ended without a plan');
+	process.exitCode = 2;
+    }
+});
+
+main().catch(e =>
+{
+    console.error(`run-browser: ${e.message}`);
+    process.exit(2);
+});

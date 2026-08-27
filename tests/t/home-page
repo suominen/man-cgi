@@ -49,7 +49,10 @@ assert_body '</script>'
 # keeps autofocus there; man, menu and 404 pages drop it. Every
 # page carries the / shortcut that focuses the field, registered
 # on keydown by key name.
-assert_body 'value="" title="Press / to focus" autofocus'
+assert_body '^      value="" autofocus>$'
+# The tooltip advertising / is the script's to add where the field
+# is not autofocused; the server does not render it.
+assert_body_absent 'title="Press / to focus"'
 assert_body "addEventListener('keydown'"
 assert_body "e.key !== '/'"
 # No URL carried a collection or arch, so neither select has a
@@ -77,6 +80,6 @@ assert_exit 0
 assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_BUILD}\$"
 assert_header '^Cache-Control: public, max-age=7200$'
-assert_body 'title="Press / to focus" autofocus'
+assert_body '^      value="" autofocus>$'
 
 test_done

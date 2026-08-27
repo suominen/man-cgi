@@ -44,7 +44,7 @@ assert_body_absent 'The manual page was not found'
 assert_body_absent 'rel="canonical"'
 # A collection index is the home page scoped to one collection
 # (ADR-0017): the form is the page, so it autofocuses too.
-assert_body 'value="" title="Press / to focus" autofocus'
+assert_body '^      value="" autofocus>$'
 
 # A branch collection has a build file too; the validator is still
 # the collection stamp, not the pull time.
@@ -54,7 +54,7 @@ assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_BR_MDOC}\$"
 assert_header '^Surrogate-Key: all home coll:NetBSD-9.x-BRANCH$'
 assert_body 'href="/NetBSD-9.x-BRANCH/intro.8"'
-assert_body 'value="" title="Press / to focus" autofocus'
+assert_body '^      value="" autofocus>$'
 
 # The index revalidates on its validator like the home page does.
 CGI_IMS="${LM_REL_MDOC}"

@@ -54,8 +54,11 @@ assert_body '<option value="1" selected>1 - General Commands</option>'
 # A man page must not autofocus the command field: that would steal
 # the scroll keys from the reader. The / shortcut focuses it instead,
 # and the field is pre-filled with the page's own name.
-assert_body 'value="ls" title="Press / to focus">'
-assert_body_absent 'autofocus'
+assert_body '^      value="ls">$'
+# The tooltip advertising / is the script's to add where it runs;
+# the server does not render it.
+assert_body_absent 'title="Press / to focus"'
+assert_body_absent ' autofocus>'
 assert_body "addEventListener('keydown'"
 
 test_done

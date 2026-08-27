@@ -29,15 +29,16 @@ SMOKE_DELAY=	1
 QA_SERVER=	man.oxygene.qa.nxrns.org
 PROD_SERVER=	man.netbsd.org
 
-.PHONY: help test dist-qa dist-prod smoke-qa smoke-prod
+.PHONY: help test test-browser dist-qa dist-prod smoke-qa smoke-prod
 
 help:
 	@echo 'Targets:'
-	@echo '  test       run the suite (on ${TEST_REMOTE} unless NetBSD)'
-	@echo '  dist-qa    install ${SCRIPT} to ${DIST_HOST}:${QA_DIR}'
-	@echo '  dist-prod  install ${SCRIPT} to ${DIST_HOST}:${PROD_DIR}'
-	@echo '  smoke-qa   smoke-check ${QA_SERVER} (origin headers too)'
-	@echo '  smoke-prod smoke-check ${PROD_SERVER} through Fastly'
+	@echo '  test          run the suite (on ${TEST_REMOTE} unless NetBSD)'
+	@echo '  test-browser  drive the inline script in headless Chromium'
+	@echo '  dist-qa       install ${SCRIPT} to ${DIST_HOST}:${QA_DIR}'
+	@echo '  dist-prod     install ${SCRIPT} to ${DIST_HOST}:${PROD_DIR}'
+	@echo '  smoke-qa      smoke-check ${QA_SERVER} (origin headers too)'
+	@echo '  smoke-prod    smoke-check ${PROD_SERVER} through Fastly'
 
 test:
 	@if [ "$$(uname -s)" = NetBSD ]; \
@@ -48,6 +49,11 @@ test:
 	    MANCGI_TEST_IDENTITY=${TEST_IDENTITY} \
 	    sh tests/run-remote; \
 	fi
+
+# The / shortcut lives in the inline script, which the suite can
+# only grep; this runs it locally (needs chromium and node).
+test-browser:
+	tests/run-browser
 
 dist-qa:
 	${RSYNC} ${SCRIPT} ${DIST_HOST}:${QA_DIR}/

@@ -99,8 +99,8 @@ LASTMODFILE="$MANROOT/NetBSD-current/build"
 # chrome, error bodies. Signature and MANCGI_DATE changes do not
 # qualify.
 #
-# 2026-08-25 18:37:11 UTC
-MINLASTMOD=${MANCGI_MINLASTMOD:-1787683031}
+# 2026-08-27 04:43:31 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1787805811}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -675,7 +675,7 @@ queryform()
   <div>
     <label for="command">Command:&nbsp;&nbsp;&nbsp;&nbsp;</label>
     <input name="command" id="command" size="24" type="text"
-      value="$COMMAND" title="Press / to focus"${focusattr}>
+      value="$COMMAND"${focusattr}>
   </div>
   <div>
     <label for="section">Section:&nbsp;&nbsp;&nbsp;</label>
@@ -789,12 +789,24 @@ END
 #
 # The script also makes / focus the command field (and select its
 # text, so typing replaces the page's own name), as on GitHub and
-# MDN. It listens on keydown by key name rather than key code, and
-# does not exclude Shift: / is Shift-7 on Finnish and Swedish
-# layouts, and e.key is still '/'. The default action is cancelled
-# only when focus actually moves, so / types normally inside a
-# form control; key auto-repeat is ignored so a held / cannot type
-# over the freshly selected text.
+# MDN, and Escape the way back out: focus returns to the page so
+# the scroll keys work again. It listens on keydown by key name
+# rather than key code, and does not exclude Shift: / is Shift-7
+# on Finnish and Swedish layouts, and e.key is still '/'. Only
+# controls that take text keep / for themselves; from the selects
+# and the Show button, where tabbing through the form ends, it
+# still reaches the shortcut. The default action is cancelled only
+# when focus actually moves (a hidden form leaves / to the browser,
+# where Firefox opens Quick Find on it), and the field is focused
+# without scrolling: below 800px the form is not sticky, and
+# focusing it would scroll a deep-read page back to the top (the
+# field is then off screen until the first typed character brings
+# the caret into view, which costs an accidental / nothing). A held
+# / auto-repeats into the now-focused field, so its repeats are
+# swallowed until the key is released. The "Press / to focus"
+# tooltip is added here rather than in the markup, so it is only
+# promised where the script runs and the field is not already
+# autofocused.
 js_queryform()
 {
     cat <<'END'
@@ -816,7 +828,7 @@ js_queryform()
 
   function fill(name, fallback) {
     var sel = document.getElementById(name);
-    if (!sel) {
+    if (!sel || !window.fetch) {
       return;
     }
     fetch('/api/v1/' + name + 'list').then(function (r) {
@@ -844,29 +856,55 @@ js_queryform()
     }).catch(function (e) {});
   }
 
-  var arch;
+  var arch, cmd, held = false, heldCode;
 
   document.addEventListener('keydown', function (e) {
-    var t = e.target, cmd;
-    if (e.key !== '/' || e.repeat || e.ctrlKey || e.metaKey || e.altKey ||
+    var t = e.target;
+    if (e.key === 'Escape' && !e.isComposing && t && t.id === 'command') {
+      t.setSelectionRange(t.value.length, t.value.length);
+      t.blur();
+      return;
+    }
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey ||
         e.isComposing) {
       return;
     }
-    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' ||
-        t.tagName === 'SELECT' || t.isContentEditable)) {
+    if (held && e.repeat) {
+      e.preventDefault();
       return;
     }
-    cmd = document.getElementById('command');
-    if (cmd) {
+    if (t && (t.tagName === 'TEXTAREA' || t.isContentEditable ||
+        (t.tagName === 'INPUT' &&
+         !/^(button|checkbox|radio|reset|submit)$/i.test(t.type)))) {
+      return;
+    }
+    if (!cmd) {
+      return;
+    }
+    cmd.focus({preventScroll: true});
+    if (document.activeElement === cmd) {
       e.preventDefault();
-      cmd.focus();
       cmd.select();
+      held = true;
+      heldCode = e.code;
     }
   });
 
-  if (!window.fetch) {
-    return;
+  document.addEventListener('keyup', function (e) {
+    if (e.key === '/' || (heldCode && e.code === heldCode)) {
+      held = false;
+    }
+  });
+
+  window.addEventListener('blur', function () {
+    held = false;
+  });
+
+  cmd = document.getElementById('command');
+  if (cmd && !cmd.autofocus) {
+    cmd.title = 'Press / to focus';
   }
+
   fill('arch', 'NONE');
   fill('coll', '');
   arch = document.getElementById('arch');
