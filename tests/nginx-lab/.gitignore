@@ -6,3 +6,4 @@ nginx-clear.conf
 nginx-stale-on.conf
 nginx-stale-off.conf
 requests.log
+nginx-reject.conf

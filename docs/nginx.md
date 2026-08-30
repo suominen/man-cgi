@@ -8,9 +8,14 @@ is defined per host in `host_vars/` (oxygene: `max_size` 500 GB;
 lcm: 88 GB), and
 `group_vars/all.yml` `website_configurations['man.netbsd.org']`
 carries the shared site definition used by oxygene, lcm, and the QA
-vhost (which strips `fastcgi_cache` and `limit_req`).
+vhost (which strips `fastcgi_cache` and `limit_req`). The request
+rejection maps (ADR-0020) were first applied by hand on oxygene
+from a diff kept beside the configuration snapshot
+(`~/tmp/oxygene-nginx/proposed.diff`); their Ansible port is
+tracked in `../TODO.md`.
 
-This file records what the configuration does for caching and why.
+This file records what the configuration does for caching and for
+request rejection, and why.
 
 ## Cache-relevant directives (mancgi.j2)
 
@@ -76,13 +81,124 @@ This file records what the configuration does for caching and why.
   long-standing intentional design (valid = fallback), not an
   accident.
 
+## Request rejection (ADR-0020)
+
+Requests the CGI could only refuse are refused by nginx first, from
+three `conf.d` maps tested at the top of both entry locations —
+`location /` (before its `rewrite ^ /cgi-bin/man-cgi$request_uri
+last`) and the `/cgi-bin/` CGI location (direct hits). A map is
+one variable, evaluated lazily and once per request, where a
+regex `location` is a pattern test on every request that has no
+exact or `^~` match — and the rewrite makes that two passes.
+
+- `conf.d/probe-map.conf` — `$probe_path`, generic, keyed on `$uri`
+  (percent-decoded, slashes merged, so encoded variants match):
+  paths only scanners request (`.php`, `wp-*`, `.env`, `.git`,
+  GraphQL, secrets in JSON, `wlwmanifest.xml`, …). Any site opts in
+  with `if ($probe_path) { return 404; }`.
+- `conf.d/man-cgi-syntax-map.conf` — the site's grammar:
+  - `$man_bad_uri`, a whitelist on `$uri`: `/`, the script's own
+    URL (`/cgi-bin/man-cgi`, with or without a slash: the query
+    form's), the health check, the `/api/v1/*` lists, and page
+    paths whose every component is in the union of the CGI's
+    `sanitize_coll`/`sanitize_arch`/`sanitize_command` character
+    sets (`[A-Za-z0-9_.+@:[]-]`). A request arriving with path info
+    after the script name (`/cgi-bin/man-cgi/ls.1`) is refused:
+    `PATH_INFO` is what the `/` rewrite produces, and the rewritten
+    request keeps the verdict `location /` reached (below). Any
+    other `/api` path, `/cgi/`, and asset-like suffixes (`.css`, `.js`,
+    `.json`, `.xml`, `.html`, `.png`, `.gif`, `.ico`, `.txt`,
+    `.map` — never a page name) are refused. The union set rather
+    than per-position sets, because the CGI's parser shifts extra
+    components and a component's role is not fixed by position.
+  - `$man_bad_method`, keyed on `"$request_method $uri"`: GET and
+    HEAD anywhere, POST only to `/` and `/cgi-bin/man-cgi` (the
+    query form's target). Answered 405 with `Allow: GET, HEAD`.
+  - `$man_bad_query`, keyed on `"$uri?$query_string"`: at
+    `/cgi-bin/man-cgi` the query string is the request, so only
+    the legacy positional form `COMMAND[+[SECTION][.ARCH][+COLLECTION]]`
+    in `sanitize_command`'s character set passes (so
+    `?/.well-known/health` does; a trailing `=` is tolerated, as
+    the CGI does; the string is raw, so a `%XX` is let through as
+    such) and anything else is a 400.
+  - `$raw_path`, `$request_uri` up to the `?`: the path as the
+    client sent it, encoding and all. `location /` answers any
+    remaining query string — on `/` or on a page path — with
+    `return 301 $raw_path`. Such a query is never the site's: the
+    legacy form was never meant for `/` and never worked there
+    (the next paragraph explains why), and what arrives on page
+    paths is other sites' tracking (`utm_source=chatgpt.com`,
+    `fbclid=`), which used to end in a CGI 404 because the rewrite
+    glued it onto `PATH_INFO`. The 301 is keyed `all redirect
+    nginx-redirect` and held at Fastly for the default TTL.
+- `conf.d/query-string-map.conf` — `$qs_error`, generic, shared
+  with the other vhosts on the host (which answer it with 400 too,
+  since the same change): the SQL-injection shapes plus the
+  scanner keys the logs showed (`rest_route=`,
+  `route=information`, the AcyMailing set, `meta-box-loader=`,
+  `_wpm=`, `wmo_hc=`, `phpinfo`, traversal in a value). It is
+  tested ahead of the redirect, so a scanner's query is a 400
+  and a reader's tracking parameter a redirect. None of the keys
+  can occur in the legacy form, which has no `&` and only a
+  trailing `=`.
+
+The `if` order is probe map, grammar map, method map, site query
+map, `$qs_error`, then (in `location /`) the query-string
+redirect, (in the CGI location) the `!-f` guard, then the
+HTTP→HTTPS upgrade redirect, so a plain-HTTP probe costs one
+round trip and a direct junk hit no stat. Status codes: 404 for a
+path (what the CGI answers, and in Fastly's cacheable set, so
+repeat probes are absorbed at the edge), 400 for a scanner's
+query string (nginx closes the connection after a 400; see
+ADR-0020), 301 for any other query string, 405 for a method with
+`Allow: GET, HEAD`; none is cached by nginx (no upstream was
+involved) and none triggers Fastly's restart-on-503.
+The 404 blocks add `Surrogate-Key: all notfound nginx-reject`, so
+a mistaken rule's answers are purgeable by key
+(`manno-purge nginx-reject`). Only `return` and `add_header`
+appear inside the `if` blocks, the documented safe form. A
+nginx-level answer logs `cache=-` and `urt=-` with the ADR-0019
+log fields, which is how the report tells it from a CGI 404 (a
+POST the CGI answers logs `cache=-` too — nginx caches GET and
+HEAD only — but carries an upstream time).
+
+`/cgi-bin/`, `/s/` and `/r/` are `^~` prefixes: once the rewrite
+lands in `/cgi-bin/`, no regex location is tried again. The outer
+`/cgi-bin/` location carries `return 404` of its own, which
+applies only when its nested CGI location does not match
+(`/cgi-bin/donate.py`, `/cgi-bin/`): a 404 without the filesystem
+lookup the static module would otherwise make. The remaining
+regex locations are the legacy `/man/…` and `…/htmlN/…` redirects.
+
+Two nginx facts the maps depend on, measured in the lab. nginx
+caches a map's value for the life of the request, internal
+redirects included, so the verdicts reached in `location /` are
+what the CGI location's `if` blocks see after the rewrite; the
+second pass judges afresh only on direct `/cgi-bin/man-cgi` hits.
+That is load-bearing: the rewrite's `$request_uri` carries the
+query string, and nginx copies it into `$uri` after a literal `?`
+(`/cgi-bin/man-cgi/?ls+1`), which the page rule would refuse if it
+were re-evaluated — never add `volatile` to these maps. The same
+copy is why `GET /?COMMAND+SECTION` always reached the CGI as
+`PATH_INFO=/?COMMAND+SECTION` and 404ed — as did every page path
+with a tracking parameter: the form is the script's own URL's,
+which the CGI's header now says, and the redirect sends every
+other query string away before the rewrite.
+
+The lab driver `tests/nginx-lab/drive-reject` holds the table of
+accepted and refused shapes and runs it against the map files.
+
 ## Rate limiting
 
 `limit_req` keys on `$binary_remote_addr`, which is a Fastly
 address (the `real_ip` include is deliberately not applied); with
 shielding, most traffic arrives from one POP and shares that
 budget. This is intentional — revisit if 429s
-become a problem. Note that `limit_req` rejects in nginx's
+become a problem: in the 2026-08-14..28 logs, 122 k of 125 k
+rejections came from the site-wide `server` zone during crawler
+storms, all of them well-formed page URLs (junk is rejected in
+`location /`, before the `/cgi-bin/` location that carries
+`limit_req`). Note that `limit_req` rejects in nginx's
 preaccess phase, before the cache is consulted, so nothing masks
 those 429s (the `use_stale http_429` directive only covers a 429
 from the FastCGI upstream, which man-cgi never emits).

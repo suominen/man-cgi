@@ -1,0 +1,416 @@
+#!/bin/sh
+# @(#)$KimmoSuominen$
+#
+# Drive the nginx request-rejection maps (ADR-0020) against the
+# synthetic FastCGI backend: every request in the table below must
+# get the expected status, and the backend must have been contacted
+# exactly when the table says so. Runs on the NetBSD test host or
+# anywhere with nginx, curl and python3; see README.md.
+#
+# 20260830  Kimmo Suominen
+#
+
+set -eu
+set -o pipefail
+
+# Wider than the house PATH: nginx lives in /usr/pkg/sbin on NetBSD
+# and in /usr/sbin on Debian.
+PATH=/bin:/usr/bin:/sbin:/usr/sbin:/usr/pkg/bin:/usr/pkg/sbin
+export PATH
+
+CDPATH=
+
+PROG="${0##*/}"
+
+die()
+{
+    echo "${PROG}: ${*}" 1>&2
+    exit 1
+}
+
+usage()
+{
+    cat <<USAGE
+Usage:	${PROG} [-h] [-m dir]
+
+Start the lab nginx with the request-rejection maps and the vhost's
+rejection blocks (reject-locations.conf), send the table of probe
+and legitimate requests, and report each line as PASS or FAIL
+according to the status received and whether the backend saw the
+request. Exits 1 when any line fails.
+
+Options:
+-h	Show this help
+-m	Directory holding probe-map.conf, man-cgi-syntax-map.conf and
+	query-string-map.conf (default: ~/tmp/oxygene-nginx/conf.d,
+	or ./maps when that does not exist)
+USAGE
+}
+
+maps=
+
+while getopts hm: opt
+do
+    case "${opt}" in
+    h)  usage; exit 0;;
+    m)  maps="${OPTARG}";;
+    *)  usage 1>&2; exit 2;;
+    esac
+done
+shift $((${OPTIND} - 1))
+
+if [ $# -ne 0 ]
+then
+    usage 1>&2
+    exit 2
+fi
+
+LAB=$(cd "$(dirname "${0}")" && pwd)
+
+if [ -z "${maps}" ]
+then
+    if [ -d "${HOME}/tmp/oxygene-nginx/conf.d" ]
+    then
+	maps="${HOME}/tmp/oxygene-nginx/conf.d"
+    else
+	maps="${LAB}/maps"
+    fi
+fi
+[ -d "${maps}" ] || die "no such directory: ${maps}"
+maps=$(cd "${maps}" && pwd)
+
+cd "${LAB}"
+
+for f in probe-map.conf man-cgi-syntax-map.conf query-string-map.conf
+do
+    [ -r "${maps}/${f}" ] || die "cannot read ${maps}/${f}"
+done
+
+for cmd in nginx curl python3
+do
+    command -v "${cmd}" > /dev/null || die "${cmd} is required"
+done
+
+# The ports also appear in fcgi-backend.py (9481); keep in sync.
+BASE=http://127.0.0.1:8481
+
+BACKEND_PID=
+
+stop_nginx()
+{
+    if [ -f logs/nginx.pid ]
+    then
+	kill "$(cat logs/nginx.pid)" 2> /dev/null || true
+	sleep 1
+    fi
+}
+
+stop_backend()
+{
+    if [ -n "${BACKEND_PID}" ]
+    then
+	kill "${BACKEND_PID}" 2> /dev/null || true
+	wait "${BACKEND_PID}" 2> /dev/null || true
+	BACKEND_PID=
+    fi
+}
+
+cleanup()
+{
+    stop_nginx
+    stop_backend
+}
+
+trap cleanup EXIT
+trap 'exit 1' INT TERM HUP
+
+# Recover from a previous crashed run before removing state.
+stop_nginx
+stop_backend
+rm -rf cache logs tmp requests.log
+mkdir -p cache logs tmp
+
+cat > nginx-reject.conf <<CONF
+worker_processes 1;
+error_log logs/error.log info;
+pid logs/nginx.pid;
+daemon on;
+
+events {
+    worker_connections 32;
+}
+
+http {
+    access_log logs/access.log;
+    client_body_temp_path tmp/body;
+    proxy_temp_path tmp/proxy;
+    fastcgi_temp_path tmp/fastcgi;
+    uwsgi_temp_path tmp/uwsgi;
+    scgi_temp_path tmp/scgi;
+
+    include ${maps}/probe-map.conf;
+    include ${maps}/man-cgi-syntax-map.conf;
+    include ${maps}/query-string-map.conf;
+
+    server {
+	listen 127.0.0.1:8481;
+
+	location / {
+	    include ${LAB}/reject-locations.conf;
+	    include ${LAB}/redirect-query.conf;
+	    add_header X-Lab-Maps "\$probe_path\$man_bad_uri\$man_bad_method\$man_bad_query\$qs_error" always;
+
+	    rewrite ^ /cgi-bin/man-cgi\$request_uri last;
+	}
+
+	location ^~ /cgi-bin/ {
+	    return 404;
+
+	    location ~ [^/][-.]cgi(\$|/) {
+		fastcgi_split_path_info ^(.+[-.]cgi)(/.*)\$;
+
+		include ${LAB}/reject-locations.conf;
+		add_header X-Lab-Maps "\$probe_path\$man_bad_uri\$man_bad_method\$man_bad_query\$qs_error" always;
+
+		fastcgi_param GATEWAY_INTERFACE CGI/1.1;
+		fastcgi_param REQUEST_METHOD \$request_method;
+		fastcgi_param REQUEST_URI \$request_uri;
+		fastcgi_param QUERY_STRING \$query_string;
+		fastcgi_param SCRIPT_NAME \$fastcgi_script_name;
+		fastcgi_param PATH_INFO \$fastcgi_path_info;
+		fastcgi_param SERVER_NAME \$server_name;
+		fastcgi_param SERVER_PORT \$server_port;
+		fastcgi_param HTTP_PROXY "";
+
+		fastcgi_pass 127.0.0.1:9481;
+	    }
+	}
+    }
+}
+CONF
+
+nginx -t -p "${LAB}" -c nginx-reject.conf > logs/nginx-t.log 2>&1 ||
+die "nginx -t failed; see logs/nginx-t.log"
+
+python3 fcgi-backend.py &
+BACKEND_PID=$!
+sleep 1
+kill -0 "${BACKEND_PID}" 2> /dev/null ||
+die 'backend failed to start (stale process on port 9481?)'
+nginx -p "${LAB}" -c nginx-reject.conf
+sleep 1
+
+seen=0
+fail=0
+
+backend_lines()
+{
+    if [ -f requests.log ]
+    then
+	wc -l < requests.log
+    else
+	echo 0
+    fi
+}
+
+# check METHOD URL EXPECTED-STATUS BACKEND(yes|no) [HEADER-SUBSTRING]
+#
+# The backend writes its requests.log line before it answers, so the
+# line count is settled by the time curl returns. The maps column is
+# the X-Lab-Maps header the lab adds (probe, uri, method, query, qs
+# verdicts in that order); a 405 has none, as its own add_header
+# hides the inherited one.
+check()
+{
+    local method url want backend header before after got status maps
+    local contacted ok
+    method="${1}"
+    url="${2}"
+    want="${3}"
+    backend="${4}"
+    header="${5:-}"
+
+    before=$(( $(backend_lines) ))
+    if [ "${method}" = HEAD ]
+    then
+	got=$(curl -g -s -o /dev/null -D - -I "${BASE}${url}" | tr -d '\r') ||
+	got=
+    else
+	got=$(curl -g -s -o /dev/null -D - -X "${method}" "${BASE}${url}" |
+	    tr -d '\r') ||
+	got=
+    fi
+    after=$(( $(backend_lines) ))
+
+    status=$(printf '%s\n' "${got}" | awk '/^HTTP\//{print $2; exit}')
+    maps=$(printf '%s\n' "${got}" | awk '/^X-Lab-Maps:/{print $2; exit}')
+    if [ "${after}" -gt "${before}" ]
+    then
+	contacted=yes
+    else
+	contacted=no
+    fi
+
+    ok=PASS
+    if [ "${status:--}" != "${want}" ] || [ "${contacted}" != "${backend}" ]
+    then
+	ok=FAIL
+    fi
+    if [ -n "${header}" ] &&
+	! printf '%s\n' "${got}" | grep -q -i -F "${header}"
+    then
+	ok=FAIL
+    fi
+    if [ "${ok}" != PASS ]
+    then
+	fail=$((${fail} + 1))
+    fi
+    seen=$((${seen} + 1))
+    printf '%s %-7s %-44s want %s/%-3s got %s/%-3s maps=%s\n' \
+	"${ok}" "${method}" "${url}" "${want}" "${backend}" \
+	"${status:--}" "${contacted}" "${maps:--}"
+}
+
+echo '-- accepted shapes reach the backend'
+check GET  /ls.1                              200 yes
+check HEAD /ls.1                              200 yes
+check HEAD /cgi-bin/man-cgi                   200 yes
+check GET  /g%2B%2B.1                         200 yes
+check GET  /NetBSD-10.1/i386/ls.1             200 yes
+check GET  /NetBSD-current/                   200 yes
+check GET  /NetBSD-10.1/i386/                 200 yes
+check GET  /g++.1                             200 yes
+check GET  '/[.1'                             200 yes
+check GET  /nsswitch.conf                     200 yes
+check GET  /CA.pl                             200 yes
+check GET  /openssl-CA.pl                     200 yes
+check GET  /revbump.py                        200 yes
+check GET  //ls.1                             200 yes
+check GET  /Mail.1                            200 yes
+check GET  /x86/boot.8                        200 yes
+check GET  /NetBSD-9.0/evbarm/x86/fdc.4       200 yes
+check GET  /api/v1/archlist                   200 yes
+check GET  /.well-known/health                200 yes
+check GET  /                                  200 yes
+check GET  /cgi-bin/man-cgi                   200 yes
+check GET  '/cgi-bin/man-cgi?ls+1'            200 yes
+check GET  '/cgi-bin/man-cgi?ls+1+NetBSD-9.3' 200 yes
+check GET  '/cgi-bin/man-cgi?ls+1='           200 yes
+# A lone key with the tolerated trailing = is a legacy query too.
+check GET  '/cgi-bin/man-cgi?p='              200 yes
+check GET  '/cgi-bin/man-cgi?boot+8.i386'     200 yes
+check GET  '/cgi-bin/man-cgi?%2B%2BNetBSD-current' 200 yes
+check GET  '/cgi-bin/man-cgi?/.well-known/health' 200 yes
+check GET  '/cgi-bin/man-cgi?ls%27+1'         200 yes
+check GET  '/cgi-bin/man-cgi/?p='             200 yes
+check GET  '/cgi-bin/man-cgi/?ls+1'           200 yes
+check POST /                                  200 yes
+check POST /cgi-bin/man-cgi                   200 yes
+check POST /cgi-bin/man-cgi/                  200 yes
+check POST '/cgi-bin/man-cgi?ls+1'            200 yes
+
+echo '-- probe map: 404 without touching the backend'
+check GET  /wp-login.php                      404 no 'Surrogate-Key: all notfound nginx-reject'
+check GET  /wp-admin/                         404 no
+check GET  /wp-json/wp/v2/users               404 no
+check GET  /xmlrpc.php                        404 no
+check GET  //av.php                           404 no
+check HEAD /wp-login.php                      404 no
+check GET  /wp-login%2Ephp                    404 no
+check GET  /cgi/man.cgi                       404 no
+check GET  /.env                              404 no
+check GET  /%2Eenv                            404 no
+check GET  /.env.bak                          404 no
+check GET  /app/.env                          404 no
+check GET  /.git/config                       404 no
+check GET  /.aws/credentials                  404 no
+check GET  /api/graphql                       404 no
+check GET  /v1/graphql                        404 no
+check GET  /graphql                           404 no
+check GET  /secrets.json                      404 no
+check GET  /appsettings.Production.json       404 no
+check GET  /wp-includes/wlwmanifest.xml       404 no
+check GET  /phpmyadmin/                       404 no
+check GET  /actuator/health                   404 no
+check GET  /.htaccess                         404 no
+check GET  /web.config                        404 no
+check GET  /owa/                              404 no
+
+echo '-- grammar map: 404 without touching the backend'
+check GET  '/ls.1;id'                         404 no 'Surrogate-Key: all notfound nginx-reject'
+check GET  '/%3Cscript%3E'                    404 no
+check GET  /%25s                              404 no
+check GET  /print.css                         404 no
+check GET  /sitemap.xml                       404 no
+check GET  /apple-touch-icon.png              404 no
+check GET  /manifest.json                     404 no
+check GET  /index.html                        404 no
+check GET  /i%3E/vax/dl.4                     404 no
+check GET  '/NetBSD-11.0/ls.1%20'             404 no
+check GET  /ipfs/bafkreicyqcbhpicbos7ev4mrx   200 yes
+check GET  /api/v2/x                          404 no
+
+echo '-- path info after the script name: internal to the / rewrite'
+check GET  /cgi-bin/man-cgi/ls.1              404 no
+check HEAD /cgi-bin/man-cgi/ls.1              404 no
+check GET  /cgi-bin/man-cgi/NetBSD-10.1/i386/ls.1 404 no
+check GET  /cgi-bin/man-cgi/.well-known/health 404 no
+check GET  /cgi-bin/man-cgi/api/v1/archlist   404 no
+check GET  /cgi-bin/man-cgi/index.php         404 no
+check GET  /cgi-bin/man-cgi/print.css         404 no
+check GET  /cgi-bin/man-cgi/ls.1%20           404 no
+check GET  '/cgi-bin/man-cgi/man?calendar+1'  404 no
+
+echo '-- method map: 405 with Allow, without touching the backend'
+check POST /ls.1                              405 no 'Allow: GET, HEAD'
+check POST /graphql                           404 no
+check POST /NetBSD-current/                   405 no 'Allow: GET, HEAD'
+check DELETE /ls.1                            405 no 'Allow: GET, HEAD'
+check OPTIONS /                               405 no 'Allow: GET, HEAD'
+check PROPFIND /                              405 no 'Allow: GET, HEAD'
+check PUT  /cgi-bin/man-cgi                   405 no 'Allow: GET, HEAD'
+
+echo '-- query maps: 400 without touching the backend'
+# $qs_error first (scanner keys), then the script URL's own rule.
+check GET  '/?a%20and%20b'                    400 no
+check GET  '/ls.1?a%20and%20b'                400 no
+check GET  '/?rest_route=/batch/v1'           400 no
+check GET  '/?information_id=9&route=information%2Finformation' 400 no
+check GET  '/?acym_action=frontentityselect&columns=id' 400 no
+check GET  '/?meta-box-loader=1'              400 no
+check GET  '/?phpinfo=1'                      400 no
+check GET  '/ls.1?file=../../.env'            400 no
+check GET  '/cgi-bin/man-cgi?x=1'             400 no
+check GET  '/cgi-bin/man-cgi?ls+1+NetBSD-9.2=%20UNION%20ALL%20SELECT%20NULL' 400 no
+
+echo '-- any other query string: 301 to the path without it'
+check GET  '/ls.1?utm_source=chatgpt.com'     301 no 'Location: http://127.0.0.1:8481/ls.1'
+check GET  '/mount_msdos.8?fbclid=IwAR0x'     301 no 'Location: http://127.0.0.1:8481/mount_msdos.8'
+check GET  '/NetBSD-10.1/i386/ls.1?utm_medium=rss' 301 no 'Location: http://127.0.0.1:8481/NetBSD-10.1/i386/ls.1'
+check GET  '/g%2B%2B.1?utm_source=x'          301 no 'Location: http://127.0.0.1:8481/g%2B%2B.1'
+check GET  '/?ls+1+NetBSD-9.3'                301 no 'Location: http://127.0.0.1:8481/'
+check GET  '/?p='                             301 no 'Location: http://127.0.0.1:8481/'
+check GET  '/?c'                              301 no
+check GET  '/?query=ls&sektion=1'             301 no
+check POST '/?query=ls&sektion=1'             301 no
+check GET  '/?utm_source=chatgpt.com'         301 no 'Surrogate-Key: all redirect nginx-redirect'
+# The rejections still come first.
+check GET  '/ls.1;id?utm_source=x'            404 no
+check GET  '/wp-login.php?utm_source=x'       404 no
+check DELETE '/ls.1?utm_source=x'             405 no
+
+echo '-- outer /cgi-bin/ location: a static 404 before any map'
+# These match location ^~ /cgi-bin/ but not the nested CGI regex, so
+# no if block runs: the outer location's own return 404 answers.
+# Listed so the shape is pinned, not credited to the maps.
+check GET  /cgi-bin/index.php                 404 no
+check GET  /cgi-bin/donate.py                 404 no
+check GET  /cgi-bin/ikiwiki                   404 no
+check GET  /cgi-bin/                          404 no
+check GET  /cgi-bin/man-cgi,v                 404 no
+
+stop_nginx
+stop_backend
+
+echo "-- ${seen} checks, ${fail} failed"
+[ "${fail}" -eq 0 ]

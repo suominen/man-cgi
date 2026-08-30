@@ -26,3 +26,4 @@ here. Supersede landed records with new ones; never rewrite them.
 | [0017](0017-collection-index-urls.md) | Collection index URLs | accepted |
 | [0018](0018-autofocus-home-only-slash-focuses.md) | Autofocus on the home page only; / focuses the command field | accepted |
 | [0019](0019-python-tooling-and-log-format-extension.md) | Python for tooling, stdlib only; bin/ CLI over lib/ package; append-only log-format extension | accepted |
+| [0020](0020-reject-junk-at-nginx-with-maps.md) | Reject junk requests at nginx with maps and client-error statuses | accepted |

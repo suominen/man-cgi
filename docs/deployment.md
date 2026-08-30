@@ -71,6 +71,29 @@ site definition minus caching and rate limiting, so most cache
 directives cannot be exercised there — that is what
 `tests/nginx-lab/` (synthetic backend on the test host) is for.
 
+Two checks before a change goes to oxygene:
+
+- `tests/nginx-lab/drive-reject` starts an unprivileged nginx with
+  the request rejection maps (`-m` names the `conf.d` directory
+  holding them) and the vhost's `if` blocks
+  (`tests/nginx-lab/reject-locations.conf`, which must track the
+  vhost) and sends a table of accepted and refused requests. It
+  runs anywhere nginx, curl and python3 exist, including the test
+  host (`rsync -a tests/nginx-lab/ kimmo@equinoxe:nginx-lab/`, the
+  map files into `nginx-lab/maps/`, then `sh nginx-lab/drive-reject
+  -m nginx-lab/maps`).
+- `nginx -t` against a path-adjusted copy of the whole
+  configuration: copy the snapshot into a `mktemp -d` directory,
+  `sed` `/etc/nginx` (and the pid, log and cache paths) to it, add
+  a `modules` symlink to the local nginx's module directory and a
+  throwaway self-signed certificate for every `ssl/live/NAME`
+  referenced, then `nginx -t -p DIR -c DIR/nginx.conf`. A local
+  nginx older than 1.29.3 must have the `add_header_inherit` lines
+  removed from the copy first, and the 10 GB `keys_zone` shrunk.
+  Unprivileged, the test ends with "syntax is ok" followed by a
+  `bind() to 0.0.0.0:80` failure; the latter is the port, not the
+  configuration.
+
 ## Test environment
 
 - NetBSD test host: `equinoxe` (NetBSD 11.0). `tests/run-remote`

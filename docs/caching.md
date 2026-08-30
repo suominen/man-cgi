@@ -137,6 +137,19 @@ emitted before the conditional check runs.
   canonicalization redirects are 301 rather than 308 (ADR-0005):
   308s were passed through to nginx on every request. 503s
   (including the health check's) are likewise not cached at Fastly.
+  The nginx-level 404s of the request rejection maps (ADR-0020)
+  carry no caching headers of their own, so Fastly holds them for
+  the service's **default TTL** — a per-service setting
+  (Configuration, Settings, Default TTL), about 120 s as measured
+  on 2026-08-30 (`Fastly-Debug-TTL` showed 70.9 s left at age 49
+  on a fresh nginx 404; the field prints only on the node that
+  holds the object). Any 404 TTL arithmetic has to count that
+  separately from the CGI's own `max-age=86400`. They do carry
+  `Surrogate-Key: all notfound nginx-reject`, so a mistaken rule's
+  answers can be purged by key. The query-string redirects (301 to the bare path, keyed
+  `all redirect nginx-redirect`) likewise sit at Fastly for the
+  default TTL. The 400s and 405s are not cached at all, which is
+  fine — such URLs are one-offs.
 - **Shielding**: the Fastly service shields through one POP
   (hel-helsinki-fi), so origin traffic concentrates there and edge
   POPs fill from the shield.

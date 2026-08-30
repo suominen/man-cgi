@@ -25,13 +25,27 @@ before touching production configuration.
   301 backend, to see which request receives the refreshed
   response.
 
+- `drive-reject` — starts nginx with the request rejection maps
+  (ADR-0020; `-m` names the `conf.d` directory holding
+  `probe-map.conf`, `man-cgi-syntax-map.conf` and
+  `query-string-map.conf`, default `~/tmp/oxygene-nginx/conf.d` or
+  `./maps`) and the vhost's `if` blocks from
+  `reject-locations.conf` (both entry locations) and
+  `redirect-query.conf` (`location /` only), then sends a table of
+  accepted, refused and redirected requests, checking the status
+  of each and whether the backend saw it. The two fragments must
+  track the vhost (and `mancgi.j2`/`fqdn.j2` once the Ansible port
+  lands): they are what this driver measures.
+
 Run it on the NetBSD test host:
 
     rsync -a tests/nginx-lab/ kimmo@equinoxe:nginx-lab/
     ssh kimmo@equinoxe sh nginx-lab/drive
 
 The other drivers run the same way (`sh nginx-lab/drive-redirect`,
-`sh nginx-lab/drive-stale`).
+`sh nginx-lab/drive-stale`; for `drive-reject` also rsync the three
+map files into `nginx-lab/maps/` and pass `-m nginx-lab/maps`).
+`drive-reject` also runs on any host with nginx, curl and python3.
 
 ## Results (2026-08-09, nginx 1.30.4 on NetBSD 11.0)
 
@@ -131,3 +145,45 @@ Conclusions:
    hands the stale copy to requests arriving while a refresh is in
    progress (not exercised here: the lab is single-client).
    ADR-0015 turns it off in production.
+
+## Request rejection maps (2026-08-30, nginx 1.30.4 on NetBSD; 1.26.3 on Debian)
+
+`drive-reject` ran its table (100 lines) against the map files as
+first applied on oxygene (ADR-0020) on both hosts with no failures:
+every accepted shape (page paths, collection and arch indexes,
+`g++.1`, `g%2B%2B.1`, `[.1`, `nsswitch.conf`, `Mail.1`, `CA.pl`,
+`revbump.py`, `//ls.1`, the API lists and the health check, the
+legacy query forms at `/cgi-bin/man-cgi` with and without the
+tolerated trailing `=`, GET, HEAD and POST at `/` and
+`/cgi-bin/man-cgi`, page paths with tracking parameters)
+reached the backend with a 200; every probe path, grammar
+violation, disallowed method and off-grammar query string was
+answered 404 (with `Surrogate-Key: all notfound nginx-reject`),
+405 (with `Allow: GET, HEAD`) or 400 without a backend request;
+so was every direct `/cgi-bin/man-cgi/<path info>` hit, path info
+being what the `/` rewrite produces; and every other query string
+on `/` or a page path was answered with a 301 to the path as sent
+(`/g%2B%2B.1?utm_source=x` → `/g%2B%2B.1`, keyed `all redirect
+nginx-redirect`), the rejections still coming first.
+The `maps=` column of the output is the five verdicts (probe, uri,
+method, query, qs) the lab exposes as `X-Lab-Maps`, so a 404 is
+attributable to the map that produced it.
+
+Findings from the first runs that shaped the maps: `POST
+/cgi-bin/man-cgi` — the query form's real target — was a 405 while
+the method map demanded a trailing slash, and the same requirement
+let `/cgi-bin/man-cgi?x=1` through the site query map; `/api/v2/x`
+passed the page charset although the CGI answers 404 for any
+`/api` path outside `/api/v1/`; a generic `\.(pl|py|cgi)$` probe
+rule would have refused sectionless requests for the real pages
+`CA.pl(1)`, `openssl-CA.pl(1)` and `revbump.py(1)`; and after the
+`rewrite ^ /cgi-bin/man-cgi$request_uri last` in `location /`,
+`$uri` is `/cgi-bin/man-cgi/?ls+1` — the query string copied in
+after a literal `?` — which the page rule would refuse if the maps
+were re-evaluated. They are not: nginx caches a map's value for
+the request, so the CGI location's `if` blocks see the `location
+/` verdicts. Adding `volatile` to `$man_bad_uri` flipped every
+rewritten line with a query string to 404; the maps must never carry it. Paths under
+`/cgi-bin/` that the nested CGI regex does not match
+(`/cgi-bin/donate.py`, `/cgi-bin/`) never reach the `if` blocks:
+the outer location's own `return 404` answers them.

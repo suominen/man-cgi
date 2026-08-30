@@ -126,31 +126,74 @@ checklist:
     last-modified: present
 
 # A name that is not one is a 404. ct-check (urllib) sends the < raw,
-# as the report that found <b>zz in the <h1> was made, so this pins
-# that such a request reaches the CGI and gets a cached 404; the
-# chrome itself is a body matter, checked by the test suite.
+# as the report that found <b>zz in the <h1> was made. Since
+# ADR-0020 nginx's grammar map answers this before the CGI (no
+# validator, no CGI Cache-Control); the CGI's own handling of such a
+# name is checked by the test suite.
 - path: /<b>zz
   code: 404
-  headers:
-    cache-control: "public, max-age=3600"
-    last-modified: present
 
 # A name with a * in it is a 404 whatever fcgiwrap's working
 # directory holds: the request words are no longer pathname-expanded
-# before the sanitizer sees them (man-cgi 1.113, set -f). A smoke
-# check cannot plant a decoy file on the server, so this pins only
-# the outcome; the decoy-based proof is tests/t/globbing.
+# before the sanitizer sees them (man-cgi 1.113, set -f). Since
+# ADR-0020 the grammar map refuses the * first, so this pins only
+# that nothing serves it; the decoy-based proof is tests/t/globbing.
 - path: /ls*
   code: 404
+
+# The same * in the legacy query form is off the query grammar:
+# refused by the site query map (ADR-0020) with a 400.
+- path: /cgi-bin/man-cgi?ls*+1
+  code: 400
+
+# Request rejection (ADR-0020): probes, off-grammar shapes and
+# off-grammar query strings are answered by nginx without reaching
+# the CGI. A 404 here carries no CGI validator.
+- path: /wp-login.php
+  code: 404
+
+- path: /.env
+  code: 404
+
+- path: /sitemap.xml
+  code: 404
+
+- path: /ls.1;id
+  code: 404
+
+- path: /?a%20and%20b
+  code: 400
+
+# The legacy query form lives at /cgi-bin/man-cgi only; any other
+# query string on / or a page path is sent to the path without it
+# (other sites' tracking parameters arrive that way).
+- path: /?ls+1
+  code: 301
+  location: /
+
+# Path info is what the / rewrite produces; arriving with it is
+# refused.
+- path: /cgi-bin/man-cgi/ls.1
+  code: 404
+
+- path: /?rest_route=/batch/v1
+  code: 400
+
+# Shapes the grammar map must keep letting through: a + in the name,
+# a sectionless name with a dot in it, tracking parameters on a page.
+- path: /g++.1
+  type: text/html
   headers:
     cache-control: "public, max-age=3600"
     last-modified: present
 
-- path: /cgi-bin/man-cgi?ls*+1
-  code: 404
-  headers:
-    cache-control: "public, max-age=3600"
-    last-modified: present
+- path: /nsswitch.conf
+  code: 301
+  location: /nsswitch.conf.5
+
+- path: /ls.1?utm_source=smoke
+  code: 301
+  location: /ls.1
 
 # A real architecture that ships no pages of its own in the
 # collection is still a real architecture: archlist is the union

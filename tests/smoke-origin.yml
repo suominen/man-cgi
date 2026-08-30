@@ -28,12 +28,20 @@ checklist:
   headers:
     surrogate-key: "all notfound coll:NetBSD-current"
 
-# A name with a * in it is not pathname-expanded into some other
-# name (man-cgi 1.113, set -f); it is a 404 keyed like any other.
+# A name with a * in it is refused by nginx's grammar map before
+# the CGI (ADR-0020), keyed for purging like every nginx-level 404;
+# that the CGI does not pathname-expand it either (man-cgi 1.113,
+# set -f) is the test suite's business now.
 - path: /ls*
   code: 404
   headers:
-    surrogate-key: "all notfound coll:NetBSD-current"
+    surrogate-key: "all notfound nginx-reject"
+
+# The probe map's 404 carries the same key.
+- path: /wp-login.php
+  code: 404
+  headers:
+    surrogate-key: "all notfound nginx-reject"
 
 # MI page under an arch URL now 301s to the arch-less canonical
 # URL, keyed as a redirect.
