@@ -3,7 +3,9 @@
 import html
 
 from . import __version__
-from .classify import BROWSER, ERROR_FAMILIES, ROUTES
+from .classify import (
+    BROWSER, ERROR_FAMILIES, GRAMMAR_BUCKETS, GRAMMAR_ORIGIN, PROBE_FAMILIES,
+    REJECTION_RULES, ROUTES)
 
 CSS = """
 :root { color-scheme: light dark; --fg: #1a1a1a; --bg: #fdfdfd; --mute: #666;
@@ -17,6 +19,7 @@ body { font: 14px/1.45 system-ui, sans-serif; color: var(--fg); background: var(
        margin: 0 auto; max-width: 72em; padding: 1em 1.5em; }
 h1 { font-size: 1.6em; } h2 { margin-top: 2em; border-bottom: 1px solid var(--line); }
 h3 { margin-top: 1.5em; font-size: 1.05em; }
+h4 { margin-top: 1.2em; font-size: 1em; }
 nav ol { columns: 2; padding-left: 1.5em; }
 table { border-collapse: collapse; margin: .5em 0 1em; }
 table.eq { table-layout: fixed; width: 100%; }
@@ -255,16 +258,31 @@ def page(title, sections, footer_html):
 
 CLASSES = ('2xx', '3xx', '4xx', '429', '499', '5xx', 'other')
 SECTION_IDS = ('summary', 'status', 'traffic', 'routes', 'bots', 'browser',
-               'probes', 'clients', 'content', 'backend', 'unclassified')
+               'probes', 'reach', 'clients', 'content', 'backend',
+               'unclassified')
 
 STATUS_NOTES = {
     '301': 'canonicalization and legacy-URL redirects (ADR-0005, ADR-0015)',
     '304': 'conditional revalidation hit (ADR-0003)',
+    '400': 'the $qs_error map (ADR-0020); without a query string, a request nginx could not parse',
+    '404': 'a page the CGI did not find, or the nginx probe and grammar maps (ADR-0020); cache= tells them apart (Backend reach)',
+    '405': 'the method map (ADR-0020): GET, HEAD, and POST only to / and /cgi-bin/man-cgi',
     '429': 'nginx limit_req, keyed on the Fastly POP address',
     '499': 'client closed the connection before the response',
-    '501': 'nginx rule for probe paths (*.php, *.cgi, wp-includes, ...)',
-    '503': 'with a query string: the $qs_error map; otherwise upstream unavailable',
+    '501': 'before ADR-0020: the per-path nginx rule for probe paths (*.php, *.cgi, wp-includes, ...)',
+    '503': 'upstream unavailable; with a query string before ADR-0020, the $qs_error map',
     '502': 'fcgiwrap unreachable or crashed',
+}
+
+REJECTION_NOTES = {
+    'probe-map': '404 from $probe_path (a named probe family)',
+    'grammar-map': '404 from the grammar map (a character the CGI would strip)',
+    'qs': '400 from $qs_error or $man_bad_query (503 before ADR-0020)',
+    'method': '405 from the method map',
+    'cgi-bin': '404 from the outer /cgi-bin/ location (no CGI there)',
+    'limit-req': '429 from limit_req',
+    'legacy-501': '501 from the per-path rules ADR-0020 replaced',
+    'other': 'an error status with no rule to credit',
 }
 
 
@@ -441,6 +459,130 @@ def section_probes(tree, meta):
     return ''.join(out)
 
 
+def _reach_rows(keys, split):
+    """[key, nginx, fastcgi, share reaching FastCGI] for the keys present."""
+    rows = []
+    for key in keys:
+        v = split.get(key)
+        if not v:
+            continue
+        nginx, fcgi = v.get('nginx', 0), v.get('fastcgi', 0)
+        rows.append([key, nginx, fcgi, pct(fcgi, nginx + fcgi)])
+    return rows
+
+
+def section_reach(tree, meta):
+    r = tree['reach']
+    t = tree['totals']['requests']
+    tot, basis = r['totals'], r['basis']
+    nginx, fcgi = tot.get('nginx', 0), tot.get('fastcgi', 0)
+    exact, inferred = basis.get('cache', 0), basis.get('inferred', 0)
+    intro = (f'<p>{fmt_int(nginx)} requests ({pct(nginx, t)}) were answered by '
+             f'nginx alone and {fmt_int(fcgi)} ({pct(fcgi, t)}) reached the '
+             'FastCGI location. ')
+    if not t:
+        intro = '<p class="note">no requests</p>'
+    elif exact:
+        intro += (f'{fmt_int(exact)} records carry the extended log fields '
+                  '(<code>cache=</code> and <code>urt=</code>), which settle '
+                  f'that split exactly; {fmt_int(r["upstream"])} of those '
+                  'contacted fcgiwrap, the rest were nginx cache hits or '
+                  'nginx-level answers. ')
+        if inferred:
+            intro += f'The other {fmt_int(inferred)} records are inferred '
+    else:
+        intro += ('No record carries the extended log fields, so the whole '
+                  'split is inferred ')
+    if t and inferred:
+        intro += ('from status and route: 429, 501, 405, 403, 400, 307, a 503 '
+                  'with a query string, the static and report files, the '
+                  'legacy redirects and a 301 for a page path with a query '
+                  'string count as nginx, everything else as '
+                  'FastCGI. That undercounts nginx once the rejection maps '
+                  'are deployed on a host still logging the basic format.')
+    if t:
+        intro += '</p>'
+    note = ('<p class="note">Measures the request rejection maps of ADR-0020 '
+            '(<code>$probe_path</code> and the grammar map answering 404, '
+            '<code>$qs_error</code> 400, the method map 405) and '
+            '<code>limit_req</code> (429), all in the nginx configuration '
+            'kept in <code>~/src/cloud</code>. The leak tables below are the '
+            'candidates for extending the maps; the runbook&#8217;s '
+            '&#8220;Repeating the nginx blocking analysis&#8221; is the '
+            'procedure.</p>')
+    days = tree['window']['days']
+    by_day = tree['by_day']
+    day_rows = []
+    for d in days:
+        v = by_day[d].get('reach', {})
+        n, f = v.get('nginx', 0), v.get('fastcgi', 0)
+        day_rows.append([_day_label(tree, d), n, f, pct(f, n + f),
+                         by_day[d].get('leaks', 0)])
+    g = r['grammar']
+    grammar_rows = [[b, GRAMMAR_ORIGIN[b], g['buckets'][b],
+                     r['by_grammar'].get(b, {}).get('nginx', 0),
+                     r['by_grammar'].get(b, {}).get('fastcgi', 0)]
+                    for b in GRAMMAR_BUCKETS if g['buckets'].get(b)]
+    leak = r['leaks']
+    classes = ([['probe family', k, v] for k, v in
+                sorted(leak['families'].items(), key=lambda kv: -kv[1])]
+               + [['grammar', k, v] for k, v in
+                  sorted(leak['grammar'].items(), key=lambda kv: -kv[1])]
+               + [['rule', k, v] for k, v in
+                  sorted(leak['violations'].items(), key=lambda kv: -kv[1])])
+    rejections = [[rule, r['rejections'][rule], REJECTION_NOTES[rule]]
+                  for rule in REJECTION_RULES if r['rejections'].get(rule)]
+    out = [intro, note,
+           '<h3>Per day</h3>',
+           table(['Day', 'nginx', 'fastcgi', 'Reached FastCGI', 'Leaks'],
+                 day_rows, numeric={1, 2, 3, 4}, nowrap={0}),
+           '<h3>By route</h3>',
+           table(['Route', 'nginx', 'fastcgi', 'Reached FastCGI'],
+                 _reach_rows(ROUTES, r['by_route']), numeric={1, 2, 3}, nowrap={0}),
+           '<h3>By probe family</h3>',
+           table(['Family', 'nginx', 'fastcgi', 'Reached FastCGI'],
+                 _reach_rows(PROBE_FAMILIES, r['by_family']), numeric={1, 2, 3},
+                 nowrap={0}),
+           '<h3>URL grammar violations</h3>',
+           f"<p>{fmt_int(g['requests'])} requests had a path the CGI&#8217;s "
+           'grammar rejects or only redirects. Origin <code>self</code> is '
+           'a link the site itself emits (the doubled arch, a tag remnant, '
+           'a filesystem path or a hostname in the arch slot, a comma in '
+           'the name, a backtick or a caret from the A-z range): a '
+           'link-generator defect, not an attack, and not a map '
+           'candidate. The character and reserved-path buckets '
+           '(bad-char, markup-leak, comma-name, sed-range, api-other, '
+           'asset-suffix, path-info) '
+           'are what the grammar map refuses; the shape buckets are known '
+           'here alone. Paths of a named probe family are judged by that '
+           'family, not here.</p>',
+           table(['Bucket', 'Origin', 'Requests', 'nginx', 'fastcgi'],
+                 grammar_rows, numeric={2, 3, 4}),
+           '<h4>Top violating paths, external</h4>',
+           table(['Path', 'Requests'], g['paths'], numeric={1}, code={0}),
+           '<h4>Top violating paths, self (the link generator&#8217;s)</h4>',
+           table(['Path', 'Requests'], g['self_paths'], numeric={1}, code={0}),
+           '<h3>Leaks: junk that reached the FastCGI location</h3>',
+           f"<p>{fmt_int(leak['requests'])} requests ({pct(leak['requests'], t)}) "
+           'matched a probe family, violated the grammar, used a method or '
+           'a query string the site does not take, and still reached the '
+           'FastCGI location. The site&#8217;s own broken-link shapes are '
+           'not counted here; the grammar table above has their reach.</p>',
+           '<h4>Top paths</h4>',
+           table(['Path', 'Requests'], leak['paths'], numeric={1}, code={0}),
+           '<h4>Top query-string keys (candidates for query-string-map.conf)</h4>',
+           table(['Key', 'Requests'], leak['query_keys'], numeric={1}, code={0}),
+           '<h4>Methods</h4>',
+           table(['Method', 'Requests'],
+                 sorted(leak['methods'].items(), key=lambda kv: -kv[1]),
+                 numeric={1}),
+           '<h4>By class</h4>',
+           table(['Kind', 'Label', 'Requests'], classes, numeric={2}),
+           '<h3>Rejections by presumed rule</h3>',
+           table(['Rule', 'Requests', 'Meaning'], rejections, numeric={1})]
+    return ''.join(out)
+
+
 def section_clients(tree, meta, lookup=None):
     c = tree['clients']
     t = tree['totals']['requests']
@@ -541,6 +683,7 @@ def render(tree, meta, lookup=None):
         ('bots', 'Named bots', section_bots(tree, meta)),
         ('browser', 'Browser-like traffic signals', section_browser(tree, meta)),
         ('probes', 'Probes', section_probes(tree, meta)),
+        ('reach', 'Backend reach and nginx rejections', section_reach(tree, meta)),
         ('clients', 'Clients', section_clients(tree, meta, lookup)),
         ('content', 'Content', section_content(tree, meta)),
         ('backend', 'Backend health', section_backend(tree, meta)),
@@ -571,6 +714,8 @@ def _per_day_row(tree):
 def section_summary(tree, meta):
     t = tree['totals']
     w = tree['window']
+    nginx = tree['reach']['totals'].get('nginx', 0)
+    leaks = tree['reach']['leaks']['requests']
     rows = [
         ['Window', f"{w['first']} – {w['last']} ({len(w['days'])} days)"],
         ['Requests', fmt_int(t['requests'])],
@@ -578,6 +723,10 @@ def section_summary(tree, meta):
         _per_day_row(tree),
         ['Bot share', pct(t['bots'], t['requests'])],
         ['Probe share', pct(t['probes'], t['requests'])],
+        ['Answered by nginx alone',
+         f"{fmt_int(nginx)} ({pct(nginx, t['requests'])})"],
+        ['Junk reaching the backend',
+         f"{fmt_int(leaks)} ({pct(leaks, t['requests'])})"],
         ['Log format', 'extended (%s records carry cache/rt fields)' % fmt_int(t['extended'])
                        if t['extended'] else 'basic (no cache/rt fields)'],
     ]
@@ -618,6 +767,8 @@ def section_footer(tree, meta):
     dropped = []
     for count, what in ((tree['probes'].get('dropped', 0), 'probe path/query/UA'),
                         (tree['content'].get('dropped', 0), 'content path'),
+                        (tree['reach']['grammar'].get('dropped', 0), 'grammar path'),
+                        (tree['reach']['leaks'].get('dropped', 0), 'leak path/key'),
                         (tree.get('unclassified_dropped', 0), 'unclassified path')):
         if count:
             dropped.append(f'{fmt_int(count)} {what}')

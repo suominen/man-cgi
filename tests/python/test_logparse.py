@@ -101,10 +101,23 @@ class ExtendedTail(unittest.TestCase):
         self.assertEqual(r.rt, 0.002)
 
 
+class ExtendedEmpty(unittest.TestCase):
+    def test_empty_cache_value_is_kept(self):
+        # nginx logs '-' for an empty variable, so no real line has
+        # 'cache=' with nothing after it; the parser keeps '' rather
+        # than None so reach() still counts it as an nginx answer.
+        r = parse_access_line(
+            'man.netbsd.org:443 1.2.3.4 - - [28/Aug/2026:01:00:00 +0300] '
+            '"GET /ls.1 HTTP/1.1" 200 1 "-" "x" cache= rt=0.1 urt=-')
+        self.assertEqual(r.cache, '')
+        self.assertAlmostEqual(r.rt, 0.1)
+        self.assertIsNone(r.urt)
+
+
 class ReadAccess(unittest.TestCase):
     def test_plain_file(self):
         recs = list(read_access(os.path.join(FIXTURES, 'access.log')))
-        self.assertEqual(len(recs), 24)
+        self.assertEqual(len(recs), 37)
         self.assertEqual(sum(isinstance(r, Malformed) for r in recs), 1)
 
     def test_xz_file(self):

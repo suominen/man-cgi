@@ -87,7 +87,7 @@ All error messages go to stderr, prefixed `manno-logreport: `.
 When `--json` is given, the file holds the same tree the HTML is
 rendered from — `window`, `totals`, `by_day`, `status`, `classes`,
 `by_hour`, `busiest`, `routes`, `bots`, `browser`, `clients`,
-`probes`, `content`, `errors`, `malformed_sample`,
+`probes`, `reach`, `content`, `errors`, `malformed_sample`,
 `unclassified`, and `unclassified_dropped` — plus a `meta` key
 recording the inputs read, the host, which CDN-ranges file was used
 and its fetch date, which lookup database (if any) was used, when
@@ -133,7 +133,7 @@ the command line (`make report LOGDIR=…`).
 
 ## Reading the report
 
-The report has eleven sections, in this order:
+The report has twelve sections, in this order:
 
 - **Summary** — the window covered, total requests and bytes,
   requests per day, the bot and probe shares, whether the
@@ -147,10 +147,16 @@ The report has eleven sections, in this order:
   `limit_req`, currently keyed on the Fastly POP address rather
   than the end client (see "Extending the log format" below);
   `499` means the client closed the connection before nginx could
-  answer; `501` is nginx's own rule for known probe paths (`*.php`,
-  `*.cgi`, `wp-includes`, and similar); `502` is fcgiwrap
-  unreachable or crashed; `503` with a query string comes from the
-  `$qs_error` map, otherwise it means the upstream was unavailable.
+  answer; `400` is the `$qs_error` map (ADR-0020) — without a
+  query string, a request nginx could not parse; `404` is either a
+  page the CGI did not find or nginx's probe and grammar maps
+  (ADR-0020), which the `cache=` field tells apart (see "Backend
+  reach" below); `405` is the method map: GET, HEAD, and POST only
+  to `/` and `/cgi-bin/man-cgi`; `501` was, before ADR-0020,
+  nginx's per-path rule for known probe paths (`*.php`, `*.cgi`,
+  `wp-includes`, and similar); `502` is fcgiwrap unreachable or
+  crashed; `503` means the upstream was unavailable — with a query
+  string, before ADR-0020, it was the `$qs_error` map.
   Below the table, a stacked chart shows the status-class mix
   (`2xx`/`3xx`/`4xx`/`429`/`499`/`5xx`/other) per day.
 - **Traffic over time** — requests and bytes per day, requests by
@@ -229,6 +235,48 @@ The report has eleven sections, in this order:
   count. The "answered with 2xx" table should
   normally be empty; anything there is a probe that got further
   than it should have.
+- **Backend reach and nginx rejections** — who answered each
+  request: nginx alone, or the FastCGI location (the nginx cache
+  or fcgiwrap). With the extended log fields the split is exact:
+  any `cache=` but `-` (a `HIT` included) went through the FastCGI
+  location, and so did a `-` with a numeric `urt=` — a POST, which
+  nginx never looks up in the cache (`fastcgi_cache_methods` is GET
+  and HEAD) but fcgiwrap answered; `-` with no upstream time is an
+  nginx-level answer. Without the fields it is inferred from status
+  and route — 429, 501, 405, 403, 400, 307, a 503 with a query
+  string, the static and report files, the legacy redirects and a
+  301 for a page path with a query string count as nginx,
+  everything else as FastCGI — which undercounts
+  nginx once the rejection maps (ADR-0020) are deployed on a host
+  still logging the basic format; the section says which basis it
+  used. Then, per day, per route and per probe family, the split;
+  the **URL grammar violations** — paths the CGI's grammar rejects
+  or only redirects, bucketed by shape and by origin: `self` is a
+  link the site itself emits (the doubled arch of `TODO.md`, a tag
+  remnant, a filesystem path, a number or a hostname in the arch
+  slot, a comma, a backtick or a caret in the name), a
+  link-generator defect rather than
+  an attack and not a map candidate; `external` is everything
+  else, and only the character and reserved-path buckets
+  (`bad-char`, `markup-leak`, `comma-name`, `sed-range`,
+  `api-other`, `asset-suffix`, `path-info` — a direct
+  `/cgi-bin/man-cgi/<path>` hit) are what the grammar map itself
+  refuses, the
+  shape buckets (archlist membership, depth) being known to the
+  report alone; a path of a named probe family is judged by that
+  family and not by the grammar. The **leaks** are the junk that
+  reached the FastCGI location — a probe family, an external
+  grammar violation, a method or a query string the site does not
+  take — with their top paths, top query-string keys and methods:
+  these are the candidates for the maps (`runbook.md`, "Repeating
+  the nginx blocking analysis"). The self shapes are left out of
+  the leaks on purpose; the grammar table's `fastcgi` column is
+  where their reach shows. Last, the nginx rejections by presumed
+  rule: `probe-map`, `grammar-map`, `qs`, `method`, `cgi-bin` (the
+  outer `/cgi-bin/` location's own 404), `limit-req`, `legacy-501`
+  (the per-path rules ADR-0020 replaced), and `other` for an error
+  status no rule accounts for. The Summary section carries the
+  nginx share and the leak count.
 - **Clients** — top client addresses by request count, with the
   maximum distinct-paths-per-day ("breadth") each reached, how many
   days it was seen, and whether it is a CDN address. Breadth is
@@ -257,8 +305,10 @@ The report has eleven sections, in this order:
   supplied. When the extended fields are present, this section also
   shows cache status per day.
 - **Unclassified paths** — anything that matched no route and no
-  probe family. A legitimate-looking path here means the route
-  whitelist in `lib/manno_logreport/classify.py` needs a new entry.
+  probe family, and is not one of the site's own broken-link
+  shapes (those are classified by the grammar, above). A
+  legitimate-looking path here means the route whitelist in
+  `lib/manno_logreport/classify.py` needs a new entry.
 
 The counters behind the top-N tables are keyed on strings a client
 chooses, so each has a bound and stops accepting new keys once it is
@@ -310,7 +360,11 @@ user agent:
 The extra fields are optional `key=value` pairs, so one parser reads
 lines from both before and after the change: whichever lines carry
 `cache=`/`rt=`/`urt=` contribute to the cache-status and
-request-time breakdowns (the Routes and Backend health sections
+request-time breakdowns and make the Backend reach split exact
+(without them, an nginx-level 404 from the rejection maps is
+indistinguishable from the CGI's, so the format change should
+precede the maps if the rejection tally is to be trusted from the
+first day) — the Routes and Backend health sections
 report how many records that was); older lines without them are
 counted everywhere else exactly as before. Future fields should
 follow the same append-only rule — add them after the user agent,
@@ -436,4 +490,6 @@ other unlisted path.
 (`tests/python/test_*.py`, via `python3 -m unittest discover`) with
 `lib/` on `PYTHONPATH`. Fixture logs — a small access log, one
 rotated and `.xz`-compressed, and an error log, covering the shapes
-exercised by every section above — live in `tests/fixtures/logs/`.
+exercised by every section above, including the six self-inflicted
+grammar shapes, a method and a query-string leak, and nginx-level
+rejections with `cache=-` — live in `tests/fixtures/logs/`.

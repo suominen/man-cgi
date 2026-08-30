@@ -9,8 +9,10 @@ from datetime import timedelta
 from collections import Counter, defaultdict
 
 from .classify import (
-    BROWSER, arch_of, bot_label, collection_of, error_family, probe_family,
-    referer_host, route, section_of, status_class, ua_family)
+    BROWSER, GRAMMAR_ORIGIN, SELF_INFLICTED, arch_of, bot_label,
+    collection_of, error_family, grammar_violation, method_violation,
+    probe_family, query_keys, query_violation, reach, referer_host,
+    rejection_rule, route, section_of, status_class, ua_family)
 
 
 # Distinct keys one attacker-controlled counter will hold before it
@@ -159,7 +161,8 @@ class Aggregator:
         self.by_day = defaultdict(lambda: {
             'requests': 0, 'bytes': 0, 'bots': 0, 'probes': 0,
             'classes': Counter(), 'status': Counter(), 'routes': Counter(),
-            'bots_by_label': Counter(), 'cache': Counter()})
+            'bots_by_label': Counter(), 'cache': Counter(),
+            'reach': Counter(), 'leaks': 0})
         self.status = Counter()
         self.by_hour = Counter()
         self.by_day_hour = Counter()
@@ -181,7 +184,25 @@ class Aggregator:
                       'paths': BoundedCounter(key_limit),
                       'queries': BoundedCounter(key_limit),
                       'uas': BoundedCounter(key_limit),
-                      'status': Counter(), 'methods': Counter(), 'ok': Counter()}
+                      'status': Counter(),
+                      'methods': BoundedCounter(key_limit), 'ok': Counter()}
+        # Backend reach (ADR-0020): who answered, and the junk that got
+        # through to the FastCGI location — the candidates for the
+        # rejection maps.
+        self.reach = {
+            'totals': Counter(), 'basis': Counter(), 'upstream': 0,
+            'by_route': defaultdict(Counter),
+            'by_family': defaultdict(Counter),
+            'by_grammar': defaultdict(Counter),
+            'rejections': Counter(),
+            'grammar': {'requests': 0, 'buckets': Counter(),
+                        'paths': BoundedCounter(key_limit),
+                        'self_paths': BoundedCounter(key_limit)},
+            'leaks': {'requests': 0, 'families': Counter(),
+                      'grammar': Counter(), 'violations': Counter(),
+                      'methods': BoundedCounter(key_limit),
+                      'paths': BoundedCounter(key_limit),
+                      'query_keys': BoundedCounter(key_limit)}}
         self.top200 = BoundedCounter(content_key_limit)
         self.top404 = BoundedCounter(content_key_limit)
         self.coll200 = Counter()
@@ -209,6 +230,17 @@ class Aggregator:
         hour = hour_key(rec.when)
         rt = route(rec.path)
         family = probe_family(rec.path, rec.query)
+        # The grammar applies to what the CGI parses as a page path;
+        # the other routes have their own shapes (or are nginx's). A
+        # named probe family is judged by that family alone: a .php
+        # path four directories deep is a probe, not a "too deep" page.
+        grammar = None
+        if (family in (None, 'other-probe')
+                and rt in ('pathinfo', 'other', 'cgi-pathinfo')):
+            grammar = grammar_violation(rec.path)
+        mv = method_violation(rec.method, rec.path)
+        qv = query_violation(rec.path, rec.query)
+        where, exact = reach(rec.cache, rec.status, rec.query, rt, rec.urt)
         label = bot_label(rec.ua)
         cls = status_class(rec.status)
         is_cdn = rec.client in self.cdn
@@ -281,10 +313,10 @@ class Aggregator:
                 p['queries'].add(rec.query)
             p['uas'].add(rec.ua)
             p['status'][rec.status] += 1
-            p['methods'][rec.method] += 1
+            p['methods'].add(rec.method[:16])
             if 200 <= rec.status < 300:
                 p['ok'][rec.path] += 1
-            if family == 'other-probe':
+            if family == 'other-probe' and grammar not in SELF_INFLICTED:
                 self.unclassified.add(rec.path)
         else:
             coll = collection_of(rec.path)
@@ -304,6 +336,57 @@ class Aggregator:
                     self.coll404[coll] += 1
             elif rec.status in (301, 302, 303, 307, 308):
                 self.redirect_routes[rt] += 1
+
+        self._add_reach(rec, d, rt, family, grammar, mv, qv, where, exact)
+
+    def _add_reach(self, rec, d, rt, family, grammar, mv, qv, where, exact):
+        r = self.reach
+        r['totals'][where] += 1
+        r['basis']['cache' if exact else 'inferred'] += 1
+        if rec.urt is not None:
+            r['upstream'] += 1
+        d['reach'][where] += 1
+        r['by_route'][rt][where] += 1
+        if family is not None:
+            r['by_family'][family][where] += 1
+        if grammar is not None:
+            r['by_grammar'][grammar][where] += 1
+            g = r['grammar']
+            g['requests'] += 1
+            g['buckets'][grammar] += 1
+            if grammar in SELF_INFLICTED:
+                g['self_paths'].add(rec.path)
+            else:
+                g['paths'].add(rec.path)
+        if where == 'nginx':
+            if rec.status >= 400:
+                r['rejections'][rejection_rule(
+                    rec.status, rec.query, family, grammar)] += 1
+            return
+        # Junk that reached the FastCGI location: a map candidate. The
+        # site's own broken-link shapes are not one; the grammar table
+        # above shows how many of those reached the backend.
+        if grammar in SELF_INFLICTED:
+            grammar = None
+            if family == 'other-probe':
+                family = None       # the route catch-all, not a signature
+        if family is None and grammar is None and mv is None and qv is None:
+            return
+        leak = r['leaks']
+        leak['requests'] += 1
+        d['leaks'] += 1
+        if family is not None:
+            leak['families'][family] += 1
+        if grammar is not None:
+            leak['grammar'][grammar] += 1
+        if mv is not None:
+            leak['violations'][mv] += 1
+        if qv is not None:
+            leak['violations'][qv] += 1
+        leak['methods'].add(rec.method[:16])
+        leak['paths'].add(rec.path)
+        for key in query_keys(rec.query):
+            leak['query_keys'].add(key)
 
     # -- error log (Task 8) ----------------------------------------------
 
@@ -386,7 +469,8 @@ class Aggregator:
                 'classes': _counts(d['classes']), 'status': _counts(d['status']),
                 'routes': _counts(d['routes']),
                 'bots_by_label': _counts(d['bots_by_label']),
-                'cache': _counts(d['cache'])}
+                'cache': _counts(d['cache']),
+                'reach': _counts(d['reach']), 'leaks': d['leaks']}
         routes = {}
         for rt, r in self.routes.items():
             routes[rt] = {'requests': r['requests'], 'bytes': r['bytes'],
@@ -448,10 +532,45 @@ class Aggregator:
                 'arches': top_list(self.arches, n),
                 'redirect_routes': _counts(self.redirect_routes),
                 'dropped': self.top200.dropped + self.top404.dropped},
+            'reach': self._reach(),
             'errors': self._errors(),
             'malformed_sample': list(self.malformed_sample),
             'unclassified': top_list(self.unclassified, n),
             'unclassified_dropped': self.unclassified.dropped,
+        }
+
+    def _reach(self):
+        n = self.top
+        r = self.reach
+        g = r['grammar']
+        leak = r['leaks']
+        origin = Counter()
+        for bucket, count in g['buckets'].items():
+            origin[GRAMMAR_ORIGIN[bucket]] += count
+        return {
+            'totals': _counts(r['totals']),
+            'basis': _counts(r['basis']),
+            'upstream': r['upstream'],
+            'by_route': {k: _counts(v) for k, v in r['by_route'].items()},
+            'by_family': {k: _counts(v) for k, v in r['by_family'].items()},
+            'by_grammar': {k: _counts(v) for k, v in r['by_grammar'].items()},
+            'rejections': _counts(r['rejections']),
+            'grammar': {
+                'requests': g['requests'],
+                'buckets': _counts(g['buckets']),
+                'origin': _counts(origin),
+                'paths': top_list(g['paths'], n),
+                'self_paths': top_list(g['self_paths'], n),
+                'dropped': g['paths'].dropped + g['self_paths'].dropped},
+            'leaks': {
+                'requests': leak['requests'],
+                'families': _counts(leak['families']),
+                'grammar': _counts(leak['grammar']),
+                'violations': _counts(leak['violations']),
+                'methods': _counts(leak['methods']),
+                'paths': top_list(leak['paths'], n),
+                'query_keys': top_list(leak['query_keys'], n),
+                'dropped': leak['paths'].dropped + leak['query_keys'].dropped},
         }
 
     def _classes(self):

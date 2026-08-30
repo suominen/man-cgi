@@ -158,7 +158,8 @@ class Render(unittest.TestCase):
         self.assertEqual(positions, sorted(positions))
         self.assertEqual(SECTION_IDS, (
             'summary', 'status', 'traffic', 'routes', 'bots', 'browser',
-            'probes', 'clients', 'content', 'backend', 'unclassified'))
+            'probes', 'reach', 'clients', 'content', 'backend',
+            'unclassified'))
 
     def test_hostile_strings_are_escaped(self):
         self.assertNotIn('<script>alert(1)</script>', self.html)
@@ -166,7 +167,9 @@ class Render(unittest.TestCase):
         self.assertNotIn('<script', self.html)
 
     def test_numbers_land(self):
-        self.assertIn('Requests</td><td>22', self.html.replace('\n', ''))
+        self.assertIn('Requests</td><td>35', self.html.replace('\n', ''))
+        self.assertIn('<td>Answered by nginx alone</td><td>11 (31.4%)</td>', self.html)
+        self.assertIn('<td>Junk reaching the backend</td><td>6 (17.1%)</td>', self.html)
         # Data-bearing fragments, not just the bare family/route name:
         # 'fcgiwrap-refused' is also a static column header in
         # section_backend and 'cgi-query' is named in a static note in
@@ -174,7 +177,11 @@ class Render(unittest.TestCase):
         self.assertIn('<td>fcgiwrap-refused</td><td class="n">2</td>', self.html)
         self.assertIn('Sogou', self.html)
         self.assertIn('<td class="nw">cgi-query</td><td class="n">1</td>', self.html)
-        self.assertIn('wp-login.php', self.html)
+        # top=5 and every probe path is a single hit, so the key
+        # tie-break decides which land; /.env sorts into the five.
+        probes = self.html[self.html.index('<h2 id="probes"'):
+                           self.html.index('<h2 id="reach"')]
+        self.assertIn('<td class="code">/.env</td>', probes)
         self.assertNotIn('no error log', self.html)
 
     def test_backend_table_has_spaced_equal_columns(self):
@@ -233,7 +240,42 @@ class Render(unittest.TestCase):
         self.assertNotIn('rowspan', bots)
 
     def test_extended_sections_state_record_count(self):
-        self.assertIn('2 records', self.html)
+        self.assertIn('8 records', self.html)
+
+    def test_reach_section(self):
+        section = self.html[self.html.index('<h2 id="reach"'):
+                            self.html.index('<h2 id="clients"')]
+        self.assertIn('Backend reach and nginx rejections', section)
+        # The intro: exact split from the 8 extended records, the
+        # inferred rest, and the upstream count.
+        self.assertIn('8 records carry', section)
+        self.assertIn('27 records', section)
+        self.assertIn('2 of those contacted fcgiwrap', section)
+        for h3 in ('Per day', 'By route', 'By probe family',
+                   'URL grammar violations',
+                   'Leaks: junk that reached the FastCGI location',
+                   'Rejections by presumed rule'):
+            self.assertIn(f'<h3>{h3}</h3>', section)
+        self.assertIn('<td>doubled-arch</td><td>self</td><td class="n">1</td>', section)
+        self.assertIn('<td>bad-char</td><td>external</td><td class="n">2</td>', section)
+        self.assertIn('<td>grammar-map</td><td class="n">1</td>', section)
+        self.assertIn('<td>legacy-501</td><td class="n">2</td>', section)
+        self.assertIn('<td class="code">/0/chmod.1</td>', section)
+        self.assertIn('<td class="code">rest_route</td>', section)
+        self.assertIn('<td class="nw">2026-08-28 (5.0 h)</td><td class="n">11</td>'
+                      '<td class="n">23</td>', section)
+
+    def test_reach_section_without_extended_fields(self):
+        cdn, cdn_meta = CidrSet.load(DEFAULT_RANGES)
+        agg = Aggregator(cdn)
+        for rec in read_access(os.path.join(FIXTURES, 'access.log')):
+            if not isinstance(rec, Malformed) and rec.cache is None:
+                agg.add_access(rec)
+        html = render(agg.result(), meta_for(cdn_meta))
+        section = html[html.index('<h2 id="reach"'):
+                       html.index('<h2 id="clients"')]
+        self.assertIn('No record carries the extended log fields', section)
+        self.assertNotIn('contacted fcgiwrap', section)
 
     def test_no_lookup_is_explained(self):
         self.assertIn('no lookup database found', self.html)
@@ -298,3 +340,13 @@ class Render(unittest.TestCase):
         self.assertNotIn('<i>evil</i>', html)
         self.assertIn('&lt;b&gt;x&lt;/b&gt;', html)
         self.assertIn('&lt;i&gt;evil&lt;/i&gt;', html)
+
+    def test_hostile_leak_key_is_escaped(self):
+        cdn, cdn_meta = CidrSet.load(DEFAULT_RANGES)
+        agg = Aggregator(cdn)
+        agg.add_access(parse_access_line(
+            'man.netbsd.org:443 1.2.3.4 - - [28/Aug/2026:01:00:00 +0300] '
+            '"GET /.env?<b>k</b>=1 HTTP/1.1" 404 1 "-" "x" cache=MISS rt=0.1 urt=0.1'))
+        html = render(agg.result(), meta_for(cdn_meta))
+        self.assertNotIn('<b>k</b>', html)
+        self.assertIn('&lt;b&gt;k&lt;/b&gt;', html)

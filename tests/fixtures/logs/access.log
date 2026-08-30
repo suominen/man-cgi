@@ -17,6 +17,19 @@ man.netbsd.org:443 167.82.236.28 - - [28/Aug/2026:04:00:00 +0300] "GET /wp-login
 man.netbsd.org:443 167.82.236.28 - - [28/Aug/2026:04:00:01 +0300] "POST /wp-content/plugins/hellopress/wp_filemanager.php HTTP/1.1" 501 307 "-" "-"
 man.netbsd.org:443 167.82.236.29 - - [28/Aug/2026:04:00:02 +0300] "GET /.env HTTP/1.1" 404 3316 "-" "python-requests/2.31"
 man.netbsd.org:443 167.82.236.29 - - [28/Aug/2026:04:00:03 +0300] "GET /<script>alert(1)</script> HTTP/1.1" 404 3316 "-" "Mozilla/5.0 \x22quoted\x22"
+man.netbsd.org:443 167.82.236.31 - - [28/Aug/2026:04:30:00 +0300] "GET /NetBSD-9.0/evbarm/x86/fdc.4 HTTP/1.1" 301 1317 "https://man.netbsd.org/NetBSD-9.0/evbarm/fdc.4" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+man.netbsd.org:443 167.82.236.31 - - [28/Aug/2026:04:30:01 +0300] "GET /i%3E/vax/dl.4 HTTP/1.1" 404 3316 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+man.netbsd.org:443 167.82.236.31 - - [28/Aug/2026:04:30:02 +0300] "GET /etc/vether.4 HTTP/1.1" 404 3316 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+man.netbsd.org:443 167.82.236.31 - - [28/Aug/2026:04:30:03 +0300] "GET /0/chmod.1 HTTP/1.1" 404 3316 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" cache=HIT rt=0.001 urt=-
+man.netbsd.org:443 167.82.236.31 - - [28/Aug/2026:04:30:04 +0300] "GET /sparc/rule,.2 HTTP/1.1" 404 3316 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+man.netbsd.org:443 167.82.236.31 - - [28/Aug/2026:04:30:05 +0300] "GET /man.netbsd.org/passwd.5 HTTP/1.1" 404 3316 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+man.netbsd.org:443 167.82.236.32 - - [28/Aug/2026:04:30:06 +0300] "POST /ls.1 HTTP/1.1" 303 600 "-" "python-requests/2.31"
+man.netbsd.org:443 167.82.236.32 - - [28/Aug/2026:04:30:07 +0300] "GET /.git/config HTTP/1.1" 404 160 "-" "python-requests/2.31" cache=- rt=0.000 urt=-
+man.netbsd.org:443 167.82.236.32 - - [28/Aug/2026:04:30:08 +0300] "GET /ls.1;id HTTP/1.1" 404 160 "-" "curl/8.5.0" cache=- rt=0.000 urt=-
+man.netbsd.org:443 167.82.236.32 - - [28/Aug/2026:04:30:09 +0300] "GET /NetBSD-current/ls.1?a%20and%20b HTTP/1.1" 400 160 "-" "python-requests/2.31" cache=- rt=0.000 urt=-
+man.netbsd.org:443 167.82.236.32 - - [28/Aug/2026:04:30:10 +0300] "DELETE /ls.1 HTTP/1.1" 405 160 "-" "python-requests/2.31" cache=- rt=0.000 urt=-
+man.netbsd.org:443 167.82.236.32 - - [28/Aug/2026:04:30:11 +0300] "GET /.aws/credentials?debug=1&token=x HTTP/1.1" 404 3316 "-" "python-requests/2.31" cache=MISS rt=0.030 urt=0.029
+man.netbsd.org:443 167.82.236.32 - - [28/Aug/2026:04:30:12 +0300] "GET /?rest_route=/batch/v1 HTTP/1.1" 404 3316 "-" "python-requests/2.31"
 man.netbsd.org:443 203.0.113.7 - - [28/Aug/2026:05:00:00 +0300] "GET /NetBSD-10.1/amd64/ls.1 HTTP/1.1" 200 8000 "-" "Mozilla/5.0 (X11; NetBSD amd64; rv:128.0) Gecko/20100101 Firefox/128.0" cache=HIT rt=0.002 urt=-
 man.netbsd.org:443 203.0.113.7 - - [28/Aug/2026:05:00:01 +0300] "GET /NetBSD-10.1/amd64/cp.1 HTTP/1.1" 200 8100 "-" "Mozilla/5.0 (X11; NetBSD amd64; rv:128.0) Gecko/20100101 Firefox/128.0" cache=MISS rt=0.250 urt=0.248
 man.netbsd.org:443 167.82.236.30 - - [28/Aug/2026:05:00:02 +0300] "GET /.well-known/health HTTP/1.1" 200 20 "-" "Fastly health check"

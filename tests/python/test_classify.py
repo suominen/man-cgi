@@ -3,9 +3,13 @@ import tempfile
 import unittest
 
 from manno_logreport.classify import (
-    ARCHES, BROWSER, _load_arches, arch_of, bot_label, collection_of,
-    error_family, is_probe, probe_family, referer_host, route, section_of,
-    status_class, ua_family)
+    ARCHES, BROWSER, GRAMMAR_BUCKETS, GRAMMAR_ORIGIN, MAP_GRAMMAR,
+    PROBE_FAMILIES, REJECTION_RULES, SELF_INFLICTED, _load_arches, arch_of,
+    bot_label,
+    collection_of, error_family, grammar_violation, is_probe,
+    method_violation, probe_family, query_keys, query_violation, reach,
+    referer_host, rejection_rule, route, section_of, status_class,
+    ua_family)
 
 
 class Route(unittest.TestCase):
@@ -254,3 +258,261 @@ class ContentHelpers(unittest.TestCase):
         self.assertEqual(referer_host('https://man.netbsd.org/NetBSD-9.2/x'), 'man.netbsd.org')
         self.assertEqual(referer_host('http://man.NetBSD.org'), 'man.netbsd.org')
         self.assertEqual(referer_host('garbage'), 'garbage')
+
+
+class Grammar(unittest.TestCase):
+    def check(self, expected, *paths):
+        for p in paths:
+            with self.subTest(path=p):
+                self.assertEqual(grammar_violation(p), expected)
+
+    def test_legitimate_paths_have_no_bucket(self):
+        self.check(None, '/', '/ls.1', '/ls', '/NetBSD-10.1/i386/ls.1',
+                   '/NetBSD-current/', '/NetBSD-10.1', '/NetBSD-10.1/i386/',
+                   '/x86/boot.8', '/g++.1', '/getopt_long.3', '/[.1',
+                   '/Mail.1', '/nsswitch.conf', '/rc.conf.5', '/ls.3lua',
+                   '/NetBSD-10.x-BRANCH/ls.1', '/pkg@version.1', '/a:b.1',
+                   '/wp-login.php', '/.env', '/api/v1/archlist',
+                   '/.well-known/health', '/NetBSD-10.1/i386/ls%2E1',
+                   '/I386/ls.1', '/ls.1/', '/foo.txt.5', '/foo.map.5',
+                   '/cgi-bin/man-cgi', '/cgi-bin/man-cgi/')
+
+    def test_self_inflicted_shapes(self):
+        cases = {
+            '/NetBSD-9.0/evbarm/x86/fdc.4': 'doubled-arch',
+            '/NetBSD-11.0/x86/x86/dosboot.8': 'doubled-arch',
+            '/x86/x86/boot.8': 'doubled-arch',
+            '/i%3E/vax/dl.4': 'markup-leak',
+            '/i>/vax/dl.4': 'markup-leak',
+            '/a%3E/X509_new.3': 'markup-leak',
+            '/etc/vether.4': 'fs-path',
+            '/usr/OPENSSL_cleanse.3': 'fs-path',
+            '/0/chmod.1': 'numeric-first',
+            '/1/hifn.4': 'numeric-first',
+            '/sparc/rule,.2': 'comma-name',
+            '/NetBSD-6.0.1/x68k/given,.2': 'comma-name',
+            '/man.netbsd.org/passwd.5': 'hostname-first',
+            '/%60FOO.2': 'sed-range',
+            '/NetBSD-11.0/%60FOO.7': 'sed-range',
+            '/2%5E0.1': 'sed-range',
+        }
+        for path, bucket in cases.items():
+            with self.subTest(path=path):
+                self.assertEqual(grammar_violation(path), bucket)
+                self.assertIn(bucket, SELF_INFLICTED)
+
+    def test_external_shapes(self):
+        cases = {
+            '/<script>alert(1)</script>': 'bad-char',
+            '/ls.1;id': 'bad-char',
+            '/%s': 'bad-char',
+            '/NetBSD-11.0/ls.1%20': 'bad-char',
+            '/NetBSD-9.3/../../etc/passwd': 'dot-dot',
+            '/NetBSD-9.3//ls.1': 'double-slash',
+            '//av.php': 'double-slash',
+            '/foo/bar.1': 'unknown-arch',
+            '/.git/config': 'unknown-arch',
+            '/NetBSD-10.1/I386/ls.1': 'unknown-arch',
+            '/a/b/c/d.1': 'too-deep',
+            '/api': 'api-other',
+            '/api/v1/': 'api-other',
+            '/api/v2/x': 'api-other',
+            '/cgi-bin/man-cgi/ls.1': 'path-info',
+            '/cgi-bin/man-cgi/.well-known/health': 'path-info',
+            '/cgi-bin/man-cgi/man': 'path-info',
+            '/sitemap.xml': 'asset-suffix',
+            '/apple-touch-icon.png': 'asset-suffix',
+            '/index.html': 'asset-suffix',
+            '/.well-known/security.txt': 'asset-suffix',
+            '/NetBSD_10/ls.1': 'bad-char',
+            '/Foo_bar-1': 'bad-char',
+            '/sparc/ru<le,.2': 'bad-char',
+            '/%60FO<O.2': 'bad-char',
+        }
+        for path, bucket in cases.items():
+            with self.subTest(path=path):
+                self.assertEqual(grammar_violation(path), bucket)
+                self.assertNotIn(bucket, SELF_INFLICTED)
+
+    def test_collection_shape_is_the_cgi_glob(self):
+        # [A-Z]*-[0-9]* and [A-Z]*-current are shell globs: anything
+        # may sit between the capital and the dash.
+        for path in ('/N1-2', '/A-B-1', '/Foo.bar-1', '/X-foo-current',
+                     '/NetBSD-current-1'):
+            with self.subTest(path=path):
+                self.assertIsNone(grammar_violation(path))
+        self.assertEqual(grammar_violation('/Foo_bar-1'), 'bad-char')
+
+    def test_absolute_form_target_is_not_judged(self):
+        self.assertIsNone(grammar_violation('http://man.netbsd.org/ls.1'))
+
+    def test_decoding_precedes_splitting(self):
+        # nginx decodes $uri before the map sees it, so an encoded
+        # separator or dot-dot is a separator or dot-dot.
+        self.assertEqual(grammar_violation('/ls%2F1'), 'unknown-arch')
+        self.assertEqual(grammar_violation('/NetBSD-9.3/%2e%2e/etc/passwd'),
+                         'dot-dot')
+        self.assertEqual(grammar_violation('/NetBSD-10.1/i386/ls.1%00'),
+                         'bad-char')
+
+    def test_markup_leak_needs_an_arch_slot(self):
+        # A tag remnant as the page name itself is just a bad character.
+        self.assertEqual(grammar_violation('/i%3E'), 'bad-char')
+        self.assertEqual(grammar_violation('/NetBSD-11.0/i%3E'), 'bad-char')
+
+    def test_rules_table_is_consistent(self):
+        self.assertEqual(len(GRAMMAR_BUCKETS), len(set(GRAMMAR_BUCKETS)))
+        self.assertTrue(SELF_INFLICTED <= set(GRAMMAR_BUCKETS))
+        self.assertTrue(MAP_GRAMMAR <= set(GRAMMAR_BUCKETS))
+        self.assertEqual(set(GRAMMAR_ORIGIN), set(GRAMMAR_BUCKETS))
+        self.assertEqual({b for b, o in GRAMMAR_ORIGIN.items() if o == 'self'},
+                         SELF_INFLICTED)
+        # What the nginx grammar map refuses: illegal characters. The
+        # shape rules (archlist membership, depth) are report-only.
+        self.assertIn('bad-char', MAP_GRAMMAR)
+        self.assertIn('api-other', MAP_GRAMMAR)
+        self.assertIn('path-info', MAP_GRAMMAR)
+        self.assertIn('asset-suffix', MAP_GRAMMAR)
+        self.assertNotIn('doubled-arch', MAP_GRAMMAR)
+        self.assertNotIn('unknown-arch', MAP_GRAMMAR)
+
+
+class Method(unittest.TestCase):
+    def test_allowed(self):
+        for method, path in (('GET', '/ls.1'), ('HEAD', '/ls.1'),
+                             ('GET', '/wp-login.php'), ('POST', '/'),
+                             ('POST', '/cgi-bin/man-cgi'),
+                             ('POST', '/cgi-bin/man-cgi/')):
+            with self.subTest(method=method, path=path):
+                self.assertIsNone(method_violation(method, path))
+
+    def test_post_elsewhere(self):
+        for path in ('/ls.1', '/graphql', '/NetBSD-current/', '/api/v1/archlist',
+                     '/cgi-bin/man-cgi/ls.1'):
+            with self.subTest(path=path):
+                self.assertEqual(method_violation('POST', path), 'post-path')
+
+    def test_other_verbs(self):
+        for method in ('DELETE', 'PUT', 'OPTIONS', 'PROPFIND', 'CONNECT', 'PATCH'):
+            with self.subTest(method=method):
+                self.assertEqual(method_violation(method, '/'), 'method')
+                self.assertEqual(method_violation(method, '/ls.1'), 'method')
+
+
+class Query(unittest.TestCase):
+    LEGACY = ('ls+1+NetBSD-9.3', 'ls+1=', 'boot+8.i386',
+              '%2B%2BNetBSD-current', 'p=', 'ls%201', 'Net::DNS+3', 'g++',
+              '[+1', '/.well-known/health', 'ls%27+1')
+
+    def test_any_query_on_root_is_refused(self):
+        # The legacy form lives at the script's own URL only; a query
+        # string on / was never meant to work (and never did).
+        self.assertIsNone(query_violation('/', ''))
+        for query in self.LEGACY + ('c', '/', 'rest_route=/batch/v1'):
+            with self.subTest(query=query):
+                self.assertEqual(query_violation('/', query), 'query')
+
+    def test_legacy_form_passes(self):
+        for path in ('/cgi-bin/man-cgi', '/cgi-bin/man-cgi/'):
+            for query in ('', 'ls+1+NetBSD-9.3', 'ls+1=', 'boot+8.i386',
+                          '%2B%2BNetBSD-current', 'p=', 'ls%201',
+                          'Net::DNS+3', 'g++', '[+1', '/.well-known/health',
+                          # raw, as the map sees it: an encoded quote is
+                          # just %27 until the CGI decides
+                          'ls%27+1', 'a%27%20or%201%3D1'):
+                with self.subTest(path=path, query=query):
+                    self.assertIsNone(query_violation(path, query))
+
+    def test_off_grammar_query_on_the_query_endpoints(self):
+        for query in ('rest_route=/batch/v1', 'x=1', 'query=ls&sektion=1',
+                      'ls+1+NetBSD-9.2=%20UNION%20ALL%20SELECT%20NULL',
+                      'a%20and%20b;', 'p=&q=1'):
+            with self.subTest(query=query):
+                self.assertEqual(query_violation('/', query), 'query')
+                self.assertEqual(query_violation('/cgi-bin/man-cgi', query), 'query')
+
+    def test_page_paths_ignore_their_query(self):
+        for path in ('/ls.1', '/NetBSD-current/ls.1', '/mount_msdos.8'):
+            with self.subTest(path=path):
+                self.assertIsNone(query_violation(path, 'utm_source=chatgpt.com'))
+                self.assertIsNone(query_violation(path, 'fbclid=IwAR0x'))
+
+
+class Reach(unittest.TestCase):
+    def test_cache_field_is_authoritative(self):
+        self.assertEqual(reach('-', 200, '', 'pathinfo'), ('nginx', True))
+        self.assertEqual(reach('', 404, '', 'other'), ('nginx', True))
+        self.assertEqual(reach('HIT', 404, '', 'other'), ('fastcgi', True))
+        self.assertEqual(reach('MISS', 200, '', 'pathinfo'), ('fastcgi', True))
+        self.assertEqual(reach('EXPIRED', 301, '', 'pathinfo'), ('fastcgi', True))
+        # cache= wins over any status-based rule.
+        self.assertEqual(reach('HIT', 429, '', 'pathinfo'), ('fastcgi', True))
+
+    def test_upstream_time_marks_a_post_as_fastcgi(self):
+        # nginx caches GET and HEAD only: a POST the CGI answers logs
+        # cache=- with an upstream time, an nginx-level answer logs
+        # cache=- with none.
+        self.assertEqual(reach('-', 303, '', 'pathinfo', 0.02), ('fastcgi', True))
+        self.assertEqual(reach('-', 303, '', 'pathinfo', None), ('nginx', True))
+        self.assertEqual(reach('-', 404, '', 'other', 0.0), ('fastcgi', True))
+
+    def test_inferred_nginx(self):
+        for status, query, rt in ((429, '', 'pathinfo'), (501, '', 'other'),
+                                  (405, '', 'pathinfo'), (400, 'x=1', 'pathinfo'),
+                                  (403, '', 'other'), (307, '', 'pathinfo'),
+                                  (301, 'utm_source=x', 'pathinfo'),
+                                  (400, '', 'other'), (503, 'a+and+b', 'pathinfo'),
+                                  (200, '', 'static'), (304, '', 'static'),
+                                  (200, '', 'report'), (301, '', 'legacy-man'),
+                                  (301, '', 'legacy-html')):
+            with self.subTest(status=status, query=query, route=rt):
+                self.assertEqual(reach(None, status, query, rt), ('nginx', False))
+
+    def test_inferred_fastcgi(self):
+        for status, query, rt in ((404, '', 'other'), (200, '', 'pathinfo'),
+                                  (301, '', 'pathinfo'),
+                                  (503, '', 'pathinfo'), (502, '', 'pathinfo'),
+                                  (499, '', 'pathinfo'), (303, '', 'pathinfo'),
+                                  (404, '', 'legacy-man'), (200, '', 'health'),
+                                  (200, '', 'cgi-query'), (304, '', 'pathinfo')):
+            with self.subTest(status=status, query=query, route=rt):
+                self.assertEqual(reach(None, status, query, rt), ('fastcgi', False))
+
+
+class RejectionRule(unittest.TestCase):
+    def test_table(self):
+        cases = (
+            ((429, '', None, None), 'limit-req'),
+            ((501, '', 'php', None), 'legacy-501'),
+            ((405, '', None, None), 'method'),
+            ((400, 'x=1', None, None), 'qs'),
+            ((503, 'a+and+b', None, None), 'qs'),
+            ((404, '', 'dotfile', None), 'probe-map'),
+            ((404, '', 'php', None), 'probe-map'),
+            ((404, '', 'cgi-bin-other', None), 'cgi-bin'),
+            ((404, '', 'shell', None), 'other'),
+            ((404, '', 'traversal', None), 'other'),
+            ((404, '', 'other-probe', 'bad-char'), 'grammar-map'),
+            ((404, '', None, 'bad-char'), 'grammar-map'),
+            ((404, '', None, 'asset-suffix'), 'grammar-map'),
+            ((404, '', 'other-probe', 'api-other'), 'grammar-map'),
+            ((404, '', None, 'doubled-arch'), 'other'),
+            ((404, '', None, None), 'other'),
+            ((400, '', None, None), 'other'),
+            ((403, '', None, None), 'other'),
+        )
+        for args, rule in cases:
+            with self.subTest(args=args):
+                self.assertEqual(rejection_rule(*args), rule)
+                self.assertIn(rule, REJECTION_RULES)
+
+
+class QueryKeys(unittest.TestCase):
+    def test_split(self):
+        self.assertEqual(query_keys('a=1&b=2'), ['a', 'b'])
+        self.assertEqual(query_keys('ls+1+NetBSD-9.3'), ['ls+1+NetBSD-9.3'])
+        self.assertEqual(query_keys(''), [])
+        self.assertEqual(query_keys('a=1&&=2'), ['a'])
+        self.assertEqual(query_keys('rest_route=/batch/v1&page=x'),
+                         ['rest_route', 'page'])
+        self.assertEqual(query_keys('k' * 200 + '=1'), ['k' * 40])

@@ -54,42 +54,45 @@ class FixtureTotals(unittest.TestCase):
 
     def test_totals(self):
         tot = self.t['totals']
-        self.assertEqual(tot['requests'], 22)
-        self.assertEqual(tot['bytes'], 69059)
+        self.assertEqual(tot['requests'], 35)
+        self.assertEqual(tot['bytes'], 94828)
         self.assertEqual(tot['malformed'], 1)
-        self.assertEqual(tot['extended'], 2)
-        self.assertEqual(tot['probes'], 4)
-        self.assertEqual(tot['bots'], 10)
+        self.assertEqual(tot['extended'], 8)
+        self.assertEqual(tot['probes'], 11)
+        self.assertEqual(tot['bots'], 23)
 
     def test_status(self):
         self.assertEqual(self.t['status'], {
-            '200': 9, '304': 1, '301': 3, '404': 3, '429': 1, '499': 1,
-            '502': 1, '503': 1, '501': 2})
+            '200': 9, '304': 1, '301': 4, '303': 1, '404': 12, '400': 1,
+            '405': 1, '429': 1, '499': 1, '502': 1, '503': 1, '501': 2})
         self.assertEqual(self.t['classes'], {
-            '2xx': 9, '3xx': 4, '4xx': 3, '429': 1, '499': 1, '5xx': 4})
+            '2xx': 9, '3xx': 6, '4xx': 14, '429': 1, '499': 1, '5xx': 4})
 
     def test_by_day(self):
         d = self.t['by_day']
         self.assertEqual(d['2026-08-27']['requests'], 1)
-        self.assertEqual(d['2026-08-28']['requests'], 21)
+        self.assertEqual(d['2026-08-28']['requests'], 34)
         self.assertEqual(d['2026-08-28']['classes']['5xx'], 4)
         self.assertEqual(d['2026-08-28']['status']['502'], 1)
-        self.assertEqual(d['2026-08-28']['routes']['other'], 3)
-        self.assertEqual(d['2026-08-28']['cache'], {'HIT': 1, 'MISS': 1})
+        self.assertEqual(d['2026-08-28']['routes']['other'], 10)
+        self.assertEqual(d['2026-08-28']['cache'], {'HIT': 2, 'MISS': 2, '-': 4})
 
     def test_routes(self):
         r = self.t['routes']
         self.assertEqual({k: v['requests'] for k, v in r.items()}, {
-            'pathinfo': 13, 'static': 1, 'cgi-query': 1, 'cgi-pathinfo': 1,
-            'legacy-man': 1, 'legacy-html': 1, 'health': 1, 'other': 3})
-        self.assertEqual(r['other']['status'], {'501': 1, '404': 2})
-        self.assertEqual(r['pathinfo']['cache'], {'HIT': 1, 'MISS': 1})
-        self.assertEqual(r['pathinfo']['rt']['n'], 2)
+            'pathinfo': 19, 'static': 1, 'cgi-query': 1, 'cgi-pathinfo': 1,
+            'legacy-man': 1, 'legacy-html': 1, 'health': 1, 'other': 10})
+        self.assertEqual(r['other']['status'], {'501': 1, '404': 9})
+        self.assertEqual(r['pathinfo']['cache'], {'HIT': 1, 'MISS': 1, '-': 2})
+        self.assertEqual(r['other']['cache'], {'HIT': 1, 'MISS': 1, '-': 2})
+        # Two of the four timed pathinfo records are nginx-level answers
+        # with rt=0.000; the median is still the 0.002 HIT.
+        self.assertEqual(r['pathinfo']['rt']['n'], 4)
         self.assertAlmostEqual(r['pathinfo']['rt']['p50'], 0.002)
         self.assertAlmostEqual(r['pathinfo']['rt']['p99'], 0.250)
         self.assertIsNone(r['static']['rt'])
-        # Both extended lines carry rt=; only one carries a numeric urt=
-        # (the other logs '-', an nginx-served response with no upstream).
+        # Only the MISS carries a numeric urt=; the HIT and the two
+        # nginx-level answers log '-' (no upstream).
         self.assertEqual(r['pathinfo']['urt']['n'], 1)
         self.assertAlmostEqual(r['pathinfo']['urt']['p50'], 0.248)
         self.assertIsNone(r['static']['urt'])
@@ -97,15 +100,14 @@ class FixtureTotals(unittest.TestCase):
     def test_hours(self):
         self.assertEqual(self.t['by_hour']['01'], 4)
         self.assertEqual(self.t['by_hour']['23'], 1)
-        # busiest[0] is a tie-break assertion: '01' is not the unique
-        # busiest (day, hour) bucket, only the first by the sort key.
-        self.assertEqual(self.t['busiest'][0], ['2026-08-28', '01', 4])
+        self.assertEqual(self.t['busiest'][0], ['2026-08-28', '04', 17])
 
     def test_bots(self):
         b = self.t['bots']
         self.assertEqual(b['Sogou']['requests'], 2)
         self.assertEqual(b['Sogou']['robots'], 1)
-        self.assertEqual(b['generic-bot']['requests'], 2)
+        self.assertEqual(b['generic-bot']['requests'], 9)
+        self.assertEqual(b['Googlebot']['requests'], 6)
         self.assertEqual(b['empty-ua']['requests'], 2)
         self.assertEqual(b['browser-like']['requests'], 12)
         self.assertEqual(b['TerraCotta']['status'], {'502': 1})
@@ -122,7 +124,7 @@ class FixtureTotals(unittest.TestCase):
     def test_clients(self):
         c = self.t['clients']
         self.assertEqual(c['non_cdn_requests'], 2)
-        self.assertEqual(c['cdn_requests'], 20)
+        self.assertEqual(c['cdn_requests'], 33)
         top = {e['ip']: e for e in c['top']}
         self.assertEqual(top['203.0.113.7']['requests'], 2)
         self.assertEqual(top['203.0.113.7']['breadth'], 2)
@@ -134,16 +136,17 @@ class FixtureTotals(unittest.TestCase):
 
     def test_probes(self):
         p = self.t['probes']
-        self.assertEqual(p['requests'], 4)
-        self.assertEqual(p['families'], {'php': 2, 'dotfile': 1, 'other-probe': 1})
-        self.assertEqual(p['status'], {'501': 2, '404': 2})
-        self.assertEqual(p['methods'], {'GET': 3, 'POST': 1})
+        self.assertEqual(p['requests'], 11)
+        self.assertEqual(p['families'], {'php': 2, 'dotfile': 3, 'other-probe': 6})
+        self.assertEqual(p['status'], {'501': 2, '404': 9})
+        self.assertEqual(p['methods'], {'GET': 10, 'POST': 1})
         self.assertEqual(p['ok'], [])
         self.assertIn(['/wp-login.php', 1], p['paths'])
-        # Every probe UA occurs once, so top_list falls back to its
-        # ascending-key tie-break; '-' (from the wp_filemanager.php hit)
-        # sorts first.
-        self.assertEqual(p['uas'][0], ['-', 1])
+        # The Googlebot UA carries four of the new probe lines, a
+        # unique maximum; python-requests has three.
+        self.assertEqual(p['uas'][0][1], 4)
+        self.assertIn('Googlebot', p['uas'][0][0])
+        self.assertEqual(dict(p['uas'])['python-requests/2.31'], 3)
 
     def test_content(self):
         c = self.t['content']
@@ -153,11 +156,68 @@ class FixtureTotals(unittest.TestCase):
         self.assertIn(['NetBSD-11.0', 1], c['collections404'])
         self.assertEqual(dict(c['sections'])['1'], 4)
         self.assertEqual(dict(c['arches'])['amd64'], 2)
-        self.assertEqual(c['redirect_routes'], {'pathinfo': 1, 'legacy-man': 1, 'legacy-html': 1})
+        self.assertIn(['NetBSD-current', 1], c['collections404'])
+        self.assertIn(['/sparc/rule,.2', 1], c['top404'])
+        self.assertEqual(c['redirect_routes'], {'pathinfo': 3, 'legacy-man': 1, 'legacy-html': 1})
 
     def test_unclassified_and_malformed(self):
-        self.assertEqual(self.t['unclassified'], [['/<script>alert(1)</script>', 1]])
+        # The site's own broken-link shapes (/etc/vether.4, /0/chmod.1,
+        # ...) are classified by the grammar and stay out of here.
+        self.assertEqual(self.t['unclassified'],
+                         [['/<script>alert(1)</script>', 1], ['/ls.1;id', 1]])
         self.assertEqual(len(self.t['malformed_sample']), 1)
+
+    def test_reach(self):
+        r = self.t['reach']
+        self.assertEqual(r['totals'], {'nginx': 11, 'fastcgi': 24})
+        self.assertEqual(r['basis'], {'cache': 8, 'inferred': 27})
+        self.assertEqual(r['upstream'], 2)
+        self.assertEqual(r['by_route']['static'], {'nginx': 1})
+        self.assertEqual(r['by_route']['legacy-man'], {'nginx': 1})
+        self.assertEqual(r['by_route']['other'], {'nginx': 3, 'fastcgi': 7})
+        self.assertEqual(r['by_family']['php'], {'nginx': 2})
+        self.assertEqual(r['by_family']['dotfile'], {'nginx': 1, 'fastcgi': 2})
+        self.assertEqual(r['by_grammar']['bad-char'], {'nginx': 1, 'fastcgi': 1})
+        self.assertEqual(r['rejections'], {
+            'limit-req': 1, 'qs': 2, 'legacy-501': 2, 'probe-map': 1,
+            'grammar-map': 1, 'method': 1})
+        # Named-family probes (the .php paths, /.git, /.aws) are not
+        # judged by the grammar, so only the six self shapes and the
+        # two bad-char other-probes count here.
+        g = r['grammar']
+        self.assertEqual(g['requests'], 9)
+        self.assertEqual(g['buckets'], {
+            'doubled-arch': 1, 'markup-leak': 1, 'fs-path': 1,
+            'numeric-first': 1, 'comma-name': 1, 'hostname-first': 1,
+            'bad-char': 2, 'path-info': 1})
+        self.assertEqual(g['origin'], {'self': 6, 'external': 3})
+        self.assertEqual(r['by_grammar']['path-info'], {'fastcgi': 1})
+        self.assertIn(['/etc/vether.4', 1], g['self_paths'])
+        self.assertIn(['/ls.1;id', 1], g['paths'])
+        self.assertNotIn(['/etc/vether.4', 1], g['paths'])
+        self.assertEqual(g['dropped'], 0)
+        # The six self-inflicted shapes reached the backend too, but
+        # they are the grammar table's business, not a map candidate.
+        # The fixture's direct /cgi-bin/man-cgi/NetBSD-9.3/ls.1 hit is
+        # the sixth leak: path info is internal to the / rewrite.
+        l = r['leaks']
+        self.assertEqual(l['requests'], 6)
+        self.assertEqual(l['families'], {'dotfile': 2, 'other-probe': 1})
+        self.assertEqual(l['grammar'], {'bad-char': 1, 'path-info': 1})
+        self.assertEqual(l['violations'], {'post-path': 1, 'query': 1})
+        self.assertEqual(l['methods'], {'GET': 5, 'POST': 1})
+        paths = dict(l['paths'])
+        self.assertEqual(paths['/.env'], 1)
+        self.assertEqual(paths['/.aws/credentials'], 1)
+        self.assertNotIn('/.git/config', paths)
+        self.assertNotIn('/ls.1;id', paths)
+        self.assertEqual(l['query_keys'], [['debug', 1], ['rest_route', 1], ['token', 1]])
+        self.assertEqual(l['dropped'], 0)
+        d = self.t['by_day']
+        self.assertEqual(d['2026-08-27']['reach'], {'fastcgi': 1})
+        self.assertEqual(d['2026-08-28']['reach'], {'nginx': 11, 'fastcgi': 23})
+        self.assertEqual(d['2026-08-27']['leaks'], 0)
+        self.assertEqual(d['2026-08-28']['leaks'], 6)
 
     def test_json_round_trip(self):
         again = json.loads(json.dumps(self.t))
@@ -295,7 +355,99 @@ class Empty(unittest.TestCase):
         t = Aggregator(CidrSet([])).result()
         self.assertEqual(t['totals']['requests'], 0)
         self.assertEqual(t['window'], {'first': None, 'last': None, 'days': [], 'partial': {}, 'full_days': []})
+        self.assertEqual(t['reach']['totals'], {})
+        self.assertEqual(t['reach']['leaks']['requests'], 0)
         json.dumps(t)
+
+
+class ReachRecords(unittest.TestCase):
+    LINE = ('man.netbsd.org:443 1.2.3.4 - - [28/Aug/2026:01:00:00 +0300] '
+            '"%s HTTP/1.1" %d 1 "-" "x"%s')
+
+    def tree(self, *specs):
+        agg = Aggregator(CidrSet([]))
+        for request, status, tail in specs:
+            agg.add_access(parse_access_line(self.LINE % (request, status, tail)))
+        return agg.result()
+
+    def test_exact_beats_inference(self):
+        # A 200 on a page path would be inferred as FastCGI; cache=-
+        # says nginx answered it (a static file, say) and wins.
+        t = self.tree(('GET /ls.1', 200, ' cache=- rt=0.000 urt=-'))
+        self.assertEqual(t['reach']['totals'], {'nginx': 1})
+        self.assertEqual(t['reach']['basis'], {'cache': 1})
+
+    def test_leak_records_paths_keys_methods(self):
+        t = self.tree(('GET /.env?a=1&b=2', 404, ' cache=MISS rt=0.030 urt=0.029'))
+        l = t['reach']['leaks']
+        self.assertEqual(l['requests'], 1)
+        self.assertEqual(l['paths'], [['/.env', 1]])
+        self.assertEqual(l['query_keys'], [['a', 1], ['b', 1]])
+        self.assertEqual(l['methods'], {'GET': 1})
+        self.assertEqual(l['families'], {'dotfile': 1})
+        self.assertEqual(t['reach']['upstream'], 1)
+
+    def test_post_with_upstream_time_is_a_leak(self):
+        t = self.tree(('POST /ls.1', 303, ' cache=- rt=0.030 urt=0.029'))
+        self.assertEqual(t['reach']['totals'], {'fastcgi': 1})
+        self.assertEqual(t['reach']['leaks']['violations'], {'post-path': 1})
+
+    def test_direct_path_info_is_a_violation(self):
+        t = self.tree(('GET /cgi-bin/man-cgi/ls.1', 404, ' cache=- rt=0 urt=-'),
+                      ('GET /cgi-bin/man-cgi/NetBSD-9.3/ls.1', 200, ''),
+                      ('GET /cgi-bin/man-cgi/', 200, ''),
+                      ('GET /cgi-bin/man-cgi?ls+1', 200, ''))
+        self.assertEqual(t['reach']['rejections'], {'grammar-map': 1})
+        self.assertEqual(t['reach']['grammar']['buckets'], {'path-info': 2})
+        self.assertEqual(t['reach']['leaks']['requests'], 1)
+
+    def test_self_inflicted_shape_is_not_a_leak(self):
+        t = self.tree(('GET /etc/vether.4', 404, ''))
+        self.assertEqual(t['reach']['leaks']['requests'], 0)
+        self.assertEqual(t['reach']['by_grammar']['fs-path'], {'fastcgi': 1})
+
+    def test_rejected_junk_is_not_a_leak(self):
+        t = self.tree(('GET /.env', 404, ' cache=- rt=0.000 urt=-'),
+                      ('GET /wp-login.php', 404, ' cache=- rt=0.000 urt=-'))
+        self.assertEqual(t['reach']['leaks']['requests'], 0)
+        self.assertEqual(t['reach']['rejections'], {'probe-map': 2})
+
+    def test_self_inflicted_split_and_unclassified(self):
+        t = self.tree(('GET /etc/vether.4', 404, ''),
+                      ('GET /<script>', 404, ''))
+        g = t['reach']['grammar']
+        self.assertEqual(g['origin'], {'self': 1, 'external': 1})
+        self.assertEqual(g['buckets'], {'fs-path': 1, 'bad-char': 1})
+        self.assertEqual(t['unclassified'], [['/<script>', 1]])
+
+    def test_query_leak_on_the_query_endpoint(self):
+        t = self.tree(('GET /?rest_route=/batch/v1', 404, ''),
+                      ('GET /?ls+1+NetBSD-9.3', 404, ''),
+                      ('GET /cgi-bin/man-cgi?ls+1+NetBSD-9.3', 200, ''),
+                      ('GET /ls.1?utm_source=x', 200, ''))
+        l = t['reach']['leaks']
+        self.assertEqual(l['requests'], 2)
+        self.assertEqual(l['violations'], {'query': 2})
+        self.assertEqual(l['query_keys'],
+                         [['ls+1+NetBSD-9.3', 1], ['rest_route', 1]])
+
+    def test_leak_key_limit_is_reported(self):
+        agg = Aggregator(CidrSet([]), key_limit=2)
+        for i in range(4):
+            agg.add_access(parse_access_line(
+                self.LINE % (f'GET /.git/c{i}', 404, '')))
+        l = agg.result()['reach']['leaks']
+        self.assertEqual(l['requests'], 4)
+        self.assertEqual(len(l['paths']), 2)
+        self.assertEqual(l['dropped'], 2)
+
+    def test_leak_query_key_limit_is_reported(self):
+        agg = Aggregator(CidrSet([]), key_limit=2)
+        agg.add_access(parse_access_line(
+            self.LINE % ('GET /.git/c?a=1&b=2&c=3&d=4', 404, '')))
+        l = agg.result()['reach']['leaks']
+        self.assertEqual(len(l['query_keys']), 2)
+        self.assertEqual(l['dropped'], 2)
 
 
 class Errors(unittest.TestCase):

@@ -107,7 +107,8 @@ class Main(unittest.TestCase):
             self.assertEqual(out, '')
             with open(js) as f:
                 tree = json.load(f)
-            self.assertEqual(tree['totals']['requests'], 24)
+            self.assertEqual(tree['totals']['requests'], 37)
+            self.assertEqual(tree['reach']['totals'], {'nginx': 11, 'fastcgi': 26})
             self.assertEqual(tree['by_day']['2026-08-27']['requests'], 2)
             self.assertEqual(tree['totals']['error_lines'], 4)
             self.assertEqual(len(tree['content']['top200']), 3)

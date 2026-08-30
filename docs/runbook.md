@@ -261,3 +261,40 @@ fallback in place; a hard purge (`manno-purge -H`) removes it.
   from client responses.
 - A conditional request echoing the exact `Last-Modified` must
   return 304 at every layer.
+
+## Repeating the nginx blocking analysis
+
+The request rejection maps (ADR-0020, `nginx.md`) are data;
+extending them is a report-driven loop, not a rewrite.
+
+1. Copy the fortnight's logs from oxygene and render the report
+   (`logreport.md`, "Getting the logs" and "Rendering and
+   publishing"): `make report`.
+2. Read the "Backend reach and nginx rejections" section. Its
+   "Leaks" tables list junk that reached the FastCGI location: the
+   top paths are candidates for `$probe_path`
+   (`conf.d/probe-map.conf.j2`) or, when they are shapes the CGI's
+   grammar refuses, for the site map
+   (`conf.d/man-cgi-syntax-map.conf.j2`); the top query-string keys
+   are candidates for `$qs_error` (`conf.d/query-string-map.conf.j2`,
+   shared with the other vhosts, so only keys no site's own URLs
+   use — a scanner's, not a tracking parameter, which the redirect
+   already handles); the methods table feeds `$man_bad_method`. All
+   three live under `roles/common/templates/nginx/` in `~/src/cloud`.
+3. The "URL grammar violations" rows whose origin is `self` never
+   appear among the leaks: those are links the site itself emits,
+   and the fix is the link generator (`../TODO.md`), not a map
+   entry. Skip anything that a
+   reader could plausibly type, too — the 404 volume is almost
+   entirely well-formed names of pages that do not exist, and no
+   pattern separates those from real misses.
+4. Add the patterns, run `tests/nginx-lab/drive-reject` with the
+   changed map files (add the new shapes to its table), apply with
+   Ansible, and smoke-check (`make smoke-qa`, then `make
+   smoke-prod`).
+5. On the next report, the "Rejections by presumed rule" tally
+   should have moved into `probe-map`/`grammar-map`/`qs`/`method`,
+   the leak count should have fallen, and the per-day "nginx"
+   share should step up on the deploy day. Two windows compare
+   through the JSON sidecars (`reach.leaks.requests`,
+   `reach.rejections`).

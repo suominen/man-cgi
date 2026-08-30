@@ -7,6 +7,7 @@ module-level data so they can be read, tested and extended in one place.
 import functools
 import os
 import re
+import urllib.parse
 
 # --- Arch list -----------------------------------------------------------
 
@@ -141,6 +142,167 @@ def is_probe(path, query):
     return probe_family(path, query) is not None
 
 
+# --- URL grammar --------------------------------------------------------
+
+# Shapes the CGI's URL grammar refuses or only redirects, with where
+# they come from: 'self' is a link the site itself emits (the
+# HTMLizer's cross-reference sed; see TODO.md), 'external' anything
+# else. The third field says whether the nginx grammar map (ADR-0020),
+# which knows only the character sets, refuses the shape; the shape
+# rules here — archlist membership, depth, and the split of an
+# unknown first element into fs-path / numeric-first / hostname-first
+# — are report-only. nginx merges slashes and resolves . and .. before
+# any map sees $uri, so those two buckets count what the client sent,
+# not what the map judged.
+GRAMMAR_RULES = (
+    ('dot-dot',        'external', False),
+    ('double-slash',   'external', False),
+    ('bad-char',       'external', True),
+    ('api-other',      'external', True),   # /api outside the v1 lists
+    ('path-info',      'external', True),   # /cgi-bin/man-cgi/<path info>
+    ('asset-suffix',   'external', True),   # /sitemap.xml: never a page name
+    ('markup-leak',    'self',     True),   # /i>/vax/dl.4
+    ('comma-name',     'self',     True),   # /sparc/rule,.2
+    ('sed-range',      'self',     True),   # /`FOO.2, /2^0.1: the A-z range
+    ('doubled-arch',   'self',     False),  # /NetBSD-9.0/evbarm/x86/fdc.4
+    ('fs-path',        'self',     False),  # /etc/vether.4
+    ('numeric-first',  'self',     False),  # /0/chmod.1
+    ('hostname-first', 'self',     False),  # /man.netbsd.org/passwd.5
+    ('unknown-arch',   'external', False),  # /foo/bar.1
+    ('too-deep',       'external', False),  # /a/b/c/d.1
+)
+GRAMMAR_BUCKETS = tuple(b for b, _, _ in GRAMMAR_RULES)
+GRAMMAR_ORIGIN = {b: o for b, o, _ in GRAMMAR_RULES}
+SELF_INFLICTED = frozenset(b for b, o, _ in GRAMMAR_RULES if o == 'self')
+MAP_GRAMMAR = frozenset(b for b, _, m in GRAMMAR_RULES if m)
+
+# The CGI's per-component character sets (sanitize_coll, sanitize_arch
+# and sanitize_command in src/man-cgi; the command set minus '/', which
+# PATH_INFO splitting has consumed by then).
+_COLL_CHARS = re.compile(r'[A-Za-z0-9.-]+')
+_ARCH_CHARS = re.compile(r'[.A-Za-z0-9_-]+')
+_NAME_CHARS = re.compile(r'[A-Za-z0-9_.+@:\[\]-]+')
+# A lone leading element is a collection only when shaped like one
+# (the CGI's [A-Z]*-[0-9]* | [A-Z]*-current shell globs, verbatim);
+# with more elements any uppercase-first leader is.
+_COLL_ALONE = re.compile(r'[A-Z].*-(?:[0-9].*|current)')
+_TAG_REMNANT = re.compile(r'[a-z]{1,4}>|</?[a-z]{1,4}>?')
+_HOSTNAME = re.compile(r'[a-z0-9-]+(?:\.[a-z0-9-]+)+')
+# The HTMLizer's name class is [0-9A-z_][-.,0-9A-z_/]*, and A-z also
+# spans [ \ ] ^ ` _ : a backtick or caret in an otherwise valid name
+# is one of its links, not a client's invention.
+_SED_RANGE = re.compile(r'[`^\\]')
+# No page name ends in these (sections are [1-9]..., 3f or [39]lua),
+# so a sectionless request for one is an asset probe; the map's rule.
+_ASSET_SUFFIX = re.compile(r'\.(?:css|js|json|xml|html?|png|gif|ico|txt|map)$')
+_FS_DIRS = frozenset((
+    'bin', 'boot', 'dev', 'etc', 'home', 'kern', 'lib', 'libexec', 'mnt',
+    'opt', 'proc', 'rescue', 'root', 'sbin', 'stand', 'sys', 'tmp', 'usr',
+    'var'))
+
+
+@functools.lru_cache(maxsize=262144)
+def grammar_violation(path):
+    """Bucket name for a path the CGI's URL grammar rejects or only
+    redirects, else None. The path is percent-decoded first, as nginx
+    decodes $uri before the grammar map sees it."""
+    if path == '/' or path == '/.well-known/health' or path in _API_EXACT:
+        return None
+    if path in ('/cgi-bin/man-cgi', '/cgi-bin/man-cgi/'):
+        return None             # the query form's URL
+    if path.startswith('/cgi-bin/man-cgi/'):
+        return 'path-info'      # internal to the / rewrite
+    if not path.startswith('/'):
+        return None             # an absolute-form target; nginx uses its path
+    if path == '/api' or path.startswith('/api/'):
+        return 'api-other'
+    decoded = urllib.parse.unquote(path)
+    if '//' in decoded:
+        return 'double-slash'
+    parts = decoded.split('/')[1:]
+    if any(p in ('..', '.') for p in parts):
+        return 'dot-dot'
+    if parts and parts[-1] == '':
+        parts.pop()             # an index URL (ADR-0017)
+    if not parts:
+        return None
+    if parts[0][:1].isupper() and (len(parts) > 1
+                                   or _COLL_ALONE.fullmatch(parts[0])):
+        coll = parts.pop(0)
+        if not _COLL_CHARS.fullmatch(coll):
+            return 'bad-char'
+        if not parts:
+            return None
+    name = parts[-1]
+    arches = parts[:-1]
+    if any(_TAG_REMNANT.fullmatch(a) for a in arches):
+        return 'markup-leak'
+    if ',' in name and _NAME_CHARS.fullmatch(name.replace(',', '')):
+        return 'comma-name'
+    if (_SED_RANGE.search(name)
+            and _NAME_CHARS.fullmatch(_SED_RANGE.sub('', name))):
+        return 'sed-range'
+    if not _NAME_CHARS.fullmatch(name):
+        return 'bad-char'
+    if not all(_ARCH_CHARS.fullmatch(a) for a in arches):
+        return 'bad-char'
+    if _ASSET_SUFFIX.search(name):
+        return 'asset-suffix'
+    if len(arches) >= 2:
+        if all(a in ARCHES for a in arches):
+            return 'doubled-arch'
+        return 'too-deep'
+    if arches and arches[0] not in ARCHES:
+        first = arches[0]
+        if first in _FS_DIRS:
+            return 'fs-path'
+        if first.isdigit():
+            return 'numeric-first'
+        if _HOSTNAME.fullmatch(first):
+            return 'hostname-first'
+        return 'unknown-arch'
+    return None
+
+
+# The site takes GET and HEAD anywhere, and POST (the query form) only
+# at / and the script's own URL; a query string is meaningful only at
+# the script's own URL, in the legacy positional form
+# COMMAND[+[SECTION][.ARCH][+COLLECTION]] (a trailing = is tolerated,
+# as the CGI does), and any query string on / is refused. These
+# mirror the $man_bad_method and $man_bad_query maps (ADR-0020).
+_METHODS = frozenset(('GET', 'HEAD', 'POST'))
+_POST_ENDPOINTS = frozenset(('/', '/cgi-bin/man-cgi', '/cgi-bin/man-cgi/'))
+_QUERY_ENDPOINTS = frozenset(('/cgi-bin/man-cgi', '/cgi-bin/man-cgi/'))
+# Raw, as $query_string is: a %XX passes as such (the map cannot
+# decode, and the CGI decodes only %20 and %2B); / is in the CGI's
+# command set and carries its documented ?/.well-known/health form.
+_LEGACY_QUERY = re.compile(r'[A-Za-z0-9_.+@:\[\]%/-]*=?')
+
+
+def method_violation(method, path):
+    """'method' for a verb the site does not take, 'post-path' for a
+    POST anywhere but the query endpoints, else None."""
+    if method not in _METHODS:
+        return 'method'
+    if method == 'POST' and path not in _POST_ENDPOINTS:
+        return 'post-path'
+    return None
+
+
+def query_violation(path, query):
+    """'query' for any query string on /, or an off-grammar one at
+    the script's own URL, else None. A query on a page path is
+    ignored by the CGI (readers arrive with tracking parameters) and
+    is not judged."""
+    if not query:
+        return None
+    if path == '/':
+        return 'query'
+    if path in _QUERY_ENDPOINTS and not _LEGACY_QUERY.fullmatch(query):
+        return 'query'
+    return None
+
+
 # --- Bots --------------------------------------------------------------
 
 BROWSER = 'browser-like'
@@ -210,6 +372,76 @@ def status_class(status):
         return '4xx'
     if 500 <= status < 600:
         return '5xx'
+    return 'other'
+
+
+# --- Backend reach -----------------------------------------------------
+
+# Answered by nginx without consulting the FastCGI location, when the
+# record has no cache= field to say so: the status codes nginx's own
+# rules produce (the CGI emits only 301, 302, 303, 304 and 404), a 503
+# with a query string (the $qs_error map before ADR-0020), the files
+# nginx serves itself, the legacy redirects, and a 301 for a page
+# path with a query string (the CGI's own 301s carry none).
+_NGINX_STATUS = frozenset((307, 400, 403, 405, 429, 501))
+_NGINX_ROUTES = frozenset(('static', 'report'))
+_LEGACY_ROUTES = frozenset(('legacy-man', 'legacy-html'))
+
+
+def reach(cache, status, query, rt, urt=None):
+    """(('nginx' | 'fastcgi'), exact). CACHE is $upstream_cache_status
+    when the record carried it and URT the upstream time: any cache
+    status but '-' means the FastCGI location handled the request (a
+    HIT included), and so does an upstream time with '-', which is
+    what a POST logs (nginx caches GET and HEAD only, so a POST skips
+    the lookup and the status stays unset). '-' with no upstream time
+    is nginx alone. Without the fields the answer is inferred from
+    status and route, which undercounts nginx once the rejection maps
+    are deployed on a host still logging the basic format."""
+    if cache is not None:
+        if urt is not None or cache not in ('-', ''):
+            return 'fastcgi', True
+        return 'nginx', True
+    if status in _NGINX_STATUS or (status == 503 and query):
+        return 'nginx', False
+    if rt in _NGINX_ROUTES:
+        return 'nginx', False
+    if rt in _LEGACY_ROUTES and 300 <= status < 400:
+        return 'nginx', False
+    if status == 301 and query and rt == 'pathinfo':
+        return 'nginx', False   # the query-string redirect (ADR-0020)
+    return 'fastcgi', False
+
+
+REJECTION_RULES = ('probe-map', 'grammar-map', 'qs', 'method', 'cgi-bin',
+                   'limit-req', 'legacy-501', 'other')
+# The families $probe_path covers: the others are query-scoped, are
+# normalised away before the map, or are the outer /cgi-bin/ location's.
+_PROBE_MAP_FAMILIES = frozenset(('php', 'wordpress', 'dotfile', 'admin'))
+
+
+def rejection_rule(status, query, family, grammar):
+    """Which nginx rule presumably produced an error answer that never
+    reached the FastCGI location (reach() said 'nginx', status >= 400).
+    A 404 is credited to the probe map when a family that map covers
+    matches, to the grammar map when the grammar bucket is one the map
+    refuses, to the outer /cgi-bin/ location for its paths, else to
+    'other'."""
+    if status == 429:
+        return 'limit-req'
+    if status == 501:
+        return 'legacy-501'
+    if status == 405:
+        return 'method'
+    if status in (400, 503) and query:
+        return 'qs'
+    if status == 404:
+        if family in _PROBE_MAP_FAMILIES:
+            return 'probe-map'
+        if grammar in MAP_GRAMMAR:
+            return 'grammar-map'
+        if family == 'cgi-bin-other':
+            return 'cgi-bin'
     return 'other'
 
 
@@ -306,3 +538,15 @@ def referer_host(referer):
         return '-'
     m = re.match(r'^[a-z]+://([^/:?#]+)', referer, re.I)
     return m.group(1).lower() if m else referer
+
+
+def query_keys(query):
+    """['a', 'b'] for 'a=1&b=2'; a legacy query 'ls+1+NetBSD-9.3' is
+    one key. Keys are cut at 40 characters: they feed a bounded
+    counter that an attacker controls."""
+    keys = []
+    for part in query.split('&'):
+        key = part.partition('=')[0]
+        if key:
+            keys.append(key[:40])
+    return keys
