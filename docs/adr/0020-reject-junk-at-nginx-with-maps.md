@@ -166,8 +166,8 @@ accepted and refused shapes.
   analysis" is the procedure for extending them from the report.
 - The nginx configuration lives in `~/src/cloud` (Ansible); the
   first deployment of this decision was applied by hand on
-  oxygene from a diff kept beside the config snapshot, with the
-  Ansible port tracked in `../../TODO.md`.
+  oxygene from a diff kept beside the config snapshot; the Ansible
+  port followed on 2026-08-30 (`../nginx.md`).
 - Related: ADR-0005 (why redirects are 301: the same Fastly
   cacheability), ADR-0015 (redirect TTLs), ADR-0019 (the log
   fields that make nginx-level answers visible in the report).

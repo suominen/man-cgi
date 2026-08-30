@@ -34,8 +34,9 @@ before touching production configuration.
   `redirect-query.conf` (`location /` only), then sends a table of
   accepted, refused and redirected requests, checking the status
   of each and whether the backend saw it. The two fragments must
-  track the vhost (and `mancgi.j2`/`fqdn.j2` once the Ansible port
-  lands): they are what this driver measures.
+  track the vhost, that is `mancgi.j2` and `fqdn.j2` in
+  `~/src/cloud`, which render it: they are what this driver
+  measures.
 
 Run it on the NetBSD test host:
 

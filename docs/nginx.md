@@ -9,10 +9,14 @@ lcm: 88 GB), and
 `group_vars/all.yml` `website_configurations['man.netbsd.org']`
 carries the shared site definition used by oxygene, lcm, and the QA
 vhost (which strips `fastcgi_cache` and `limit_req`). The request
-rejection maps (ADR-0020) were first applied by hand on oxygene
-from a diff kept beside the configuration snapshot
-(`~/tmp/oxygene-nginx/proposed.diff`); their Ansible port is
-tracked in `../TODO.md`.
+rejection maps (ADR-0020) are the `conf.d/probe-map.conf.j2`,
+`conf.d/man-cgi-syntax-map.conf.j2` and
+`conf.d/query-string-map.conf.j2` templates, tested by the
+`probe_check` and `mancgi` site options in `fqdn.j2` and
+`mancgi.j2`; the site map is installed on hosts in the `mancgi`
+inventory group. They were first applied by hand on oxygene from a
+diff kept beside the configuration snapshot
+(`~/tmp/oxygene-nginx/proposed.diff`) and ported on 2026-08-30.
 
 This file records what the configuration does for caching and for
 request rejection, and why.
