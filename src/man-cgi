@@ -55,7 +55,7 @@
 # sanitizers see them. Nothing in this script globs.
 set -f
 
-MANCGI_DATE=2026-08-27
+MANCGI_DATE=2026-09-01
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
@@ -104,8 +104,8 @@ LASTMODFILE="$MANROOT/NetBSD-current/build"
 # chrome, error bodies. Signature and MANCGI_DATE changes do not
 # qualify.
 #
-# 2026-08-27 18:40:34 UTC
-MINLASTMOD=${MANCGI_MINLASTMOD:-1787856034}
+# 2026-09-01 07:00:34 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1788246034}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
