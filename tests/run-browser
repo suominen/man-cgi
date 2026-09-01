@@ -2,8 +2,9 @@
 // @(#)$KimmoSuominen$
 //
 // Drive the query form's inline script in headless Chromium and
-// check the / shortcut's behaviour: what the shell suite cannot
-// see, since it only greps the markup. The style and script blocks
+// check the / shortcut's behaviour and the selects' storage
+// precedence: what the shell suite cannot see, since it only
+// greps the markup. The style and script blocks
 // are taken verbatim from the CGI script and wrapped in a page
 // shaped like a man page; no browser automation library is needed,
 // only Chromium's own DevTools protocol over the WebSocket built
@@ -52,8 +53,38 @@ function page(opts)
 {
     const focus = opts.autofocus ? ' autofocus' : '';
     const value = opts.autofocus ? '' : 'ls';
-    const pre = opts.nofetch ?
-	'<script>window.fetch = undefined;</script>\n' : '';
+    const archattr = opts.archUrl ? ` data-url="${opts.archUrl}"` : '';
+    const collattr = opts.collUrl ? ` data-url="${opts.collUrl}"` : '';
+    // Every page starts with clean storage (the tab and file://
+    // origin persist across opens), then any seeds the test wants.
+    const seeds = Object.entries(opts.session || {}).map(([k, v]) =>
+	`sessionStorage.setItem('${k}', '${v}');`).concat(
+	Object.entries(opts.local || {}).map(([k, v]) =>
+	    `localStorage.setItem('${k}', '${v}');`)).join('\n');
+    let pre = `<script>sessionStorage.clear(); localStorage.clear();
+${seeds}</script>\n`;
+    if (opts.nofetch)
+    {
+	pre += '<script>window.fetch = undefined;</script>\n';
+    }
+    // The lists the fill script would fetch from /api/v1, served by
+    // a stub: file:// pages cannot fetch, and the tests must not
+    // depend on the network anyway.
+    if (opts.lists)
+    {
+	pre += `<script>
+window.fetch = function (url) {
+    var lists = {
+	'/api/v1/archlist': 'vax\\nNONE\\nx86\\n',
+	'/api/v1/colllist': 'NetBSD-current\\nNetBSD-11.0\\n'
+    };
+    return Promise.resolve({
+	ok: true,
+	text: function () { return Promise.resolve(lists[url] || ''); }
+    });
+};
+</script>\n`;
+    }
     const hide = opts.hidden ?
 	'<style>.queryform { display: none; }</style>\n' : '';
     const body = Array.from({ length: 400 },
@@ -85,19 +116,23 @@ ${hide}<title>ls(1) - NetBSD Manual Pages</title>
   </div>
   <div>
     <label for="arch">Arch:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</label>
-    <select name="arch" id="arch">
+    <select name="arch" id="arch"${archattr}>
       <option value="NONE">NONE</option>
     </select>
   </div>
   <div>
     <label for="coll">Collection:</label>
-    <select name="coll" id="coll">
+    <select name="coll" id="coll"${collattr}>
       <option value="NetBSD-current" selected>NetBSD-current</option>
     </select>
   </div>
   <div>
     <label for="submit"><span>&gt;&gt;&gt;</span></label>
     <input id="submit" type="submit" value="Show">
+  </div>
+  <div class="remember" hidden>
+    <input id="remember" type="checkbox">
+    <label for="remember">Remember arch and collection across visits</label>
   </div>
 </form>
 </div>
@@ -298,6 +333,39 @@ class Browser
 	})()`);
     }
 
+    // The fill settles a few microtasks after the load event, so
+    // wait for the stubbed lists to arrive in the arch select
+    // before reading either select or the stores.
+    async selects()
+    {
+	for (let i = 0; i < 40; i++)
+	{
+	    if (await this.js(
+		"document.getElementById('arch').options.length > 1"))
+	    {
+		break;
+	    }
+	    await sleep(50);
+	}
+	return this.js(`(function () {
+	    return {
+		arch: document.getElementById('arch').value,
+		coll: document.getElementById('coll').value,
+		options: document.getElementById('arch').options.length,
+		collOptions: document.getElementById('coll').options.length,
+		sessArch: sessionStorage.getItem('man-cgi.arch'),
+		sessColl: sessionStorage.getItem('man-cgi.coll'),
+		localArch: localStorage.getItem('man-cgi.arch'),
+		localColl: localStorage.getItem('man-cgi.coll'),
+		localOther: localStorage.getItem('man-cgi.other'),
+		localRemember: localStorage.getItem('man-cgi.remember'),
+		remember: document.getElementById('remember').checked,
+		rowHidden: document.getElementById('remember')
+		    .parentNode.hidden
+	    };
+	})()`);
+    }
+
     // A process killed by a signal has exitCode null and only
     // signalCode set.
     gone()
@@ -487,6 +555,160 @@ async function main()
 		{ key: 'Escape', isComposing: true, bubbles: true }))`);
 	s = await b.state();
 	ok(s.active === 'command', 'Escape while composing stays put', s);
+
+	// The select filling: the remembered arch must beat the
+	// URL-carried one, so the machine-class canonicalization
+	// (i386 -> x86 in the URL, ADR-0009) cannot overwrite the
+	// user's choice on the next submit.
+	await b.open({ lists: true, archUrl: 'x86',
+	    session: { 'man-cgi.arch': 'vax' } });
+	s = await b.selects();
+	ok(s.arch === 'vax',
+	    'a remembered arch beats the URL-carried one', s);
+
+	// With nothing remembered the URL's arch is preselected.
+	await b.open({ lists: true, archUrl: 'x86' });
+	s = await b.selects();
+	ok(s.arch === 'x86',
+	    'without a remembered arch the URL arch is used', s);
+
+	// With neither, the fallback. The options assertion keeps
+	// this honest: NONE is also the static markup's only option
+	// and must not pass because the fill never ran.
+	await b.open({ lists: true });
+	s = await b.selects();
+	ok(s.arch === 'NONE' && s.options === 3,
+	    'without any arch the fallback is selected', s);
+
+	// The collection fallback is the empty string, which matches
+	// no option: the browser is left showing the list's first.
+	ok(s.coll === 'NetBSD-current' && s.collOptions === 2,
+	    'without any collection the list defaults to its first', s);
+
+	// The collection side shares the same precedence.
+	await b.open({ lists: true, collUrl: 'NetBSD-current',
+	    session: { 'man-cgi.coll': 'NetBSD-11.0' } });
+	s = await b.selects();
+	ok(s.coll === 'NetBSD-11.0',
+	    'a remembered collection beats the URL-carried one', s);
+
+	// With nothing remembered the URL's collection is used.
+	await b.open({ lists: true, collUrl: 'NetBSD-11.0' });
+	s = await b.selects();
+	ok(s.coll === 'NetBSD-11.0',
+	    'without a remembered collection the URL collection is used', s);
+
+	// Submitting remembers the selects' values in sessionStorage
+	// only. (dispatchEvent fires the listener without letting the
+	// form navigate away.)
+	await b.open({ lists: true });
+	await b.selects();
+	await b.js(`document.getElementById('arch').value = 'x86';
+	    document.getElementById('coll').value = 'NetBSD-11.0';
+	    document.getElementById('arch').form.dispatchEvent(
+		new Event('submit'));`);
+	s = await b.selects();
+	ok(s.sessArch === 'x86' && s.sessColl === 'NetBSD-11.0' &&
+	    s.localArch === null && s.localColl === null,
+	    'submit stores the choices in sessionStorage only', s);
+
+	// The keys the localStorage era left behind are removed --
+	// targeted removal, not a wipe: an unrelated key survives.
+	await b.open({ lists: true, local:
+	    { 'man-cgi.arch': 'i386', 'man-cgi.coll': 'NetBSD-9.2',
+		'man-cgi.other': 'kept' } });
+	s = await b.selects();
+	ok(s.localArch === null && s.localColl === null &&
+	    s.localOther === 'kept',
+	    'the old localStorage keys are cleaned up, nothing else', s);
+
+	// The remember row is the script's to reveal: without JS
+	// the checkbox would do nothing, so the markup hides it.
+	await b.open({ lists: true });
+	s = await b.selects();
+	ok(s.rowHidden === false && s.remember === false,
+	    'the script reveals the remember row, unticked', s);
+
+	// Ticking the box makes the current session memory
+	// persistent: the values move to localStorage with the
+	// flag, and the session copies go.
+	await b.open({ lists: true, session:
+	    { 'man-cgi.arch': 'vax', 'man-cgi.coll': 'NetBSD-11.0' } });
+	await b.selects();
+	await b.js("document.getElementById('remember').click()");
+	s = await b.selects();
+	ok(s.localRemember === 'yes' && s.localArch === 'vax' &&
+	    s.localColl === 'NetBSD-11.0' && s.sessArch === null &&
+	    s.sessColl === null,
+	    'ticking remember moves the memory to localStorage', s);
+
+	// ... and later submits on the same page store persistently.
+	await b.js(`document.getElementById('arch').value = 'x86';
+	    document.getElementById('arch').form.dispatchEvent(
+		new Event('submit'));`);
+	s = await b.selects();
+	ok(s.localArch === 'x86' && s.sessArch === null,
+	    'a submit after ticking stores in localStorage', s);
+
+	// An opted-in visitor: the box comes back ticked, the
+	// persistent values win over the URL, and the cleanup
+	// leaves the keys alone.
+	await b.open({ lists: true, archUrl: 'x86',
+	    collUrl: 'NetBSD-current', local:
+	    { 'man-cgi.remember': 'yes', 'man-cgi.arch': 'vax',
+		'man-cgi.coll': 'NetBSD-11.0' } });
+	s = await b.selects();
+	ok(s.remember === true && s.arch === 'vax' &&
+	    s.coll === 'NetBSD-11.0' && s.localArch === 'vax',
+	    'persistent values survive the load and beat the URL', s);
+
+	// An empty persistent store still yields to the URL arch;
+	// submitting while opted in stores persistently.
+	await b.open({ lists: true, archUrl: 'x86', local:
+	    { 'man-cgi.remember': 'yes' } });
+	s = await b.selects();
+	ok(s.arch === 'x86',
+	    'an empty persistent store yields to the URL arch', s);
+	await b.js(`document.getElementById('arch').value = 'vax';
+	    document.getElementById('arch').form.dispatchEvent(
+		new Event('submit'));`);
+	s = await b.selects();
+	ok(s.localArch === 'vax' && s.sessArch === null,
+	    'submit while opted in stores in localStorage', s);
+
+	// Unticking withdraws: every man-cgi localStorage key
+	// goes, and the memory falls back to the session.
+	await b.open({ lists: true, local:
+	    { 'man-cgi.remember': 'yes', 'man-cgi.arch': 'vax',
+		'man-cgi.coll': 'NetBSD-11.0' } });
+	await b.selects();
+	await b.js("document.getElementById('remember').click()");
+	s = await b.selects();
+	ok(s.localRemember === null && s.localArch === null &&
+	    s.localColl === null && s.sessArch === 'vax' &&
+	    s.sessColl === 'NetBSD-11.0',
+	    'unticking remember withdraws the stored values', s);
+
+	// ... and later submits stay in the session store.
+	await b.js(`document.getElementById('arch').value = 'x86';
+	    document.getElementById('arch').form.dispatchEvent(
+		new Event('submit'));`);
+	s = await b.selects();
+	ok(s.sessArch === 'x86' && s.localArch === null,
+	    'a submit after unticking stays in sessionStorage', s);
+
+	// Withdrawal mirrors, not merges: a session stray for a
+	// key the persistent store does not hold is removed, so no
+	// stale value is ever adopted.
+	await b.open({ lists: true, local:
+	    { 'man-cgi.remember': 'yes', 'man-cgi.arch': 'vax' },
+	    session: { 'man-cgi.coll': 'NetBSD-9.2' } });
+	await b.selects();
+	await b.js("document.getElementById('remember').click()");
+	s = await b.selects();
+	ok(s.sessArch === 'vax' && s.sessColl === null &&
+	    s.localArch === null,
+	    'unticking mirrors the persistent store into the session', s);
     }
     finally
     {

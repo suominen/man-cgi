@@ -767,6 +767,11 @@ END
     <label for="submit"><span>&gt;&gt;&gt;</span></label>
     <input id="submit" type="submit" value="Show">
   </div>
+  <div class="remember" hidden>
+    <input id="remember" type="checkbox">
+    <label for="remember"
+      title="Stored only in this browser, until you untick this. Nothing is sent to the server.">Remember arch and collection across visits</label>
+  </div>
 END
 
     case "${DEFAULT_COLLECTION}" in
@@ -787,9 +792,13 @@ END
 }
 
 # Emit the inline script that populates the arch and collection
-# selects from /api/v1 and remembers the choices in localStorage
+# selects from /api/v1 and remembers the choices in sessionStorage
 # (no cookies: nothing varies at any cache tier). Preselection
-# order: URL-carried value (data-url), remembered value, default.
+# order: remembered value, URL-carried value (data-url), default.
+# The remember checkbox opts into localStorage instead, so the
+# choices survive the session: ticking it is the consent, and only
+# the script reveals the row and ticks it back. The pre-ADR-0021
+# localStorage keys are removed on load for everyone not opted in.
 # Without JavaScript the fallback options keep the form usable.
 #
 # The script also makes / focus the command field (and select its
@@ -817,17 +826,52 @@ js_queryform()
     cat <<'END'
 <script>
 (function () {
+  // The opt-in flag is read live on every store access, so another
+  // tab's tick or untick is honored here from the next submit on.
+  function persistent() {
+    try {
+      return localStorage.getItem('man-cgi.remember') === 'yes';
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function store() {
+    return persistent() ? localStorage : sessionStorage;
+  }
+
   function remember(key, value) {
     try {
-      localStorage.setItem('man-cgi.' + key, value);
+      store().setItem('man-cgi.' + key, value);
     } catch (e) {}
   }
 
   function recall(key) {
     try {
-      return localStorage.getItem('man-cgi.' + key);
+      return store().getItem('man-cgi.' + key);
     } catch (e) {
       return null;
+    }
+  }
+
+  // After a move the target mirrors the source and the source is
+  // empty: a key the source does not hold is removed, never kept,
+  // so no stale value is ever adopted. Per-key try/catch: losing
+  // a preference beats retaining withdrawn data.
+  function move(from, to) {
+    var i, v, keys = ['man-cgi.arch', 'man-cgi.coll'];
+    for (i = 0; i < keys.length; i++) {
+      try {
+        v = from.getItem(keys[i]);
+        if (v !== null) {
+          to.setItem(keys[i], v);
+        } else {
+          to.removeItem(keys[i]);
+        }
+      } catch (e) {}
+      try {
+        from.removeItem(keys[i]);
+      } catch (e) {}
     }
   }
 
@@ -843,7 +887,7 @@ js_queryform()
       return r.text();
     }).then(function (text) {
       var names = text.split('\n');
-      var want = sel.getAttribute('data-url') || recall(name) || fallback;
+      var want = recall(name) || sel.getAttribute('data-url') || fallback;
       var i, opt;
       sel.options.length = 0;
       for (i = 0; i < names.length; i++) {
@@ -861,7 +905,7 @@ js_queryform()
     }).catch(function (e) {});
   }
 
-  var arch, cmd, held = false, heldCode;
+  var arch, cmd, rem, held = false, heldCode;
 
   document.addEventListener('keydown', function (e) {
     var t = e.target;
@@ -908,6 +952,38 @@ js_queryform()
   cmd = document.getElementById('command');
   if (cmd && !cmd.autofocus) {
     cmd.title = 'Press / to focus';
+  }
+
+  // One-time cleanup: the arch/coll keys lived in localStorage
+  // until ADR-0021 moved them to sessionStorage. With the opt-in
+  // ticked they are current again and stay.
+  if (!persistent()) {
+    try {
+      localStorage.removeItem('man-cgi.arch');
+      localStorage.removeItem('man-cgi.coll');
+    } catch (e) {}
+  }
+
+  // The remember opt-in: the row stays hidden until here, so only
+  // pages where the script runs show a working checkbox. Ticking
+  // is the consent: the memory moves to localStorage with the
+  // flag; unticking withdraws it all back to the session.
+  rem = document.getElementById('remember');
+  if (rem) {
+    rem.checked = persistent();
+    rem.parentNode.hidden = false;
+    rem.addEventListener('change', function () {
+      try {
+        if (rem.checked) {
+          localStorage.setItem('man-cgi.remember', 'yes');
+          move(sessionStorage, localStorage);
+        } else {
+          localStorage.removeItem('man-cgi.remember');
+          move(localStorage, sessionStorage);
+        }
+      } catch (e) {}
+      rem.checked = persistent();
+    });
   }
 
   fill('arch', 'NONE');
@@ -1912,6 +1988,12 @@ label {
 label[for="command"] { padding-left: 0.15em; }
 label[for="submit"] span { display: none; }
 label[for="submit"]:after { content: '\00a0'; }
+/* The remember opt-in gets a wrapped row of its own; the explicit
+   display would defeat the hidden attribute without the [hidden]
+   rule. */
+div.remember { display: flex; align-items: center; flex-basis: 100%; }
+div.remember[hidden] { display: none; }
+label[for="remember"] { text-transform: none; padding-bottom: 0; }
 pre, tt, ul.matches { font-family: monospace; }
 pre { white-space: pre-wrap; }
 /* Two blank lines (2 x line-height) where the list of other

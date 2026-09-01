@@ -41,19 +41,6 @@ Open ideas and known defects not part of any scheduled effort.
   post-cutover refill storm, roughly a third of uncached requests
   (including the QA vhost's) 502'd for hours while crawlers re-filled
   the caches.
-- Keep the requested architecture across the machine-class
-  canonicalization. `/i386/est.4` 301s to `/x86/est.4` (ADR-0009),
-  and the query form prefers the URL's arch to the remembered one
-  (`want = data-url || recall(name) || fallback`), so the select
-  comes back as `x86` and the next submit stores `x86` over the
-  user's `i386`. Cross-reference links in the page carry the class
-  too, so browsing onward stays in `x86`. The machine-independent
-  case is fine and is what ADR-0009 relies on: the arch leaves the
-  URL entirely, no `data-url` is emitted, and ADR-0008's
-  localStorage keeps the selection. Only the class transition
-  overwrites it. A fix has to stay inside the form or the
-  remembered value — putting the port back in the URL would
-  recreate the per-arch cache aliases ADR-0009 exists to collapse.
 - Consider bringing back the apropos functionality (perhaps an
   `/apropos/*` namespace) using `apropos -l` "legacy" output (also
   reachable by setting `export APROPOS=-l` in the environment and
@@ -109,3 +96,13 @@ Open ideas and known defects not part of any scheduled effort.
   (`?query=ls&sektion=1`, 57 requests in the fortnight): the site
   map (ADR-0020) now answers 400; a redirect to `/ls.1` would be the
   friendlier answer.
+- After 2027-09-01, remove the one-time localStorage cleanup: the
+  `if (!persist)` block removing `man-cgi.arch` / `man-cgi.coll`
+  in `js_queryform()` (ADR-0021 moved the keys to sessionStorage
+  on 2026-09-01; the remember opt-in guards its own copies with
+  the `man-cgi.remember` flag, which the cleanup respects) and the
+  "old localStorage keys are cleaned up" check in
+  `tests/run-browser`. Stale pre-ADR-0021 keys are inert without
+  the flag — nothing reads them — so the cleanup is a courtesy
+  for visitors returning within the year, and its later removal
+  harmlessly leaves any latecomer's keys in place.

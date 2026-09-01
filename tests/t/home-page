@@ -40,8 +40,24 @@ assert_body '<option value="NetBSD-current" selected>NetBSD-current</option>'
 assert_body_absent '<option value="i386">'
 assert_body_absent '<option value="NetBSD-10.1">'
 assert_body "fetch('/api/v1/'"
-assert_body 'localStorage.setItem'
+assert_body 'persistent() ? localStorage : sessionStorage'
+# localStorage appears only for the remember opt-in and for the
+# one-time cleanup of the pre-ADR-0021 keys.
+assert_body 'localStorage.removeItem'
+assert_body "localStorage.getItem('man-cgi.remember')"
 assert_body "addEventListener('submit'"
+# The remember opt-in row: revealed by the script (hidden without
+# JS, where it would do nothing), never submitted (no name), and
+# unticked in the cached markup so ticking it is the affirmative
+# act the consent requires.
+assert_body '<div class="remember" hidden>'
+assert_body '<input id="remember" type="checkbox"'
+assert_body 'Remember arch and collection across visits'
+assert_body 'Nothing is sent to the server'
+assert_body_absent 'name="remember"'
+assert_body_absent 'type="checkbox" checked'
+assert_body_absent 'checked>'
+assert_body_before '<div class="remember" hidden>' '<input id="remember"'
 assert_body '<script>'
 assert_body '</script>'
 # The home page is the form, so the command field autofocuses.
@@ -50,7 +66,7 @@ assert_command_autofocus ''
 # is not autofocused; the server does not render it.
 assert_body_absent 'title="Press / to focus"'
 # No URL carried a collection or arch, so neither select has a
-# data-url attribute (which would override the remembered value).
+# data-url attribute (the fallback when nothing is remembered).
 # The bare word still appears in the script, so match the attribute.
 assert_body_absent 'data-url="'
 # The section select stays fully server-rendered on every page.

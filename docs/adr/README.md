@@ -14,8 +14,8 @@ here. Supersede landed records with new ones; never rewrite them.
 | [0005](0005-301-for-canonicalization-redirects.md) | 301 (not 308) for canonicalization redirects | amended by ADR-0015 |
 | [0006](0006-no-etag.md) | No ETag (for now) | accepted |
 | [0007](0007-post-303-no-store.md) | POST form responses are 303 with no-store | accepted |
-| [0008](0008-js-query-form-and-list-endpoints.md) | JS query form fed by plain-text list endpoints | amended by ADR-0018 |
-| [0009](0009-canonical-arch-redirects.md) | Canonical-arch redirects | amended by ADR-0015 |
+| [0008](0008-js-query-form-and-list-endpoints.md) | JS query form fed by plain-text list endpoints | amended by ADR-0018, ADR-0021 |
+| [0009](0009-canonical-arch-redirects.md) | Canonical-arch redirects | amended by ADR-0015, ADR-0021 |
 | [0010](0010-keep-the-shell-cgi.md) | Keep the shell CGI instead of rewriting | accepted |
 | [0011](0011-minlastmod-validator-floor.md) | MINLASTMOD floor folds script changes into Last-Modified | accepted |
 | [0012](0012-multi-match-menus.md) | Menus for multi-match lookups | amended by ADR-0016 |
@@ -23,7 +23,8 @@ here. Supersede landed records with new ones; never rewrite them.
 | [0014](0014-import-the-rcs-history.md) | Import the RCS history of man-cgi as one linear git history | accepted |
 | [0015](0015-short-lived-redirects-and-deterministic-purges.md) | Short-lived redirects and deterministic purges | accepted |
 | [0016](0016-section-from-match-token.md) | Infer the section from the match token | accepted |
-| [0017](0017-collection-index-urls.md) | Collection index URLs | accepted |
+| [0017](0017-collection-index-urls.md) | Collection index URLs | amended by ADR-0021 |
 | [0018](0018-autofocus-home-only-slash-focuses.md) | Autofocus on the home page only; / focuses the command field | accepted |
 | [0019](0019-python-tooling-and-log-format-extension.md) | Python for tooling, stdlib only; bin/ CLI over lib/ package; append-only log-format extension | accepted |
 | [0020](0020-reject-junk-at-nginx-with-maps.md) | Reject junk requests at nginx with maps and client-error statuses | accepted |
+| [0021](0021-session-storage-and-stored-value-precedence.md) | Session-scoped storage, remembered value over the URL's | accepted |
