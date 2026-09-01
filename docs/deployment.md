@@ -20,9 +20,10 @@ workflow:
    the signature), bump `MINLASTMOD` to the commit time in the
    same commit: it floors every `Last-Modified`, so cached
    objects revalidate to the new output as they expire (ADR-0011).
-5. Bump `MANCGI_DATE` (its own commit) when observable output
-   changed; it is visible in `X-Powered-By` on the health check and
-   in the page signature, which makes deployed-version checks easy.
+5. Bump `MANCGI_DATE` when observable output changed; any commit
+   of the change may carry it. It is visible in `X-Powered-By` on
+   the health check and in the page signature, which makes
+   deployed-version checks easy.
 6. `make dist-qa` installs the script on the QA vhost
    (man.oxygene.qa.nxrns.org — uncached, no rate limits, serves the
    production man tree); `make smoke-qa` checks the response
