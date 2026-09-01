@@ -26,7 +26,7 @@ by Surrogate-Key at any time).
 |-------|------------------------|------------------------|---------------------------|
 | current / -BRANCH page | `public, max-age=3600` | 3600 | `max-age=86400, stale-while-revalidate=3600, stale-if-error=604800` |
 | release page | `public, max-age=86400` | 86400 | `max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800` |
-| home page | `public, max-age=7200` | 7200 | `max-age=86400, stale-while-revalidate=3600, stale-if-error=604800` |
+| home page / index | `public, max-age=3600` | 3600 | `max-age=86400, stale-while-revalidate=3600, stale-if-error=604800` |
 | 404 | `public, max-age=3600` | 3600 | `max-age=86400, stale-if-error=86400` |
 | 302 collection fallback | `public, max-age=3600` | 10800 | `max-age=86400, stale-if-error=86400` |
 | 301 canonicalization | `public, max-age=86400` | 86400 | `max-age=2592000, stale-if-error=604800` |

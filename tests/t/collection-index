@@ -32,8 +32,8 @@ assert_exit 0
 assert_no_header '^Status:'
 assert_header '^Content-Type: text/html; charset=windows-1252$'
 assert_header "^Last-Modified: ${LM_REL_MDOC}\$"
-assert_header '^Cache-Control: public, max-age=7200$'
-assert_header '^X-Accel-Expires: 7200$'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800$'
 assert_header '^Surrogate-Key: all home coll:NetBSD-10.1$'
 assert_body '<title>NetBSD Manual Pages</title>'

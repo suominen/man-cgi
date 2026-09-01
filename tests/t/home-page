@@ -24,8 +24,8 @@ assert_exit 0
 assert_no_header '^Status:'
 assert_header '^Content-Type: text/html; charset=windows-1252$'
 assert_header "^Last-Modified: ${LM_BUILD}\$"
-assert_header '^Cache-Control: public, max-age=7200$'
-assert_header '^X-Accel-Expires: 7200$'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=86400, stale-while-revalidate=3600, stale-if-error=604800$'
 assert_no_header '^X-Powered-By:'
 assert_body '<title>NetBSD Manual Pages</title>'
@@ -89,7 +89,8 @@ run_cgi ''
 assert_exit 0
 assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_BUILD}\$"
-assert_header '^Cache-Control: public, max-age=7200$'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
 assert_body 'href="/afterboot.8"'
 
 test_done

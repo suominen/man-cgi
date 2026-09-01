@@ -104,8 +104,8 @@ LASTMODFILE="$MANROOT/NetBSD-current/build"
 # chrome, error bodies. Signature and MANCGI_DATE changes do not
 # qualify.
 #
-# 2026-09-01 07:00:34 UTC
-MINLASTMOD=${MANCGI_MINLASTMOD:-1788246034}
+# 2026-09-01 08:02:53 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1788249773}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -1040,9 +1040,11 @@ emit_cache_headers()
 	surrogate='max-age=30'
 	;;
     home)
-	# 2 hours; a day at Fastly
-	expsecs=7200
-	accel=7200
+	# 1 hour; a day at Fastly -- the current-page lifetimes: home
+	# and index bodies are script chrome (the query form), which
+	# changes with the script, not with a frozen release
+	expsecs=3600
+	accel=3600
 	surrogate='max-age=86400, stale-while-revalidate=3600'
 	surrogate="${surrogate}, stale-if-error=604800"
 	;;

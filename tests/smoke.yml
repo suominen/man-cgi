@@ -22,7 +22,7 @@ checklist:
 - path: /
   type: text/html
   headers:
-    cache-control: "public, max-age=7200"
+    cache-control: "public, max-age=3600"
     last-modified: present
   revalidate: true
 
@@ -63,7 +63,7 @@ checklist:
 - path: /NetBSD-10.1/
   type: text/html
   headers:
-    cache-control: "public, max-age=7200"
+    cache-control: "public, max-age=3600"
     last-modified: present
   revalidate: true
 
