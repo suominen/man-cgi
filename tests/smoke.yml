@@ -46,14 +46,14 @@ checklist:
   code: 301
   location: /ls.1
   headers:
-    cache-control: "public, max-age=86400"
+    cache-control: "public, max-age=3600"
 
 # Release-collection page. (Will 302 to the branch when the 10.1
 # directory is eventually retired - update to a newer release then.)
 - path: /NetBSD-10.1/ls.1
   type: text/html
   headers:
-    cache-control: "public, max-age=86400"
+    cache-control: "public, max-age=3600"
     last-modified: present
   revalidate: true
 
@@ -71,14 +71,14 @@ checklist:
   code: 301
   location: /NetBSD-10.1/
   headers:
-    cache-control: "public, max-age=86400"
+    cache-control: "public, max-age=3600"
 
 # An architecture with no page name goes to the collection's index.
 - path: /i386/
   code: 301
   location: /
   headers:
-    cache-control: "public, max-age=86400"
+    cache-control: "public, max-age=3600"
 
 # Branch-collection page. (Dies when the 10 branch EOLs - update.)
 - path: /NetBSD-10.x-BRANCH/ls.1
@@ -101,7 +101,7 @@ checklist:
   code: 301
   location: /ls.1
   headers:
-    cache-control: "public, max-age=86400"
+    cache-control: "public, max-age=3600"
 
 # Legacy query-string URL canonicalizes permanently.
 - path: /cgi-bin/man-cgi?ls+1

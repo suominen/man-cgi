@@ -30,7 +30,7 @@ assert_header '^Status: 302 Found$'
 assert_no_header '^Status: 304'
 assert_header '^Location: https://man.netbsd.org/NetBSD-9.x-BRANCH/ls.1$'
 assert_header '^Cache-Control: public, max-age=3600$'
-assert_header '^X-Accel-Expires: 10800$'
+assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=86400, stale-if-error=86400$'
 assert_no_header '^Last-Modified:'
 assert_body 'Goto:'
@@ -42,8 +42,8 @@ run_cgi /i386/i386/ls.1
 assert_exit 0
 assert_header '^Status: 301 Moved Permanently$'
 assert_header '^Location: https://man.netbsd.org/i386/ls.1$'
-assert_header '^Cache-Control: public, max-age=86400$'
-assert_header '^X-Accel-Expires: 86400$'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=2592000, stale-if-error=604800$'
 
 test_done

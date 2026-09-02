@@ -23,8 +23,8 @@ run_cgi /NetBSD-10.1/ls.1
 assert_exit 0
 assert_no_header '^Status:'
 assert_header "^Last-Modified: ${LM_REL_LS1}\$"
-assert_header '^Cache-Control: public, max-age=86400$'
-assert_header '^X-Accel-Expires: 86400$'
+assert_header '^Cache-Control: public, max-age=3600$'
+assert_header '^X-Accel-Expires: 3600$'
 assert_header '^Surrogate-Control: max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800$'
 assert_header '^Surrogate-Key: all coll:NetBSD-10.1 page:NetBSD-10.1:ls.1$'
 assert_body 'rel="canonical" href="https://man.netbsd.org/NetBSD-10.1/ls.1"'

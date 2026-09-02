@@ -18,18 +18,21 @@ CGI's `emit_cache_headers` function:
 The guiding principle: **browsers cache briefly** (they cannot be
 purged), **nginx briefly** (an expired entry costs only a 304
 revalidation, and purging nginx is crude), **Fastly long** (purgeable
-by Surrogate-Key at any time).
+by Surrogate-Key at any time). Since ADR-0022 every cacheable
+content class shares the hourly browser and nginx lifetimes, so the
+classes differ only at the Fastly tier; the health check (30 s
+everywhere) and the uncacheable POST 303 stand apart.
 
 ## TTL policy
 
 | Class | Cache-Control (browser) | X-Accel-Expires (nginx) | Surrogate-Control (Fastly) |
 |-------|------------------------|------------------------|---------------------------|
 | current / -BRANCH page | `public, max-age=3600` | 3600 | `max-age=86400, stale-while-revalidate=3600, stale-if-error=604800` |
-| release page | `public, max-age=86400` | 86400 | `max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800` |
+| release page | `public, max-age=3600` | 3600 | `max-age=7776000, stale-while-revalidate=86400, stale-if-error=604800` |
 | home page / index | `public, max-age=3600` | 3600 | `max-age=86400, stale-while-revalidate=3600, stale-if-error=604800` |
 | 404 | `public, max-age=3600` | 3600 | `max-age=86400, stale-if-error=86400` |
-| 302 collection fallback | `public, max-age=3600` | 10800 | `max-age=86400, stale-if-error=86400` |
-| 301 canonicalization | `public, max-age=86400` | 86400 | `max-age=2592000, stale-if-error=604800` |
+| 302 collection fallback | `public, max-age=3600` | 3600 | `max-age=86400, stale-if-error=86400` |
+| 301 canonicalization | `public, max-age=3600` | 3600 | `max-age=2592000, stale-if-error=604800` |
 | api lists (`/api/v1/*`) | `public, max-age=3600` | 3600 | `max-age=604800, stale-while-revalidate=3600, stale-if-error=604800` |
 | health check | `public, max-age=30` | 30 | `max-age=30` |
 | 303 (POST form) | `no-store` | — | — |

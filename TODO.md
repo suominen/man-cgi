@@ -85,9 +85,11 @@ Open ideas and known defects not part of any scheduled effort.
   `hp300` 74 k): crawlers walking the collection × arch × name
   cross-product, not readers. Not an nginx-pattern problem — the
   URLs are valid. Options: serve the canonical body directly with a
-  `Content-Location`, raise the redirect TTLs (ADR-0015 went the
-  other way for purge determinism), or steer crawlers (robots.txt
-  rules for arch-prefixed paths; `Crawl-delay`).
+  `Content-Location`, or steer crawlers (robots.txt rules for
+  arch-prefixed paths; `Crawl-delay`). Raising the redirect TTLs is
+  off the table at the browser and nginx tiers (ADR-0015 shortened
+  them for purge determinism, ADR-0022 to bound staleness in the
+  unpurgeable tiers); the Fastly hold is already 30 days.
 - `/s/netbsd.ico` 404s (15 requests plus 16 error-log lines in the
   fortnight): the page links `/s/${CNAME:-$OSNAME}.ico`, so the file
   either is missing in lowercase or the reference is being

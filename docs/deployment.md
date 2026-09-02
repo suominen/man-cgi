@@ -50,7 +50,7 @@ workflow:
 9. Redirects are the other exception to step 8. nginx does not
    revalidate them conditionally (`tests/nginx-lab/`), so no
    `MINLASTMOD` bump reaches them; they refresh only when their
-   nginx entry expires — a day for 301s, 3 hours for 302s. If the
+   nginx entry expires — an hour for either kind (ADR-0022). If the
    change makes any URL stop redirecting, or redirect somewhere
    else, wait that out, then `manno-purge redirect` and confirm at
    the edge (runbook, "Redirect changes"). No wipe.

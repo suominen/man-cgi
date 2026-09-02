@@ -55,7 +55,7 @@
 # sanitizers see them. Nothing in this script globs.
 set -f
 
-MANCGI_DATE=2026-09-01
+MANCGI_DATE=2026-09-02
 
 ### CONFIGURATION SECTION : change the following variables to fit your needs ###
 
@@ -104,8 +104,8 @@ LASTMODFILE="$MANROOT/NetBSD-current/build"
 # chrome, error bodies. Signature and MANCGI_DATE changes do not
 # qualify.
 #
-# 2026-09-01 08:02:53 UTC
-MINLASTMOD=${MANCGI_MINLASTMOD:-1788249773}
+# 2026-09-02 04:58:36 UTC
+MINLASTMOD=${MANCGI_MINLASTMOD:-1788325116}
 
 ### END OF CONFIGURATION SECTION ###############################################
 
@@ -1004,8 +1004,8 @@ END
 }
 
 # Emit the caching headers for a response of the given content
-# class: health, home, redirect-found, redirect-permanent, page,
-# or notfound.
+# class: api, api-notfound, health, home, redirect-found,
+# redirect-permanent, page, menu, or notfound.
 emit_cache_headers()
 {
     local accel class coll expdate expires expsecs keys surrogate
@@ -1025,11 +1025,16 @@ emit_cache_headers()
     # for what has to stop soon anyway (404s, the 302 of ADR-0015),
     # and none for the health check, which must not report stale
     # health.
+    #
+    # Browsers and nginx hold every content class for an hour
+    # (ADR-0022); only the health check overrides. The Fastly
+    # lifetime is what distinguishes the classes.
+    expsecs=3600
+    accel=3600
+
     case "${class}" in
     api)
-	# 1 hour; a week at Fastly
-	expsecs=3600
-	accel=3600
+	# A week at Fastly
 	surrogate='max-age=604800, stale-while-revalidate=3600'
 	surrogate="${surrogate}, stale-if-error=604800"
 	;;
@@ -1040,59 +1045,46 @@ emit_cache_headers()
 	surrogate='max-age=30'
 	;;
     home)
-	# 1 hour; a day at Fastly -- the current-page lifetimes: home
-	# and index bodies are script chrome (the query form), which
+	# A day at Fastly -- the current-page lifetimes: home and
+	# index bodies are script chrome (the query form), which
 	# changes with the script, not with a frozen release
-	expsecs=3600
-	accel=3600
 	surrogate='max-age=86400, stale-while-revalidate=3600'
 	surrogate="${surrogate}, stale-if-error=604800"
 	;;
     notfound|api-notfound)
-	# 1 hour; a day at Fastly (a rebuild can add the page)
-	expsecs=3600
-	accel=3600
+	# A day at Fastly (a rebuild can add the page)
 	surrogate='max-age=86400, stale-if-error=86400'
 	;;
     redirect-found)
-	# 1 hour for browsers (the tier that cannot be purged), 3
-	# hours at nginx, a day at Fastly: this is the "not yet a
-	# release" redirect, and it has to stop within hours of the
-	# release tree landing (ADR-0015). It is also the cheapest
-	# response the script makes, emitted before man -w, so a
-	# refetch costs less than a 404 revalidation.
-	expsecs=3600
-	accel=10800
+	# A day at Fastly: this is the "not yet a release"
+	# redirect, and it has to stop within hours of the release
+	# tree landing (ADR-0015, ADR-0022). It is also the
+	# cheapest response the script makes, emitted before
+	# man -w, so a refetch costs less than a 404 revalidation.
 	surrogate='max-age=86400, stale-if-error=86400'
 	;;
     redirect-permanent)
-	# 24 hours for browsers and nginx; 30 days at Fastly, where
-	# the redirect key purges. nginx never revalidates a cached
-	# redirect, so its expiry is a full refetch -- cheap, at most
-	# one man -w -- and a day bounds how long a redirect that
-	# should no longer exist keeps being served (ADR-0015). 301
-	# is in Fastly's default-cacheable status set; 308 was not,
+	# 30 days at Fastly, where the redirect key purges. nginx
+	# never revalidates a cached redirect, so its expiry is a
+	# full refetch -- cheap, at most one man -w -- and the hour
+	# bounds how long a redirect that should no longer exist
+	# keeps being served (ADR-0022, amending ADR-0015). 301 is
+	# in Fastly's default-cacheable status set; 308 was not,
 	# which is why these redirects are 301s (ADR-0005).
-	expsecs=86400
-	accel=86400
 	surrogate='max-age=2592000, stale-if-error=604800'
 	;;
     *)
 	# page: the resolved collection decides
 	case "${coll}" in
 	*-current|*-BRANCH)
-	    # Rebuilt frequently: 1 hour for browsers and nginx,
-	    # a day at Fastly
-	    expsecs=3600
-	    accel=3600
+	    # Rebuilt frequently: a day at Fastly
 	    surrogate='max-age=86400, stale-while-revalidate=3600'
 	    surrogate="${surrogate}, stale-if-error=604800"
 	    ;;
 	*)
-	    # Frozen release: a day for browsers and nginx,
-	    # 90 days at Fastly
-	    expsecs=86400
-	    accel=86400
+	    # Frozen release: 90 days at Fastly -- frozen pages
+	    # revalidate by the same 304 path current pages
+	    # already exercise hourly (ADR-0022)
 	    surrogate='max-age=7776000, stale-while-revalidate=86400'
 	    surrogate="${surrogate}, stale-if-error=604800"
 	    ;;

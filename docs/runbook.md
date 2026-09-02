@@ -172,11 +172,11 @@ below.
 Until the release tree exists, `/NetBSD-N.M/...` 302s to
 `NetBSD-N.x-BRANCH` (or to NetBSD-current for an N.0 with no
 branch). Those 302s are keyed by the collection they *point at*,
-not the one requested, and are held 3 hours at nginx and a day at
-Fastly (ADR-0015).
+not the one requested, and are held an hour at nginx and a day at
+Fastly (ADR-0015, ADR-0022).
 
 1. The release tree lands in `$MANROOT/NetBSD-N.M/`.
-2. Wait 3 hours (the 302's nginx TTL).
+2. Wait an hour (the 302's nginx TTL).
 3. `manno-purge redirect` (the `coll:` key of the collection the
    302s pointed at covers them too).
 4. Confirm `/NetBSD-N.M/ls.1` answers 200 at the edge.
@@ -191,14 +191,14 @@ measured in `../tests/nginx-lab/`, it neither sends
 `If-Modified-Since` upstream when a cached 301 expires nor answers
 a client's conditional with 304, where the identical setup does
 both for a 200. So a `MINLASTMOD` bump never reaches them; they
-refresh only by expiring — a day for 301s, 3 hours for 302s. When
+refresh only by expiring — an hour for either kind (ADR-0022). When
 a deploy makes any URL stop redirecting, or redirect somewhere
 else (multi-match menus, ADR-0012, are the worked example: every
 sectionless URL they answer, such as `/printf` and `/i386/apm`,
 was previously a cached 301), or when a 301 turns out to be wrong:
 
 1. Deploy (or fix).
-2. Wait a day (the 301's nginx TTL), or remove the affected
+2. Wait an hour (the 301's nginx TTL), or remove the affected
    entries at nginx ("Removing one class of entries" above).
 3. `manno-purge redirect`.
 4. Confirm at the edge: status and `Location` against the QA
@@ -214,8 +214,8 @@ was previously a cached 301), or when a 301 turns out to be wrong:
    home page's validator).
 2. `manno-purge coll:<collection>` (soft).
 3. Nothing else: nginx entries revalidate as they expire (at most
-   1 h for current/branch, 24 h for releases), and pages whose
-   files changed get fresh bodies on the next fill.
+   1 h for every collection, ADR-0022), and pages whose files
+   changed get fresh bodies on the next fill.
 4. If the rebuild must be visible *immediately* at every tier, wipe
    nginx too — rarely worth it.
 

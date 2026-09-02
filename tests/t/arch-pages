@@ -39,7 +39,7 @@ run_cgi /i386/ls.1
 assert_exit 0
 assert_header '^Status: 301 Moved Permanently$'
 assert_header '^Location: https://man.netbsd.org/ls.1$'
-assert_header '^Cache-Control: public, max-age=86400$'
+assert_header '^Cache-Control: public, max-age=3600$'
 assert_header '^Surrogate-Key: all redirect coll:NetBSD-current$'
 
 # The canonical MI URL itself serves.
