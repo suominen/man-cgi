@@ -267,7 +267,7 @@ STATUS_NOTES = {
     '400': 'the $qs_error map (ADR-0020); without a query string, a request nginx could not parse',
     '404': 'a page the CGI did not find, or the nginx probe and grammar maps (ADR-0020); cache= tells them apart (Backend reach)',
     '405': 'the method map (ADR-0020): GET, HEAD, and POST only to / and /cgi-bin/man-cgi',
-    '429': 'nginx limit_req, keyed on the Fastly POP address',
+    '429': 'nginx limit_req (per-address zone keyed on the Fastly POP address before 2026-09-03, on the end client since)',
     '499': 'client closed the connection before the response',
     '501': 'before ADR-0020: the per-path nginx rule for probe paths (*.php, *.cgi, wp-includes, ...)',
     '503': 'upstream unavailable; with a query string before ADR-0020, the $qs_error map',
@@ -423,8 +423,9 @@ def section_browser(tree, meta):
            table(['Family', 'Requests'], b['ua_families'], numeric={1})]
     if c['per_day_cdn']:
         out.append('<h3>Per CDN address per day: requests and distinct paths</h3>'
-                   '<p class="note">Until the real client address is logged, each row '
-                   'is a Fastly POP, so breadth here measures the POP, not a user.</p>')
+                   '<p class="note">Before 2026-09-03 the real client address was not '
+                   'logged: each row for those days is a Fastly POP, so breadth '
+                   'measures the POP, not a user.</p>')
         rows = []
         for day, ips in c['per_day_cdn'].items():
             for ip, v in sorted(ips.items(), key=lambda kv: -kv[1]['requests'])[:5]:
@@ -589,12 +590,12 @@ def section_clients(tree, meta, lookup=None):
     out = [f"<p>{fmt_int(c['cdn_requests'])} requests ({pct(c['cdn_requests'], t)}) "
            'came from CDN addresses, '
            f"{fmt_int(c['non_cdn_requests'])} from other addresses.</p>",
-           '<p class="note">Until the man.netbsd.org vhost carries the '
-           '<code>fastly</code> include (real client address from '
-           '<code>X-Forwarded-For</code>), nearly every request shows a '
-           'Fastly POP address here, so the CDN share is expected to sit '
-           'at ~100% and this table describes POPs, not users. After the '
-           'include lands, the CDN share should drop to ~0%.</p>']
+           '<p class="note">Before 2026-09-03 the man.netbsd.org vhost did not '
+           'carry the <code>fastly</code> include (real client address from '
+           '<code>X-Forwarded-For</code>), so records from before that date '
+           'show a Fastly POP address here and push the CDN share toward '
+           '100%; since then the rows are end clients and the CDN share '
+           'should sit near 0%.</p>']
     rows = []
     for e in c['top']:
         row = [e['ip'], 'CDN' if e['cdn'] else '', e['requests'],

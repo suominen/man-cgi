@@ -194,18 +194,32 @@ accepted and refused shapes and runs it against the map files.
 
 ## Rate limiting
 
-`limit_req` keys on `$binary_remote_addr`, which is a Fastly
-address (the `real_ip` include is deliberately not applied); with
-shielding, most traffic arrives from one POP and shares that
-budget. This is intentional — revisit if 429s
-become a problem: in the 2026-08-14..28 logs, 122 k of 125 k
-rejections came from the site-wide `server` zone during crawler
-storms, all of them well-formed page URLs (junk is rejected in
-`location /`, before the `/cgi-bin/` location that carries
-`limit_req`). Note that `limit_req` rejects in nginx's
-preaccess phase, before the cache is consulted, so nothing masks
-those 429s (the `use_stale http_429` directive only covers a 429
-from the FastCGI upstream, which man-cgi never emits).
+Two `limit_req` zones apply to the man-cgi location: `ip`, keyed on
+`$binary_remote_addr` (3 r/s, burst 15, `nodelay`), and the
+site-wide `server`, keyed on `$server_name` (50 r/s, burst 75).
+Since 2026-09-03 the vhost carries `include fastly`
+(`/etc/nginx/fastly`: `set_real_ip_from` for Fastly's published
+ranges, `real_ip_header X-Forwarded-For` and `real_ip_recursive on`,
+which is what resolves the shield's two-hop header to the client;
+rendered in `~/src/cloud` from
+`cdn.j2` and `roles/common/defaults/main/cdns.yml`, and added to the
+vhost by `includes: [fastly]` on the site's entry in
+`group_vars/all.yml`), so `$remote_addr` is the end client and the
+`ip` zone budgets each client separately. Before that the include
+was deliberately left out and the key was the connecting Fastly
+address; with shielding, most traffic arrived from one POP and
+shared that budget. The 2026-08-14..28 logs are the baseline for
+what the change can and cannot move: 122 k of 125 k rejections came
+from the `server` zone during crawler storms, all of them
+well-formed page URLs (junk is rejected in `location /`, before the
+`/cgi-bin/` location that carries `limit_req`), and the `ip` zone
+fired 3.1 k times, on the 15 shield-POP addresses. The `server`
+budget is unchanged by `real_ip`, so those 429s remain a
+crawler-vs-reader question; what the change buys is a per-client
+zone that can single out a crawler. Note that `limit_req` rejects
+in nginx's preaccess phase, before the cache is consulted, so
+nothing masks those 429s (the `use_stale http_429` directive only
+covers a 429 from the FastCGI upstream, which man-cgi never emits).
 
 ## References
 
@@ -240,7 +254,7 @@ directives are all on one page; the anchors name them.
   with `limit_req_status`, 503 by default, 429 here):
   <https://nginx.org/en/docs/http/ngx_http_limit_req_module.html>
 - `ngx_http_realip_module` (`set_real_ip_from`, `real_ip_header`),
-  the include deliberately not applied:
+  the `fastly` include, applied since 2026-09-03:
   <https://nginx.org/en/docs/http/ngx_http_realip_module.html>
 
 That nginx withholds client conditionals from the FastCGI backend

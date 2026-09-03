@@ -24,16 +24,6 @@ Open ideas and known defects not part of any scheduled effort.
 - Unify cache keys for legacy query-string URLs vs path URLs (nginx
   cache key is `$request_method$request_uri`; the 301 canonicalization
   already migrates traffic).
-- Apply the Fastly `real_ip` list so `limit_req` keys on end-client
-  addresses instead of Fastly POP addresses (current per-POP limiting
-  is intentional). The 2026-08-14..28 logs: 122 k of the 125 k
-  `limit_req` rejections came from the site-wide `server` zone
-  during crawler storms, every one of them a well-formed page URL;
-  the per-address zone fired 3.1 k times, on the 15 shield-POP
-  addresses that all traffic arrives from. Junk never reaches the
-  limiter (ADR-0020 rejects it in `location /`, ahead of the
-  `/cgi-bin/` location that carries `limit_req`), so the 429s are
-  purely a crawler-vs-reader budget question.
 - Align lcm's cache disk device with oxygene: the cache filesystem is
   `ld3a` on lcm but `ld2a` on oxygene, which invites wipe-procedure
   mistakes.

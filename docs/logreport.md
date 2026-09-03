@@ -144,8 +144,9 @@ The report has twelve sections, in this order:
   specific to this service, a note: `301` is canonicalization and
   legacy-URL redirection (ADR-0005, ADR-0015); `304` is a
   conditional-revalidation hit (ADR-0003); `429` is nginx's
-  `limit_req`, currently keyed on the Fastly POP address rather
-  than the end client (see "Extending the log format" below);
+  `limit_req` (its per-address zone keyed on the Fastly POP address
+  before 2026-09-03, on the end client since; see "Extending the
+  log format" below);
   `499` means the client closed the connection before nginx could
   answer; `400` is the `$qs_error` map (ADR-0020) — without a
   query string, a request nginx could not parse; `404` is either a
@@ -283,18 +284,19 @@ The report has twelve sections, in this order:
   counted per day up to a cap of 2 000 distinct paths, after which
   counting stops: a client past the cap is shown as `≥ 2 000`, a
   floor rather than a count, in both this table and the
-  per-CDN-address one under "Browser-like traffic signals". Right
-  now this section's CDN share is expected to sit at (or very
-  near) 100%:
-  every request nginx sees currently arrives with Fastly's own
-  connecting address as `$remote_addr`, because the `fastly` include
-  that restores the real end-client address has not been applied to
-  the man.netbsd.org vhost yet (see "Extending the log format"
-  below). Until it lands, this section mostly measures Fastly POPs,
-  not end clients; the per-CDN-address breadth table under
-  "Browser-like traffic signals" says so explicitly. Country and ASN
-  columns only appear when a lookup database was found (see "Lookup
-  databases" below).
+  per-CDN-address one under "Browser-like traffic signals". For
+  records before 2026-09-03 the CDN share sits at (or very near)
+  100%: every request nginx saw arrived with Fastly's own
+  connecting address as `$remote_addr`, so the section measured
+  Fastly POPs, not end clients, and the per-CDN-address breadth
+  table under "Browser-like traffic signals" says so explicitly.
+  Since that date the vhost's `fastly` include restores the
+  end-client address (see "Extending the log format" below), so
+  the CDN share should be near zero for later records; a window
+  spanning the date shows both regimes, and a CDN address after it
+  is a range nginx did not trust (see "CDN ranges" below). Country
+  and ASN columns only appear when a lookup database was found
+  (see "Lookup databases" below).
 - **Content** — the most-requested pages, by collection, section,
   and architecture; the same for 404s; and redirects broken down by
   route.
@@ -371,26 +373,22 @@ follow the same append-only rule — add them after the user agent,
 never insert or reorder — so old and new logs keep parsing together
 without a version flag.
 
-Separately, the man.netbsd.org vhost does not yet forward the real
-client address through Fastly. That fix lives entirely in the
-`~/src/cloud` Ansible tree, not in this repository, and not in a
-generated file: vhosts are rendered by
-`roles/common/templates/nginx/sites-available/fqdn.j2`, which emits
-an `include NAME;` line for each entry of a site's `includes:` list
-(see `host_vars/banff.yml` for a site that already sets
-`includes: [localnets]`). man.netbsd.org's site config is
-`website_configurations['man.netbsd.org']` in `group_vars/all.yml`,
-and it currently has no `includes:` key at all. The fix is to add
-`includes: [fastly]` to that entry and apply the playbook to
-oxygene; the `fastly` file itself (`/etc/nginx/fastly`, carrying
-`set_real_ip_from` for Fastly's published ranges and
-`real_ip_header X-Forwarded-For`) is already generated from that
+Separately, since 2026-09-03 the man.netbsd.org vhost forwards the
+real client address through Fastly: `$remote_addr` is the end
+client, not the connecting Fastly POP. That lives entirely in the
+`~/src/cloud` Ansible tree, not in this repository: vhosts are
+rendered by `roles/common/templates/nginx/sites-available/fqdn.j2`,
+which emits an `include NAME;` line for each entry of a site's
+`includes:` list, and man.netbsd.org's entry
+(`website_configurations['man.netbsd.org']` in `group_vars/all.yml`)
+carries `includes: [fastly]`. The `fastly` file itself
+(`/etc/nginx/fastly`: `set_real_ip_from` for Fastly's published
+ranges, `real_ip_header X-Forwarded-For`, `real_ip_recursive on`)
+is generated from that
 tree's `cdn.j2` template and `roles/common/defaults/main/cdns.yml`
-data, so nothing else needs
-to change on the nginx side. Once the include is in place,
-`$remote_addr` becomes the actual client address instead of the
-connecting Fastly POP, and the Clients and Browser-like traffic
-signals sections stop being dominated by CDN addresses.
+data. Log lines from before that date carry POP addresses, so the
+Clients and Browser-like traffic signals sections read differently
+on either side of it (see "Reading the report" above).
 
 ## Dependencies
 
