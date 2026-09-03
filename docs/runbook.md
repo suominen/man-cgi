@@ -42,7 +42,7 @@ page at manage.fastly.com (also in its URL).
 
 | Key | Purge when |
 |-----|------------|
-| `coll:<collection>` | That collection's man tree was rebuilt. The common case: `manno-purge coll:NetBSD-current` after the daily build pull. Covers the collection's pages, 404s (a rebuild can add a page that 404'd), multi-match menus, and redirects. |
+| `coll:<collection>` | That collection's man tree was rebuilt, or removed ("Collection retirement procedure"). The common case: `manno-purge coll:NetBSD-current` after the daily build pull. Covers the collection's pages, index, 404s (a rebuild can add a page that 404'd), multi-match menus, and redirects — its own 301s and the 302s that point at it. |
 | `page:<coll>:<cmd>.<sect>` | One page needs refreshing; hits all its arch aliases at once (the key is arch-free). |
 | `page:<coll>:<cmd>` | The sectionless form: one command's multi-match menu (ADR-0012). Purge it alongside the `.<sect>` keys when a name gains or loses a page in another section or arch. |
 | `form` | `archlist` or `colllist` changed. Since the JS query form (ADR-0008) only the three `/api/v1` list objects carry it; pages no longer embed the lists. |
@@ -50,8 +50,8 @@ page at manage.fastly.com (also in its URL).
 | `home` | The home page, or a collection's index (`/<coll>/`, ADR-0017), needs refreshing. |
 | `notfound` | Mass-refresh of 404s. |
 | `menu` | Mass-refresh of multi-match menus, e.g. after changing how they render. |
-| `redirect` | Redirect logic changed, or a collection appeared/disappeared. |
-| `arch:<arch>` | An architecture was retired from `archlist`. |
+| `redirect` | Redirect logic changed, or a collection appeared/disappeared (the release and retirement procedures). The `coll:` key of the collection the 302s point at reaches those too, and is the cheaper purge. |
+| `arch:<arch>` | An architecture was retired from `archlist`. Its arch-prefixed 301s carry no arch key (redirects are keyed `redirect coll:<coll>` only), so purge `redirect` too; and refresh `lib/manno_logreport/data/arches` (`logreport.md`). |
 | `all` | Everything (soft). The safe whole-site refresh; Fastly's own purge-all is hard-only. |
 
 Multiple keys per invocation are fine; a failed key is reported and
@@ -182,7 +182,8 @@ Fastly (ADR-0015, ADR-0022).
 4. Confirm `/NetBSD-N.M/ls.1` answers 200 at the edge.
 
 That makes the release reachable by URL; listing it is the
-colllist change below.
+colllist change below. Retiring a branch is the reverse
+("Collection retirement procedure").
 
 ## Redirect changes
 
@@ -224,8 +225,66 @@ was previously a cached 301), or when a 301 turns out to be wrong:
 1. Edit the lists (the Makefile in `$MANROOT` regenerates them).
 2. `manno-purge form` — refreshes the `/api/v1` list objects, which
    is all that embeds the lists since the JS query form (ADR-0008).
-   Browsers pick the change up within the objects' 1-hour
-   Cache-Control.
+   Their validator is the list files' mtime, so the ordering rule
+   applies: purge after nginx's hour, or the old list refills for a
+   week. (`api` would purge the same three objects plus their 404s,
+   which a list change does not need.) Browsers pick the change up
+   within the objects' 1-hour Cache-Control.
+
+## Collection retirement procedure
+
+The reverse of the release procedure: a branch reaches end of
+support and its tree goes (release trees stay). A collection is
+served iff `$MANROOT/<coll>/` exists, so removing the directory
+turns every URL under it into a 404 keyed `notfound coll:<coll>`
+with no validator (the collection's `tmac/mdoc.local` went with
+it): its pages, index and menus, the no-name URLs that used to 301
+to its index (ADR-0017), and its arch-prefixed page URLs (nothing
+is found, so nothing is canonicalized). A trailing slash or an
+extra component on a page URL still 301s, to a 404; those carry
+`redirect coll:<coll>` and purge with the rest. The
+`/NetBSD-N.M/...` 302s that pointed at it become 404s keyed by
+their own name. Nothing redirects to a surviving release.
+
+1. Remove the branch's build-pull cron job (the pull script leaves
+   nothing else behind).
+2. On oxygene, remove `$MANROOT/<coll>/` and run `make -C $MANROOT`,
+   which regenerates the lists, installs the ones that changed and
+   prints which: `colllist` always; `archlist` only if an arch
+   existed in no other collection, which retires the arch too —
+   then add `arch:<arch> redirect` to the purge in step 4 and refresh
+   `lib/manno_logreport/data/arches` (`logreport.md`).
+3. On lcm, remove the same directory by hand *before* running
+   `site-rsync man-www` there: the sync carries the regenerated
+   lists but caps the number of removals and fails on the non-empty
+   directory (`deployment.md`). Both hosts must be done before the
+   purge: a purge-triggered fetch that Fastly routes to a host still
+   holding the tree refills the old objects from it.
+4. On oxygene (where the purge token lives), schedule the purge
+   now, for after the nginx hour of every class (ADR-0022), counted
+   from the later of the two removals:
+
+       echo manno-purge form coll:<coll> | at now + 1 hour
+
+   Purging earlier re-caches the old objects from nginx ("Purging
+   Fastly" above): pages, index, menus and the 302s for a day, the
+   collection's own 301s for 30 days, the lists for a week.
+   `coll:<coll>` covers the pages, index, menus, 404s, the
+   collection's 301s and the 302s that pointed at it, all keyed by
+   the resolved collection; `form` the list objects. A site-wide
+   `redirect` purge is not needed and would refill every crawled
+   arch 301.
+5. Once the purge has run, confirm at the edge: `/<coll>/ls.1`,
+   `/<coll>/`, `/<coll>/i386/ls.1`, `/<coll>` and, for a release
+   that was never built, `/NetBSD-N.M/ls.1` all answer 404 (an N.0
+   with no tree 302s to NetBSD-current instead), and
+   `/api/v1/colllist` lacks the name. Probe each twice, a minute
+   apart: the classes with `stale-while-revalidate` answer the
+   first fetch after a soft purge with the stale object.
+   `X-Man-Cache: UPDATING` means an nginx refresh was in flight —
+   purge that key again.
+6. `make smoke-prod`, after updating `tests/smoke.yml` if it named
+   the collection (the branch entry's comment says so).
 
 ## Health checks and failover
 

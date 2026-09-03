@@ -48,8 +48,8 @@ checklist:
   headers:
     cache-control: "public, max-age=3600"
 
-# Release-collection page. (Will 302 to the branch when the 10.1
-# directory is eventually retired - update to a newer release then.)
+# Release-collection page. (Release trees are never retired, so this
+# entry outlives the branch one below.)
 - path: /NetBSD-10.1/ls.1
   type: text/html
   headers:
@@ -58,8 +58,7 @@ checklist:
   revalidate: true
 
 # Collection index (ADR-0017): the home page scoped to a release,
-# and the slash-less form canonicalizing to it. (Same retirement
-# caveat as the release page above.)
+# and the slash-less form canonicalizing to it.
 - path: /NetBSD-10.1/
   type: text/html
   headers:
@@ -80,8 +79,10 @@ checklist:
   headers:
     cache-control: "public, max-age=3600"
 
-# Branch-collection page. (Dies when the 10 branch EOLs - update.)
-- path: /NetBSD-10.x-BRANCH/ls.1
+# Branch-collection page. (Dies when the 11 branch is retired -
+# runbook, "Collection retirement procedure" - update to the next
+# branch first.)
+- path: /NetBSD-11.x-BRANCH/ls.1
   type: text/html
   headers:
     cache-control: "public, max-age=3600"

@@ -29,9 +29,13 @@ workflow:
    production man tree); `make smoke-qa` checks the response
    classes there, Surrogate headers included.
 7. `make dist-prod` installs it into the man-www site on oxygene;
-   sync to lcm with `/root/bin/site-rsync man-www` (as root). lcm
-   also runs that sync from cron at 06:53 and 18:53, so a manual
-   run is only needed when the deploy must reach lcm immediately.
+   sync to lcm with `/root/bin/site-rsync man-www` (as root). The
+   sync carries the whole `/p/netbsd/man` tree — the script, htdocs
+   and `$MANROOT` with its lists — but caps the number of removals,
+   so a removed collection directory must be `rm`ed on lcm by hand
+   first (runbook, "Collection retirement procedure"). lcm also
+   runs that sync from cron at 06:53 and 18:53, so a manual run is
+   only needed when the deploy must reach lcm immediately.
    `make smoke-prod` checks the edge.
 8. If the change altered rendered output and `MINLASTMOD` was
    bumped, caches converge on their own: every validator below the
