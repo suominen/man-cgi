@@ -263,8 +263,8 @@ SECTION_IDS = ('summary', 'status', 'traffic', 'routes', 'bots', 'browser',
 
 STATUS_NOTES = {
     '301': 'canonicalization and legacy-URL redirects (ADR-0005, ADR-0015)',
-    '302': 'the collection fallback (ADR-0015): a release with no tree, sent to its branch, or an N.0 to NetBSD-current; nothing else emits 302',
-    '303': 'the query form\'s POST, sent on to the page URL it names; nothing else emits 303',
+    '302': 'the collection fallback (ADR-0015): a release with no tree, sent to its branch, or an N.0 to NetBSD-current',
+    '303': 'the query form\'s POST, sent on to the page URL it names',
     '304': 'conditional revalidation hit (ADR-0003)',
     '400': 'the $qs_error map (ADR-0020); without a query string, a request nginx could not parse',
     '404': 'a page the CGI did not find, or the nginx probe and grammar maps (ADR-0020); cache= tells them apart (Backend reach)',

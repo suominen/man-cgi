@@ -144,10 +144,8 @@ The report has twelve sections, in this order:
   specific to this service, a note: `301` is canonicalization and
   legacy-URL redirection (ADR-0005, ADR-0015); `302` is the
   collection fallback (ADR-0015): a release with no tree, sent to
-  its branch, or an N.0 to NetBSD-current (nothing else emits
-  302); `303` is the query
-  form's POST, sent on to the page URL it names (nothing else
-  emits 303); `304` is a
+  its branch, or an N.0 to NetBSD-current; `303` is the query
+  form's POST, sent on to the page URL it names; `304` is a
   conditional-revalidation hit (ADR-0003); `429` is nginx's
   `limit_req` (its per-address zone keyed on the Fastly POP address
   before 2026-09-03, on the end client since; see "Extending the
