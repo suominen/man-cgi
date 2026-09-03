@@ -142,7 +142,9 @@ The report has twelve sections, in this order:
 - **HTTP status distribution** — a table of every status code seen,
   with its share of requests and, where the code means something
   specific to this service, a note: `301` is canonicalization and
-  legacy-URL redirection (ADR-0005, ADR-0015); `304` is a
+  legacy-URL redirection (ADR-0005, ADR-0015); `303` is the query
+  form's POST, sent on to the page URL it names (nothing else
+  emits 303); `304` is a
   conditional-revalidation hit (ADR-0003); `429` is nginx's
   `limit_req` (its per-address zone keyed on the Fastly POP address
   before 2026-09-03, on the end client since; see "Extending the
