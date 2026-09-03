@@ -117,10 +117,36 @@ class Page(unittest.TestCase):
         html = page('T<', [('s1', 'One<', '<p>x</p>')], '<p>f</p>')
         self.assertTrue(html.startswith('<!DOCTYPE html>'))
         self.assertIn('<title>T&lt;</title>', html)
-        self.assertIn('<a href="#s1">One&lt;</a>', html)
-        self.assertIn('<h2 id="s1">One&lt;</h2>', html)
+        self.assertIn('<a href="#s1">1 One&lt;</a>', html)
+        self.assertIn('<h2 id="s1">1 One&lt;</h2>', html)
         self.assertIn('prefers-color-scheme: dark', html)
         self.assertNotIn('<script', html)
+
+    def test_sections_numbered_in_order(self):
+        html = page('T', [('a', 'A', ''), ('b', 'B', ''), ('c', 'C', '')], '')
+        self.assertIn('<a href="#b">2 B</a>', html)
+        self.assertIn('<h2 id="b">2 B</h2>', html)
+        self.assertIn('<h2 id="c">3 C</h2>', html)
+        # The TOC text carries the number, so the list must not add one.
+        self.assertIn('nav ol { columns: 2; list-style: none;', html)
+
+    def test_subheadings_numbered_within_section(self):
+        second = ('<h3>A</h3><p>x</p><h4>a</h4><h4>b</h4>'
+                  '<h3>B</h3><h4>c</h4>')
+        html = page('T', [('s1', 'One', '<h3>Z</h3><h4>z</h4>'),
+                          ('s2', 'Two', second),
+                          ('s3', 'Three', '<p>plain</p>')], '')
+        self.assertIn('<h3>1.1 Z</h3><h4>1.1.1 z</h4>', html)
+        # Both counters restart in the next section.
+        self.assertIn('<h3>2.1 A</h3><p>x</p><h4>2.1.1 a</h4><h4>2.1.2 b</h4>', html)
+        # The h4 counter restarts under the next h3.
+        self.assertIn('<h3>2.2 B</h3><h4>2.2.1 c</h4>', html)
+        self.assertIn('<section><h2 id="s3">3 Three</h2><p>plain</p></section>', html)
+
+    def test_escaped_heading_text_is_not_numbered(self):
+        body = '<h3>Real</h3><p>&lt;h3&gt;not a heading&lt;/h3&gt;</p>'
+        html = page('T', [('s1', 'One', body)], '')
+        self.assertIn('<h3>1.1 Real</h3><p>&lt;h3&gt;not a heading&lt;/h3&gt;</p>', html)
 
 
 def fixture_tree(with_errors=True):
@@ -156,6 +182,10 @@ class Render(unittest.TestCase):
     def test_all_sections_present_in_order(self):
         positions = [self.html.index(f'<h2 id="{i}"') for i in SECTION_IDS]
         self.assertEqual(positions, sorted(positions))
+        self.assertIn('<h2 id="summary">1 Summary</h2>', self.html)
+        self.assertIn('<h2 id="reach">8 Backend reach and nginx rejections</h2>',
+                      self.html)
+        self.assertIn('<h2 id="unclassified">12 Unclassified paths</h2>', self.html)
         self.assertEqual(SECTION_IDS, (
             'summary', 'status', 'traffic', 'routes', 'bots', 'browser',
             'probes', 'reach', 'clients', 'content', 'backend',
@@ -245,17 +275,22 @@ class Render(unittest.TestCase):
     def test_reach_section(self):
         section = self.html[self.html.index('<h2 id="reach"'):
                             self.html.index('<h2 id="clients"')]
-        self.assertIn('Backend reach and nginx rejections', section)
+        self.assertIn('<h2 id="reach">8 Backend reach and nginx rejections</h2>', section)
         # The intro: exact split from the 8 extended records, the
         # inferred rest, and the upstream count.
         self.assertIn('8 records carry', section)
         self.assertIn('27 records', section)
         self.assertIn('2 of those contacted fcgiwrap', section)
-        for h3 in ('Per day', 'By route', 'By probe family',
-                   'URL grammar violations',
-                   'Leaks: junk that reached the FastCGI location',
-                   'Rejections by presumed rule'):
-            self.assertIn(f'<h3>{h3}</h3>', section)
+        for k, h3 in enumerate(('Per day', 'By route', 'By probe family',
+                                'URL grammar violations',
+                                'Leaks: junk that reached the FastCGI location',
+                                'Rejections by presumed rule'), 1):
+            self.assertIn(f'<h3>8.{k} {h3}</h3>', section)
+        self.assertIn('<h4>8.4.1 Top violating paths, external</h4>', section)
+        self.assertIn('<h4>8.4.2 Top violating paths, self', section)
+        # The h4 counter restarts under 8.5.
+        self.assertIn('<h4>8.5.1 Top paths</h4>', section)
+        self.assertIn('<h4>8.5.4 By class</h4>', section)
         self.assertIn('<td>doubled-arch</td><td>self</td><td class="n">1</td>', section)
         self.assertIn('<td>bad-char</td><td>external</td><td class="n">2</td>', section)
         self.assertIn('<td>grammar-map</td><td class="n">1</td>', section)
@@ -276,6 +311,11 @@ class Render(unittest.TestCase):
                        html.index('<h2 id="clients"')]
         self.assertIn('No record carries the extended log fields', section)
         self.assertNotIn('contacted fcgiwrap', section)
+        # Without the extended fields Routes loses its second table and
+        # Backend health its last one; the numbers stay contiguous.
+        self.assertIn('<h3>4.1 Per day</h3>', html)
+        self.assertNotIn('<h3>4.2 ', html)
+        self.assertNotIn('Cache status per day', html)
 
     def test_no_lookup_is_explained(self):
         self.assertIn('no lookup database found', self.html)
@@ -289,6 +329,9 @@ class Render(unittest.TestCase):
         tree, cdn_meta = fixture_tree(with_errors=False)
         html = render(tree, meta_for(cdn_meta))
         self.assertIn('no error log', html)
+        # The two error-log tables are absent, so the dynamic heading
+        # that follows them moves up from 11.4 to 11.2.
+        self.assertIn('<h3>11.2 Cache status per day (8 records carry it)</h3>', html)
 
     def test_empty_tree_renders(self):
         cdn, cdn_meta = CidrSet.load(DEFAULT_RANGES)

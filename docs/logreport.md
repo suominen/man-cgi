@@ -133,13 +133,18 @@ the command line (`make report LOGDIR=…`).
 
 ## Reading the report
 
-The report has twelve sections, in this order:
+The report has twelve sections, in this order. Every heading in the
+page carries its number (`1`–`12` for the sections, `2.1` and
+`8.4.1` for subsections), so a subsection's parent is visible in
+its number. Section numbers are fixed; subsection numbers shift
+when an optional table is absent (a run without the extended
+fields or without an error log has fewer of them):
 
-- **Summary** — the window covered, total requests and bytes,
+- **1 Summary** — the window covered, total requests and bytes,
   requests per day, the bot and probe shares, whether the
   logs carried the extended cache/timing fields (see "Extending the
   log format" below), and a per-status-class breakdown.
-- **HTTP status distribution** — a table of every status code seen,
+- **2 HTTP status distribution** — a table of every status code seen,
   with its share of requests and, where the code means something
   specific to this service, a note: `301` is canonicalization and
   legacy-URL redirection (ADR-0005, ADR-0015); `302` is the
@@ -163,18 +168,18 @@ The report has twelve sections, in this order:
   string, before ADR-0020, it was the `$qs_error` map.
   Below the table, a stacked chart shows the status-class mix
   (`2xx`/`3xx`/`4xx`/`429`/`499`/`5xx`/other) per day.
-- **Traffic over time** — requests and bytes per day, requests by
+- **3 Traffic over time** — requests and bytes per day, requests by
   hour of day across the whole window, and the busiest individual
   (day, hour) slots.
-- **Partial days** — nginx rotates its logs at 21:00, so the first
-  and last calendar day of any copy are usually covered only in
-  part. The report keeps every record in the totals but marks such
-  days: the per-day tables show the hours covered (`2026-08-14
-  (3.0 h)`), the per-day chart fades their columns, and the
-  Summary's "requests per full day" averages over the full days
-  only. A day counts as full at 23.5 hours or more of coverage, so
-  a copy taken a few minutes before midnight still counts.
-- **Routes** — how many requests fell into each URL shape: `health`
+  - **Partial days** — nginx rotates its logs at 21:00, so the first
+    and last calendar day of any copy are usually covered only in
+    part. The report keeps every record in the totals but marks such
+    days: the per-day tables show the hours covered (`2026-08-14
+    (3.0 h)`), the per-day chart fades their columns, and the
+    Summary's "requests per full day" averages over the full days
+    only. A day counts as full at 23.5 hours or more of coverage, so
+    a copy taken a few minutes before midnight still counts.
+- **4 Routes** — how many requests fell into each URL shape: `health`
   (the liveness probe), `static` (robots.txt, favicon, and similar),
   `pathinfo` (the live, current route — nginx rewrites `/` to
   `/cgi-bin/man-cgi$request_uri`, so this is where all current
@@ -200,7 +205,7 @@ The report has twelve sections, in this order:
   down by route, with percentiles for both the whole request and the
   upstream (fcgiwrap) wait; a cache hit or an nginx-served response
   has no upstream time, so the two counts differ.
-- **Named bots** — a table of every user agent that matched a known
+- **5 Named bots** — a table of every user agent that matched a known
   bot signature (search engines, AI crawlers, generic bot/scraper
   patterns), with its request count, bytes, whether it fetched
   `robots.txt`, and its status mix. The two catch-all rows are in
@@ -213,7 +218,7 @@ The report has twelve sections, in this order:
   two crawlers, shown as `Meta-External-Agent` (the
   `meta-externalagent` bulk crawler) and `Meta-Preview`
   (`facebookexternalhit`, link previews) so they read as one family.
-- **Browser-like traffic signals** — everything whose user agent did
+- **6 Browser-like traffic signals** — everything whose user agent did
   *not* match a known bot signature. This section is evidence, not
   a verdict: a plain-browser user agent with no referer and a wide
   spread of unusual paths is what a stealth crawler that spoofs its
@@ -221,7 +226,7 @@ The report has twelve sections, in this order:
   bookmark looks like. Use the referer-host and UA-family tables,
   and the per-CDN-address breadth table, to spot patterns worth a
   closer look, not as an automatic classification.
-- **Probes** — requests that fell outside the legitimate URL space,
+- **7 Probes** — requests that fell outside the legitimate URL space,
   or that matched a probe signature even on a legitimate route
   (so `/NetBSD-11.0/wp-login.php` counts here too). Membership is a
   whitelist: a path either matches one of the known route shapes
@@ -239,7 +244,7 @@ The report has twelve sections, in this order:
   count. The "answered with 2xx" table should
   normally be empty; anything there is a probe that got further
   than it should have.
-- **Backend reach and nginx rejections** — who answered each
+- **8 Backend reach and nginx rejections** — who answered each
   request: nginx alone, or the FastCGI location (the nginx cache
   or fcgiwrap). With the extended log fields the split is exact:
   any `cache=` but `-` (a `HIT` included) went through the FastCGI
@@ -281,7 +286,7 @@ The report has twelve sections, in this order:
   (the per-path rules ADR-0020 replaced), and `other` for an error
   status no rule accounts for. The Summary section carries the
   nginx share and the leak count.
-- **Clients** — top client addresses by request count, with the
+- **9 Clients** — top client addresses by request count, with the
   maximum distinct-paths-per-day ("breadth") each reached, how many
   days it was seen, and whether it is a CDN address. Breadth is
   counted per day up to a cap of 2 000 distinct paths, after which
@@ -300,16 +305,16 @@ The report has twelve sections, in this order:
   is a range nginx did not trust (see "CDN ranges" below). Country
   and ASN columns only appear when a lookup database was found
   (see "Lookup databases" below).
-- **Content** — the most-requested pages, by collection, section,
+- **10 Content** — the most-requested pages, by collection, section,
   and architecture; the same for 404s; and redirects broken down by
   route.
-- **Backend health** — daily counts of the access-log signals that
+- **11 Backend health** — daily counts of the access-log signals that
   point at backend trouble (`429`, `499`, `502`, `503`) alongside
   the error-log families, error samples, and the busiest ten-minute
   error windows; falls back to a note when no error log was
   supplied. When the extended fields are present, this section also
   shows cache status per day.
-- **Unclassified paths** — anything that matched no route and no
+- **12 Unclassified paths** — anything that matched no route and no
   probe family, and is not one of the site's own broken-link
   shapes (those are classified by the grammar, above). A
   legitimate-looking path here means the route whitelist in

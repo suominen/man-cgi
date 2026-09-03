@@ -1,6 +1,7 @@
 """Static, self-contained HTML for the report tree. No JavaScript."""
 
 import html
+import re
 
 from . import __version__
 from .classify import (
@@ -20,7 +21,7 @@ body { font: 14px/1.45 system-ui, sans-serif; color: var(--fg); background: var(
 h1 { font-size: 1.6em; } h2 { margin-top: 2em; border-bottom: 1px solid var(--line); }
 h3 { margin-top: 1.5em; font-size: 1.05em; }
 h4 { margin-top: 1.2em; font-size: 1em; }
-nav ol { columns: 2; padding-left: 1.5em; }
+nav ol { columns: 2; list-style: none; padding-left: 0; }
 table { border-collapse: collapse; margin: .5em 0 1em; }
 table.eq { table-layout: fixed; width: 100%; }
 table.eq th { white-space: normal; overflow-wrap: anywhere; font-size: .85em; }
@@ -245,10 +246,31 @@ def stacked(days, keys, values, width=760, height=180, partial=()):
     return ''.join(out) + f'<div class="legend">{legend}</div>'
 
 
+SUBHEADING_RE = re.compile(r'<h([34])>')
+
+
+def number_subheadings(section_html, n):
+    """Prefix each <h3>/<h4> in one section's HTML with its number
+    under section n: "n.1", "n.1.1", ... The section functions emit
+    bare <h3>/<h4> tags only; escaped text (&lt;h3&gt;) cannot match."""
+    counters = [0, 0]
+
+    def sub(m):
+        level = int(m.group(1)) - 3
+        counters[level] += 1
+        counters[level + 1:] = [0] * (1 - level)
+        label = '.'.join(str(c) for c in (n, *counters[:level + 1]))
+        return f'{m.group(0)}{label} '
+
+    return SUBHEADING_RE.sub(sub, section_html)
+
+
 def page(title, sections, footer_html):
-    toc = ''.join(f'<li><a href="#{esc(i)}">{esc(t)}</a></li>' for i, t, _ in sections)
-    body = ''.join(f'<section><h2 id="{esc(i)}">{esc(t)}</h2>{h}</section>'
-                   for i, t, h in sections)
+    toc = ''.join(f'<li><a href="#{esc(i)}">{n} {esc(t)}</a></li>'
+                  for n, (i, t, _) in enumerate(sections, 1))
+    body = ''.join(f'<section><h2 id="{esc(i)}">{n} {esc(t)}</h2>'
+                   f'{number_subheadings(h, n)}</section>'
+                   for n, (i, t, h) in enumerate(sections, 1))
     return (f'<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width, initial-scale=1">'
             f'<title>{esc(title)}</title><style>{CSS}</style></head>'
